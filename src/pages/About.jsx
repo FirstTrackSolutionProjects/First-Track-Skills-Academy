@@ -5,8 +5,11 @@ import {
   FaHandshake,
   FaArrowRight,
 } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const About = () => {
+  const navigate = useNavigate();
+  
   return (
     <section className="py-24 bg-[#FFF8F0]">
       <div className="max-w-7xl mx-auto px-6">
@@ -21,22 +24,25 @@ const About = () => {
             </span>
 
             <h2 className="text-5xl font-bold text-gray-900 mt-6 leading-tight">
-              Bridging the
+              Empowering Careers with
               <span className="text-orange-500">
-                {" "}Skills Gap
+                {" "}Industry-Ready Skills
               </span>
             </h2>
 
             <p className="text-gray-600 mt-6 leading-8 text-lg">
-              As technology continues to transform industries, employers
-              are looking for professionals with practical knowledge and
-              real-world experience—not just academic qualifications.
+              First Track Skills Academy is the official education and training platform owned and operated by
+              <span className="font-semibold text-gray-800">
+                {" "}First Track Solution Technologies Pvt. Ltd.
+              </span>
+               . We are dedicated to bridging the gap between academic learning and industry expectations through practical, career-focused education.
             </p>
 
             <p className="text-gray-600 mt-4 leading-8 text-lg">
-              First Track Skills Academy was founded to bridge this gap
-              through expert-led training, live projects, and complete
-              placement support.
+              We provide industry-oriented certification courses, live projects,
+              internships, expert mentorship, and placement assistance across multiple
+              technology domains, helping students and professionals build the skills
+              required for successful careers.
             </p>
 
             {/* Cards */}
@@ -54,8 +60,7 @@ const About = () => {
                 </h3>
 
                 <p className="text-gray-600 mt-3 leading-7">
-                  Deliver high-quality practical training guided by
-                  experienced industry professionals.
+                  To empower students and professionals with practical knowledge, technical expertise, and real-world experience through quality training and industry-focused learning.
                 </p>
 
               </div>
@@ -72,8 +77,7 @@ const About = () => {
                 </h3>
 
                 <p className="text-gray-600 mt-3 leading-7">
-                  Learn through live projects, real tools, and current
-                  industry practices.
+                  Our learning methodology combines expert-led classes, live industry projects, internships, modern tools, and hands-on practice to create job-ready professionals.
                 </p>
 
               </div>
@@ -96,9 +100,7 @@ const About = () => {
                   </h3>
 
                   <p className="text-gray-600 mt-3 leading-7">
-                    Affordable, flexible, and career-focused learning
-                    designed for students across India with internship
-                    and placement assistance.
+                    We are committed to providing affordable, flexible, and career-focused education with continuous mentorship, internship opportunities, and dedicated placement support for every learner.
                   </p>
 
                 </div>
@@ -107,8 +109,10 @@ const About = () => {
 
             </div>
 
-            <button className="mt-10 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-semibold flex items-center gap-3 transition">
-              Learn More
+            <button 
+              onClick={() => navigate("/courses")}
+              className="mt-10 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-semibold flex items-center gap-3 transition">
+              Explore Programs
               <FaArrowRight />
             </button>
 
@@ -127,11 +131,11 @@ const About = () => {
             <div className="absolute top-8 -left-8 bg-white rounded-3xl shadow-xl px-8 py-6">
 
               <h2 className="text-4xl font-bold text-orange-500">
-                10K+
+                Live
               </h2>
 
               <p className="text-gray-600 mt-2">
-                Students Trained
+                Project-based Learning
               </p>
 
             </div>
@@ -144,7 +148,7 @@ const About = () => {
               </h2>
 
               <p className="mt-2">
-                Placement Support
+                Career-Focused Training
               </p>
 
             </div>

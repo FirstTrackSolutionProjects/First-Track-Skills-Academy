@@ -7,6 +7,7 @@ import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Courses from "./pages/Courses";
+import ProgramFees from "./pages/ProgramFees";
 import FrontendCourse from "./pages/FrontendCourse";
 import BackendCourse from "./pages/BackendCourse";
 import FullStackCourse from "./pages/FullStackCourse";
@@ -38,6 +39,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/courses" element={<Courses />} />
+        <Route path="/program-details" element={<ProgramFees />} />
         <Route path="/frontend-course" element={<FrontendCourse />} />
         <Route path="/backend-course" element={<BackendCourse />} />
         <Route path="/fullstack-course" element={<FullStackCourse />} />

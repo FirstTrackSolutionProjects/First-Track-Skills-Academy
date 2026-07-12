@@ -1,4 +1,24 @@
 import React, { useState } from "react";
+import {
+  FaUser,
+  FaEnvelope,
+  FaPhoneAlt,
+  FaBriefcase,
+  FaGraduationCap,
+  FaMapMarkerAlt,
+  FaCloudUploadAlt,
+  FaCheckCircle,
+  FaPaperPlane,
+} from "react-icons/fa";
+
+const benefits = [
+  "Professional Work Environment",
+  "Career Growth Opportunities",
+  "Flexible Working Culture",
+  "Competitive Salary Package",
+  "Continuous Learning & Development",
+  "Friendly & Supportive Team",
+];
 
 const Career = () => {
   const [formData, setFormData] = useState({
@@ -43,171 +63,370 @@ const Career = () => {
   };
 
   return (
-    <section className="py-24 bg-[#FFF8F0]">
-      <div className="max-w-4xl mx-auto px-6">
+    <section className="relative overflow-hidden bg-[#FFF8F0] py-20">
 
-        <div className="text-center mb-12">
+      {/* Background Blur */}
 
-          <span className="bg-orange-100 text-orange-600 px-5 py-2 rounded-full font-semibold">
-            Career Application
+      <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-orange-200 blur-3xl opacity-30"></div>
+
+      <div className="absolute bottom-0 right-0 w-[450px] h-[450px] rounded-full bg-orange-100 blur-3xl opacity-40"></div>
+
+      <div className="relative max-w-7xl mx-auto px-5 lg:px-8">
+
+        {/* Heading */}
+
+        <div className="text-center max-w-3xl mx-auto">
+
+          <span className="inline-block bg-orange-100 text-orange-600 px-5 py-2 rounded-full font-semibold">
+            Career Opportunities
           </span>
 
-          <h2 className="text-5xl font-bold mt-5">
-            Join Our Team
+          <h2 className="mt-6 text-4xl md:text-5xl font-bold text-gray-900">
+            Join Our Amazing Team
           </h2>
 
-          <p className="text-gray-600 mt-4 max-w-2xl mx-auto">
-            Fill out the application form below and our HR team will
-            contact you if your profile matches our requirements.
+          <p className="mt-5 text-lg text-gray-600 leading-8">
+            We are always looking for passionate, talented and creative
+            individuals who want to make an impact in education and
+            technology.
           </p>
 
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white shadow-xl rounded-3xl p-10"
-        >
+        {/* Main Section */}
 
-          <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid lg:grid-cols-5 gap-10 mt-16">
 
-            <div>
-              <label className="font-medium">Full Name</label>
-              <input
-                type="text"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
-                required
-                placeholder="Enter Full Name"
-                className="w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500"
-              />
-            </div>
+          {/* Left Side */}
 
-            <div>
-              <label className="font-medium">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                placeholder="Enter Email"
-                className="w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500"
-              />
-            </div>
+          <div className="lg:col-span-2">
 
-            <div>
-              <label className="font-medium">Phone Number</label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                required
-                placeholder="Enter Phone Number"
-                className="w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500"
-              />
-            </div>
+            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-3xl p-10 text-white shadow-2xl h-full">
 
-            <div>
-              <label className="font-medium">Position Applying For</label>
-              <select
-                name="position"
-                value={formData.position}
-                onChange={handleChange}
-                required
-                className="w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500"
-              >
-                <option value="">Select Position</option>
-                <option>Frontend Developer</option>
-                <option>Backend Developer</option>
-                <option>Full Stack Developer</option>
-                <option>UI/UX Designer</option>
-                <option>Digital Marketing Executive</option>
-                <option>HR Executive</option>
-                <option>Trainer</option>
-              </select>
-            </div>
+              <h3 className="text-3xl font-bold">
+                Why Join First Track?
+              </h3>
 
-            <div>
-              <label className="font-medium">Highest Qualification</label>
-              <input
-                type="text"
-                name="qualification"
-                value={formData.qualification}
-                onChange={handleChange}
-                placeholder="B.Tech / MCA / MBA"
-                className="w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500"
-              />
-            </div>
+              <p className="mt-5 text-orange-100 leading-8">
+                At First Track Skills Academy, you'll work with a passionate
+                team committed to empowering students through innovation,
+                technology, and practical learning.
+              </p>
 
-            <div>
-              <label className="font-medium">Experience</label>
-              <select
-                name="experience"
-                value={formData.experience}
-                onChange={handleChange}
-                className="w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500"
-              >
-                <option value="">Select Experience</option>
-                <option>Fresher</option>
-                <option>0-1 Years</option>
-                <option>1-3 Years</option>
-                <option>3-5 Years</option>
-                <option>5+ Years</option>
-              </select>
-            </div>
+              <div className="mt-10 space-y-5">
 
-            <div>
-              <label className="font-medium">Current Location</label>
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                placeholder="Enter City"
-                className="w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500"
-              />
-            </div>
+                {benefits.map((item) => (
 
-            <div>
-              <label className="font-medium">Upload Resume</label>
-              <input
-                type="file"
-                name="resume"
-                accept=".pdf,.doc,.docx"
-                onChange={handleChange}
-                className="w-full mt-2 border rounded-xl px-4 py-3"
-              />
+                  <div
+                    key={item}
+                    className="flex items-center gap-4"
+                  >
+
+                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+
+                      <FaCheckCircle />
+
+                    </div>
+
+                    <span className="text-lg">
+                      {item}
+                    </span>
+
+                  </div>
+
+                ))}
+
+              </div>
+
+              <div className="mt-12 p-6 rounded-2xl bg-white/10 backdrop-blur">
+
+                <h4 className="text-xl font-semibold">
+                  Grow With Us 🚀
+                </h4>
+
+                <p className="mt-3 text-orange-100 leading-7">
+                  Join a workplace where learning never stops. Build your
+                  career while helping thousands of students achieve theirs.
+                </p>
+
+              </div>
+
             </div>
 
           </div>
 
-          <div className="mt-6">
-            <label className="font-medium">
-              Cover Letter / Message
-            </label>
+          {/* Right Side Form */}
 
-            <textarea
-              rows="5"
-              name="message"
-              value={formData.message}
-              onChange={handleChange}
-              placeholder="Tell us about yourself..."
-              className="w-full mt-2 border rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500"
-            ></textarea>
+          <div className="lg:col-span-3">
+
+            <form
+              onSubmit={handleSubmit}
+              className="bg-white rounded-3xl shadow-2xl p-8 md:p-10"
+            >
+              <form
+  onSubmit={handleSubmit}
+  className="bg-white rounded-3xl shadow-2xl p-8 md:p-10"
+></form>
+
+{/* Form Grid */}
+
+<div className="grid md:grid-cols-2 gap-6">
+
+  {/* Full Name */}
+
+  <div>
+
+    <label className="font-semibold text-gray-700">
+      Full Name
+    </label>
+
+    <div className="relative mt-2">
+
+      <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-500" />
+
+      <input
+        type="text"
+        name="fullName"
+        value={formData.fullName}
+        onChange={handleChange}
+        required
+        placeholder="Enter your full name"
+        className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-4 focus:ring-orange-100 focus:border-orange-500"
+      />
+
+    </div>
+
+  </div>
+
+  {/* Email */}
+
+  <div>
+
+    <label className="font-semibold text-gray-700">
+      Email Address
+    </label>
+
+    <div className="relative mt-2">
+
+      <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-500" />
+
+      <input
+        type="email"
+        name="email"
+        value={formData.email}
+        onChange={handleChange}
+        required
+        placeholder="Enter email"
+        className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-4 focus:ring-orange-100 focus:border-orange-500"
+      />
+
+    </div>
+
+  </div>
+
+  {/* Phone */}
+
+  <div>
+
+    <label className="font-semibold text-gray-700">
+      Phone Number
+    </label>
+
+    <div className="relative mt-2">
+
+      <FaPhoneAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-500" />
+
+      <input
+        type="tel"
+        name="phone"
+        value={formData.phone}
+        onChange={handleChange}
+        required
+        placeholder="Enter phone number"
+        className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-4 focus:ring-orange-100 focus:border-orange-500"
+      />
+
+    </div>
+
+  </div>
+
+  {/* Position */}
+
+  <div>
+
+    <label className="font-semibold text-gray-700">
+      Position Applying For
+    </label>
+
+    <div className="relative mt-2">
+
+      <FaBriefcase className="absolute left-4 top-4 text-orange-500" />
+
+      <select
+        name="position"
+        value={formData.position}
+        onChange={handleChange}
+        required
+        className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-4 focus:ring-orange-100 focus:border-orange-500"
+      >
+        <option value="">Select Position</option>
+        <option>Frontend Developer</option>
+        <option>Backend Developer</option>
+        <option>Full Stack Developer</option>
+        <option>UI/UX Designer</option>
+        <option>Digital Marketing Executive</option>
+        <option>HR Executive</option>
+        <option>Trainer</option>
+      </select>
+
+    </div>
+
+  </div>
+
+  {/* Qualification */}
+
+  <div>
+
+    <label className="font-semibold text-gray-700">
+      Qualification
+    </label>
+
+    <div className="relative mt-2">
+
+      <FaGraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-500" />
+
+      <input
+        type="text"
+        name="qualification"
+        value={formData.qualification}
+        onChange={handleChange}
+        placeholder="B.Tech / MCA / MBA"
+        className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-4 focus:ring-orange-100 focus:border-orange-500"
+      />
+
+    </div>
+
+  </div>
+
+  {/* Experience */}
+
+  <div>
+
+    <label className="font-semibold text-gray-700">
+      Experience
+    </label>
+
+    <select
+      name="experience"
+      value={formData.experience}
+      onChange={handleChange}
+      className="w-full mt-2 px-4 py-3.5 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-4 focus:ring-orange-100 focus:border-orange-500"
+    >
+      <option value="">Select Experience</option>
+      <option>Fresher</option>
+      <option>0-1 Years</option>
+      <option>1-3 Years</option>
+      <option>3-5 Years</option>
+      <option>5+ Years</option>
+    </select>
+
+  </div>
+
+  {/* Location */}
+
+  <div>
+
+    <label className="font-semibold text-gray-700">
+      Current Location
+    </label>
+
+    <div className="relative mt-2">
+
+      <FaMapMarkerAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-500" />
+
+      <input
+        type="text"
+        name="location"
+        value={formData.location}
+        onChange={handleChange}
+        placeholder="Enter your city"
+        className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-4 focus:ring-orange-100 focus:border-orange-500"
+      />
+
+    </div>
+
+  </div>
+
+  {/* Resume */}
+
+  <div>
+
+    <label className="font-semibold text-gray-700">
+      Upload Resume
+    </label>
+
+    <div className="mt-2 border-2 border-dashed border-orange-300 rounded-2xl p-6 text-center hover:border-orange-500 transition">
+
+      <FaCloudUploadAlt className="text-5xl text-orange-500 mx-auto mb-4" />
+
+      <p className="font-semibold text-gray-800">
+        Upload Resume
+      </p>
+
+      <p className="text-gray-500 text-sm mt-2">
+        PDF, DOC, DOCX (Max 5MB)
+      </p>
+
+      <input
+        type="file"
+        name="resume"
+        accept=".pdf,.doc,.docx"
+        onChange={handleChange}
+        className="mt-4"
+      />
+
+    </div>
+
+  </div>
+
+</div>
+
+{/* Message */}
+
+<div className="mt-8">
+
+  <label className="font-semibold text-gray-700">
+    Cover Letter / Message
+  </label>
+
+  <textarea
+    rows="5"
+    name="message"
+    value={formData.message}
+    onChange={handleChange}
+    placeholder="Tell us about yourself..."
+    className="w-full mt-2 px-4 py-4 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-4 focus:ring-orange-100 focus:border-orange-500 resize-none"
+  ></textarea>
+
+</div>
+
+<button
+  type="submit"
+  className="mt-8 w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-4 rounded-xl text-lg font-semibold flex items-center justify-center gap-3 shadow-lg hover:shadow-orange-300 transition-all duration-300 hover:-translate-y-1"
+>
+  <FaPaperPlane />
+
+  Submit Application
+</button>
+
+            </form>
+
           </div>
 
-          <button
-            type="submit"
-            className="mt-8 w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl text-lg font-semibold transition"
-          >
-            Submit Application
-          </button>
-
-        </form>
+        </div>
 
       </div>
+
     </section>
   );
 };

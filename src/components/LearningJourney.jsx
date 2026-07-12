@@ -7,12 +7,13 @@ import {
   FaRocket,
   FaArrowRight,
 } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const steps = [
   {
     icon: <FaUserPlus />,
     title: "Enroll",
-    desc: "Choose your desired course and complete your registration in just a few minutes.",
+    desc: "Choose your preferred course and complete your registration in just a few minutes.",
   },
   {
     icon: <FaLaptopCode />,
@@ -22,105 +23,78 @@ const steps = [
   {
     icon: <FaTasks />,
     title: "Practice",
-    desc: "Build real-world projects, solve assignments and improve your coding skills.",
+    desc: "Build real-world projects, complete assignments and improve your technical skills.",
   },
   {
     icon: <FaUserTie />,
     title: "Interview Ready",
-    desc: "Resume building, aptitude training and mock interviews with experts.",
+    desc: "Prepare with resume building, mock interviews and career guidance.",
   },
   {
     icon: <FaRocket />,
     title: "Get Placed",
-    desc: "Receive placement assistance and launch your dream career confidently.",
+    desc: "Receive placement assistance and confidently begin your professional journey.",
   },
 ];
 
 const LearningJourney = () => {
-  return (
-    <section className="py-24 bg-[#FFF8F0] overflow-hidden">
+  const navigate = useNavigate();
 
-      <div className="max-w-7xl mx-auto px-6">
+  return (
+    <section className="py-16 md:py-24 bg-[#FFF8F0] overflow-hidden">
+
+      <div className="max-w-7xl mx-auto px-5 lg:px-8">
 
         {/* Heading */}
 
-        <div className="text-center mb-20">
+        <div className="text-center mb-14 md:mb-20">
 
           <span className="inline-block bg-orange-100 text-orange-600 px-5 py-2 rounded-full font-semibold">
             LEARNING JOURNEY
           </span>
 
-          <h2 className="text-5xl font-bold mt-6 text-gray-900">
+          <h2 className="text-3xl md:text-5xl font-bold mt-6 text-gray-900 leading-tight">
             Your Path To
             <span className="text-orange-500"> Success</span>
           </h2>
 
-          <p className="max-w-3xl mx-auto mt-6 text-lg text-gray-600 leading-8">
-            Follow our structured roadmap from enrollment to placement.
-            Every step is carefully designed to help you become
-            industry-ready.
+          <p className="max-w-3xl mx-auto mt-5 text-base md:text-lg text-gray-600 leading-8">
+            Follow our step-by-step roadmap from enrollment to placement and
+            become industry-ready with confidence.
           </p>
 
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
 
-          {/* Left Side */}
+          {/* Left Image */}
 
           <div>
 
             <img
               src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=900"
-              alt=""
-              className="rounded-[35px] shadow-2xl"
+              alt="Learning Journey"
+              className="rounded-[30px] shadow-2xl w-full object-cover"
             />
-
-            <div className="grid grid-cols-2 gap-6 mt-8">
-
-              <div className="bg-white rounded-3xl shadow-lg p-6 text-center">
-
-                <h3 className="text-5xl font-bold text-orange-500">
-                  10K+
-                </h3>
-
-                <p className="text-gray-500 mt-2">
-                  Students
-                </p>
-
-              </div>
-
-              <div className="bg-white rounded-3xl shadow-lg p-6 text-center">
-
-                <h3 className="text-5xl font-bold text-orange-500">
-                  95%
-                </h3>
-
-                <p className="text-gray-500 mt-2">
-                  Placement
-                </p>
-
-              </div>
-
-            </div>
 
           </div>
 
-          {/* Right Side Timeline */}
+          {/* Timeline */}
 
           <div className="relative">
 
-            <div className="absolute left-8 top-5 bottom-5 w-1 bg-orange-200"></div>
+            <div className="absolute left-8 top-5 bottom-5 w-1 bg-orange-200 rounded-full"></div>
 
             {steps.map((step, index) => (
 
               <div
                 key={index}
-                className="relative flex gap-6 mb-10 group"
+                className="relative flex gap-5 mb-8 group"
               >
 
                 <div className="relative z-10">
 
-                  <div className="w-16 h-16 rounded-full bg-orange-500 text-white flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition">
+                  <div className="w-16 h-16 rounded-full bg-orange-500 text-white flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-all duration-300">
 
                     {step.icon}
 
@@ -128,28 +102,22 @@ const LearningJourney = () => {
 
                 </div>
 
-                <div className="bg-white rounded-3xl shadow-lg p-6 flex-1 hover:-translate-y-2 hover:shadow-2xl transition">
+                <div className="flex-1 bg-white rounded-3xl border border-orange-100 shadow-md p-6 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
 
                   <div className="flex justify-between items-center mb-3">
 
-                    <h3 className="text-2xl font-bold text-gray-900">
-
+                    <h3 className="text-xl md:text-2xl font-bold text-gray-900">
                       {step.title}
-
                     </h3>
 
-                    <span className="text-orange-500 font-bold text-xl">
-
-                      0{index + 1}
-
+                    <span className="text-orange-500 font-bold text-lg">
+                      {String(index + 1).padStart(2, "0")}
                     </span>
 
                   </div>
 
                   <p className="text-gray-600 leading-7">
-
                     {step.desc}
-
                   </p>
 
                 </div>
@@ -164,31 +132,31 @@ const LearningJourney = () => {
 
         {/* CTA */}
 
-        <div className="mt-24 rounded-[35px] bg-gradient-to-r from-orange-500 to-orange-600 text-white px-12 py-14 flex flex-col lg:flex-row items-center justify-between gap-10">
+        <div className="mt-16 md:mt-24 bg-gradient-to-r from-orange-500 to-orange-600 rounded-[30px] p-8 md:p-12 flex flex-col lg:flex-row items-center justify-between gap-8">
 
           <div>
 
-            <span className="uppercase tracking-widest text-orange-100">
+            <span className="uppercase tracking-wider text-orange-100 font-semibold">
               Ready To Begin?
             </span>
 
-            <h2 className="text-4xl font-bold mt-4">
+            <h2 className="text-2xl md:text-4xl font-bold text-white mt-3">
               Start Your Learning Journey Today
             </h2>
 
-            <p className="text-orange-100 mt-4 text-lg max-w-2xl">
-              Learn from industry experts, work on live projects,
-              earn certifications and get complete placement support.
+            <p className="mt-4 text-orange-100 leading-8 max-w-2xl">
+              Learn from industry experts, work on live projects, earn
+              certifications and receive dedicated placement support.
             </p>
 
           </div>
 
-          <button className="bg-white text-orange-600 px-10 py-4 rounded-xl font-bold flex items-center gap-3 hover:scale-105 transition">
-
+          <button
+            onClick={() => navigate("/career")}
+            className="bg-white text-orange-600 hover:bg-orange-50 px-8 py-4 rounded-xl font-bold flex items-center gap-3 transition hover:scale-105 whitespace-nowrap"
+          >
             Enroll Now
-
             <FaArrowRight />
-
           </button>
 
         </div>

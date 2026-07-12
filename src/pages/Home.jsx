@@ -8,7 +8,7 @@ import Benefits from "../components/Benefits";
 import LearningJourney from "../components/LearningJourney";
 import PlacementStats from "../components/PlacementStats";
 import Testimonials from "../components/Testimonials";
-import ProgramFees from "../components/ProgramFees";
+
 import ContactCTA from "../components/ContactCTA";
 
 
@@ -24,7 +24,7 @@ const Home = () => {
         <LearningJourney />
         <PlacementStats />
         <Testimonials />
-        <ProgramFees />
+     
         <ContactCTA />
 
     </>

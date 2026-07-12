@@ -6,6 +6,7 @@ import {
   FaChalkboardTeacher,
   FaArrowRight,
 } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const stats = [
   {
@@ -18,80 +19,80 @@ const stats = [
   {
     icon: <FaBriefcase />,
     number: "95%",
-    title: "Placement Rate",
-    desc: "Career Success",
+    title: "Placement Support",
+    desc: "Career Guidance",
     color: "bg-green-100 text-green-600",
   },
   {
     icon: <FaBuilding />,
     number: "150+",
     title: "Hiring Partners",
-    desc: "Top Companies",
+    desc: "Leading Companies",
     color: "bg-blue-100 text-blue-600",
   },
   {
     icon: <FaChalkboardTeacher />,
     number: "50+",
-    title: "Industry Mentors",
-    desc: "Expert Trainers",
+    title: "Expert Mentors",
+    desc: "Industry Trainers",
     color: "bg-purple-100 text-purple-600",
   },
 ];
 
 const PlacementStats = () => {
-  return (
-    <section className="py-24 bg-gradient-to-br from-orange-50 via-white to-orange-100">
+  const navigate = useNavigate();
 
-      <div className="max-w-7xl mx-auto px-6">
+  return (
+    <section className="py-16 md:py-24 bg-gradient-to-br from-orange-50 via-white to-orange-100">
+
+      <div className="max-w-7xl mx-auto px-5 lg:px-8">
 
         {/* Heading */}
 
-        <div className="text-center mb-20">
+        <div className="text-center mb-14 md:mb-20">
 
           <span className="inline-block px-5 py-2 rounded-full bg-orange-100 text-orange-600 font-semibold">
             OUR ACHIEVEMENTS
           </span>
 
-          <h2 className="text-5xl font-bold text-gray-900 mt-6">
+          <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mt-6 leading-tight">
             Trusted By
-            <span className="text-orange-500">
-              {" "}Thousands of Students
-            </span>
+            <span className="text-orange-500"> Thousands of Learners</span>
           </h2>
 
-          <p className="max-w-3xl mx-auto mt-6 text-lg text-gray-600 leading-8">
-            Our numbers reflect our commitment to quality education,
-            practical learning and successful career outcomes.
+          <p className="max-w-3xl mx-auto mt-5 text-base md:text-lg text-gray-600 leading-8">
+            We help students build practical skills, earn certifications and
+            prepare for successful careers.
           </p>
 
         </div>
 
-        {/* Cards */}
+        {/* Stats */}
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 md:gap-8">
 
           {stats.map((item, index) => (
 
             <div
               key={index}
-              className="group bg-white rounded-[30px] shadow-lg hover:shadow-2xl hover:-translate-y-3 transition duration-500 p-8 text-center"
+              className="group bg-white rounded-3xl border border-orange-100 shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 p-6 md:p-8 text-center"
             >
 
               <div
-                className={`w-20 h-20 mx-auto rounded-2xl flex items-center justify-center text-4xl mb-6 ${item.color} group-hover:scale-110 transition`}
+                className={`w-16 h-16 md:w-20 md:h-20 mx-auto rounded-2xl flex items-center justify-center text-3xl md:text-4xl mb-5 ${item.color} group-hover:scale-110 transition`}
               >
                 {item.icon}
               </div>
 
-              <h2 className="text-5xl font-extrabold text-gray-900">
+              <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900">
                 {item.number}
               </h2>
 
-              <h4 className="text-xl font-bold mt-4 text-gray-800">
+              <h4 className="text-lg md:text-xl font-bold mt-3 text-gray-800">
                 {item.title}
               </h4>
 
-              <p className="text-gray-500 mt-2">
+              <p className="text-sm md:text-base text-gray-500 mt-2">
                 {item.desc}
               </p>
 
@@ -101,34 +102,33 @@ const PlacementStats = () => {
 
         </div>
 
-        {/* Bottom CTA */}
+        {/* CTA */}
 
-        <div className="mt-24 bg-gradient-to-r from-orange-500 to-orange-600 rounded-[35px] px-10 py-14 flex flex-col lg:flex-row items-center justify-between gap-8 text-white shadow-2xl">
+        <div className="mt-16 md:mt-24 bg-gradient-to-r from-orange-500 to-orange-600 rounded-[30px] p-8 md:p-12 flex flex-col lg:flex-row items-center justify-between gap-8 text-white shadow-xl">
 
           <div>
 
-            <span className="uppercase tracking-widest text-orange-100">
+            <span className="uppercase tracking-wider text-orange-100 font-semibold">
               Start Your Journey
             </span>
 
-            <h2 className="text-4xl font-bold mt-3">
+            <h2 className="text-2xl md:text-4xl font-bold mt-3">
               Become Our Next Success Story
             </h2>
 
-            <p className="mt-4 text-orange-100 text-lg max-w-2xl">
-              Join live classes, build real-world projects,
-              earn industry-recognized certifications and
-              get complete placement assistance.
+            <p className="mt-4 text-orange-100 leading-8 max-w-2xl">
+              Learn from industry experts, build real-world projects and receive
+              dedicated placement assistance to achieve your career goals.
             </p>
 
           </div>
 
-          <button className="bg-white text-orange-600 px-8 py-4 rounded-xl font-bold flex items-center gap-3 hover:scale-105 transition">
-
+          <button
+            onClick={() => navigate("/career")}
+            className="bg-white text-orange-600 hover:bg-orange-50 px-8 py-4 rounded-xl font-bold flex items-center gap-3 transition hover:scale-105 whitespace-nowrap"
+          >
             Enroll Now
-
             <FaArrowRight />
-
           </button>
 
         </div>

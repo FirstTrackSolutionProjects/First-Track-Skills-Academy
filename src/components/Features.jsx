@@ -8,6 +8,7 @@ import {
   FaBookOpen,
   FaArrowRight,
 } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const features = [
   {
@@ -43,12 +44,14 @@ const features = [
 ];
 
 const Features = () => {
+  const navigate = useNavigate();
+  
   return (
     <section className="relative py-24 bg-[#FFF8F0] overflow-hidden">
 
       {/* Background Decoration */}
 
-      <div className="absolute top-0 left-0 w-72 h-72 bg-orange-100 rounded-full blur-3xl opacity-40"></div>
+      <div className="absolute top-24 left-24 w-72 h-72 bg-orange-100 rounded-full blur-3xl opacity-40"></div>
       <div className="absolute bottom-0 right-0 w-80 h-80 bg-orange-200 rounded-full blur-3xl opacity-30"></div>
 
       <div className="relative max-w-7xl mx-auto px-6">
@@ -84,60 +87,6 @@ const Features = () => {
               <FaArrowRight />
 
             </button>
-
-          </div>
-
-          {/* Stats */}
-
-          <div className="grid grid-cols-2 gap-6">
-
-            <div className="bg-white rounded-3xl shadow-lg p-8 text-center">
-
-              <h3 className="text-5xl font-bold text-orange-500">
-                10K+
-              </h3>
-
-              <p className="text-gray-600 mt-3">
-                Students Trained
-              </p>
-
-            </div>
-
-            <div className="bg-white rounded-3xl shadow-lg p-8 text-center">
-
-              <h3 className="text-5xl font-bold text-orange-500">
-                95%
-              </h3>
-
-              <p className="text-gray-600 mt-3">
-                Placement Success
-              </p>
-
-            </div>
-
-            <div className="bg-white rounded-3xl shadow-lg p-8 text-center">
-
-              <h3 className="text-5xl font-bold text-orange-500">
-                50+
-              </h3>
-
-              <p className="text-gray-600 mt-3">
-                Industry Experts
-              </p>
-
-            </div>
-
-            <div className="bg-white rounded-3xl shadow-lg p-8 text-center">
-
-              <h3 className="text-5xl font-bold text-orange-500">
-                100+
-              </h3>
-
-              <p className="text-gray-600 mt-3">
-                Live Projects
-              </p>
-
-            </div>
 
           </div>
 

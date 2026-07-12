@@ -1,26 +1,30 @@
 import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { HiMenuAlt3, HiX } from "react-icons/hi";
+import { FaArrowRight } from "react-icons/fa";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [scroll, setScroll] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScroll(window.scrollY > 40);
-    };
+    const handleScroll = () => setScroll(window.scrollY > 40);
 
     window.addEventListener("scroll", handleScroll);
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "auto";
+  }, [open]);
+
   const menu = [
     { name: "Home", path: "/" },
     { name: "Courses", path: "/courses" },
     { name: "About", path: "/about" },
     { name: "Career", path: "/career" },
+    { name: "Program Details", path: "/program-details" },
     { name: "Contact", path: "/contact" },
   ];
 
@@ -33,71 +37,91 @@ const Navbar = () => {
             : "bg-transparent py-5"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-5 lg:px-8 flex items-center justify-between">
 
           {/* Logo */}
-          <NavLink to="/" className="flex items-center gap-3">
-
+          <NavLink
+            to="/"
+            className="flex items-center gap-3 flex-shrink-0"
+          >
             <img
               src="/images/companylogo.jpg"
-              alt="Logo"
-              className="w-12 h-12 rounded-full border-2 border-orange-500 object-cover"
+              alt="First Track"
+              className="w-12 h-12 lg:w-14 lg:h-14 rounded-full border-2 border-orange-500 object-cover shadow-md"
             />
 
-            <div
-              className={`overflow-hidden transition-all duration-500 ${
-                scroll
-                  ? "max-w-xs opacity-100 translate-x-0"
-                  : "max-w-0 opacity-0 -translate-x-5"
-              }`}
-            >
-              <h2 className="text-2xl font-extrabold whitespace-nowrap text-gray-900">
-                First Track <span className="text-orange-500">Skills Academy</span>
+            {/* Desktop */}
+            <div className="hidden md:block">
+              <h2
+                className={`font-extrabold leading-tight transition ${
+                  scroll ? "text-gray-900" : "text-black"
+                }`}
+              >
+                First Track
+                <span className="text-orange-500"> Skills Academy</span>
               </h2>
 
-              <p className="text-xs text-gray-500">
+              <p
+                className={`text-xs ${
+                  scroll ? "text-gray-700" : "text-gray-800"
+                }`}
+              >
                 Learn • Grow • Succeed
               </p>
             </div>
 
+            {/* Mobile */}
+            <div className="md:hidden leading-tight">
+              <h2
+                className={`text-base font-extrabold ${
+                  scroll ? "text-gray-900" : "text-black"
+                }`}
+              >
+                First Track
+              </h2>
+
+              <p className="text-orange-500 text-xs font-semibold">
+                Skills Academy
+              </p>
+            </div>
           </NavLink>
 
           {/* Desktop Menu */}
-          <nav className="hidden lg:flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full px-3 py-2">
+          <nav className="hidden lg:flex items-center gap-2 bg-white/10 backdrop-blur-xl rounded-full border border-white/20 px-3 py-2">
 
             {menu.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `px-5 py-2 rounded-full font-medium transition-all duration-300 ${
+                  `px-5 py-2 rounded-full font-medium transition ${
                     isActive
                       ? "bg-orange-500 text-white"
                       : scroll
-                      ? "text-gray-700 hover:bg-orange-100 hover:text-orange-500"
-                      : "text-white hover:bg-white/20"
+                      ? "text-gray-700 hover:text-orange-500 hover:bg-orange-100"
+                      : "text-black hover:bg-white/20"
                   }`
                 }
               >
                 {item.name}
               </NavLink>
             ))}
-
           </nav>
 
-          {/* Enroll Button */}
+          {/* Desktop CTA */}
           <NavLink
             to="/contact"
-            className="hidden lg:block bg-orange-500 hover:bg-orange-600 text-white px-7 py-3 rounded-full font-semibold shadow-lg transition hover:scale-105"
+            className="hidden lg:flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full font-semibold transition hover:scale-105"
           >
             Enroll Now
+            <FaArrowRight size={14} />
           </NavLink>
 
-          {/* Mobile Icon */}
+          {/* Mobile Menu Button */}
           <button
             onClick={() => setOpen(true)}
             className={`lg:hidden text-4xl ${
-              scroll ? "text-gray-900" : "text-white"
+              scroll ? "text-gray-900" : "text-black"
             }`}
           >
             <HiMenuAlt3 />
@@ -106,82 +130,96 @@ const Navbar = () => {
         </div>
       </header>
 
-      {/* Overlay */}
+      {/* Mobile Menu */}
       <div
-        onClick={() => setOpen(false)}
-        className={`fixed inset-0 bg-black/50 z-40 transition ${
-          open ? "opacity-100 visible" : "opacity-0 invisible"
-        }`}
-      />
-
-      {/* Mobile Drawer */}
-      <aside
-        className={`fixed top-0 right-0 h-full w-[250px] bg-white z-50 shadow-2xl transition-transform duration-300 ${
-          open ? "translate-x-0" : "translate-x-full"
+        className={`fixed inset-0 z-[999] transition-all duration-300 ${
+          open
+            ? "opacity-100 visible"
+            : "opacity-0 invisible"
         }`}
       >
+        {/* Background */}
+        <div
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          onClick={() => setOpen(false)}
+        />
 
-        <div className="flex justify-between items-center p-6 border-b">
+        {/* Panel */}
+        <div
+          className={`absolute right-0 top-0 h-full w-[90%] max-w-sm bg-white transition-transform duration-300 ${
+            open ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          {/* Top */}
+          <div className="flex justify-between items-center p-6 border-b">
 
-          <div className="flex items-center gap-3">
-            <img
-              src="/images/companylogo.jpg"
-              className="w-12 h-12 rounded-full"
-              alt=""
-            />
+            <div className="flex items-center gap-3">
 
-            <div>
-              <h2 className="font-bold">First Track</h2>
-              <p className="text-orange-500 text-sm">
-                Skills Academy
-              </p>
+              <img
+                src="/images/companylogo.jpg"
+                alt=""
+                className="w-14 h-14 rounded-full border border-orange-300"
+              />
+
+              <div>
+                <h2 className="font-bold text-lg">
+                  First Track
+                </h2>
+
+                <p className="text-orange-500 text-sm">
+                  Skills Academy
+                </p>
+              </div>
+
             </div>
+
+            <button
+              onClick={() => setOpen(false)}
+              className="text-4xl text-gray-700"
+            >
+              <HiX />
+            </button>
 
           </div>
 
-          <button
-            onClick={() => setOpen(false)}
-            className="text-4xl"
-          >
-            <HiX />
-          </button>
+          {/* Links */}
+          <div className="p-6 flex flex-col gap-3">
 
-        </div>
+            {menu.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={() => setOpen(false)}
+                className={({ isActive }) =>
+                  `px-5 py-4 rounded-2xl font-medium transition ${
+                    isActive
+                      ? "bg-orange-500 text-white"
+                      : "text-gray-700 hover:bg-orange-50"
+                  }`
+                }
+              >
+                {item.name}
+              </NavLink>
+            ))}
 
-        <div className="p-6 flex flex-col gap-3">
+          </div>
 
-          {menu.map((item) => (
+          {/* Bottom */}
+          <div className="absolute bottom-8 left-6 right-6">
+
             <NavLink
-              key={item.path}
-              to={item.path}
+              to="/contact"
               onClick={() => setOpen(false)}
-              className={({ isActive }) =>
-                `px-5 py-4 rounded-2xl transition ${
-                  isActive
-                    ? "bg-orange-500 text-white"
-                    : "hover:bg-orange-50 text-gray-700"
-                }`
-              }
+              className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-2xl font-semibold transition"
             >
-              {item.name}
+              Enroll Now
+              <FaArrowRight />
             </NavLink>
-          ))}
+
+          </div>
 
         </div>
-
-        <div className="absolute bottom-8 left-6 right-6">
-
-          <NavLink
-            to="/contact"
-            onClick={() => setOpen(false)}
-            className="block w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-2xl text-center font-semibold"
-          >
-            Enroll Now
-          </NavLink>
-
-        </div>
-
-      </aside>
+      </div>
     </>
   );
 };

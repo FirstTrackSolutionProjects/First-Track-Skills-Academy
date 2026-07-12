@@ -1,176 +1,147 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  FaArrowRight,
+  FaChalkboardTeacher,
   FaLaptopCode,
+  FaProjectDiagram,
+  FaClock,
   FaCertificate,
-  FaUserGraduate,
-  FaPlay,
+  FaBookOpen,
+  FaArrowRight,
 } from "react-icons/fa";
 
-const Hero = () => {
+const features = [
+  {
+    icon: <FaChalkboardTeacher />,
+    title: "Industry Expert Trainers",
+    desc: "Learn directly from experienced professionals through practical sessions and real-world guidance.",
+  },
+  {
+    icon: <FaLaptopCode />,
+    title: "Hands-on Learning",
+    desc: "Practice every concept with coding exercises, assignments and implementation.",
+  },
+  {
+    icon: <FaProjectDiagram />,
+    title: "Live Projects",
+    desc: "Build industry-level projects that strengthen your portfolio and confidence.",
+  },
+  {
+    icon: <FaClock />,
+    title: "Flexible Learning",
+    desc: "Attend live classes or watch recordings whenever it's convenient.",
+  },
+  {
+    icon: <FaBookOpen />,
+    title: "Updated Curriculum",
+    desc: "Stay ahead with courses aligned to current industry requirements.",
+  },
+  {
+    icon: <FaCertificate />,
+    title: "Certification",
+    desc: "Receive a professional course completion certificate after training.",
+  },
+];
+
+const stats = [
+  { value: "Live", label: "Interactive Classes" },
+  { value: "Expert", label: "Mentors" },
+  { value: "Career", label: "Guidance" },
+  { value: "Projects", label: "Hands-on Learning" },
+];
+
+const Features = () => {
+  const navigate = useNavigate();
+
   return (
-    <section className="bg-[#FFF8F0] pt-20 pb-20">
-      <div className="max-w-7xl mx-auto px-6">
+    <section className="relative overflow-hidden bg-[#FFF8F0] py-16 md:py-24">
 
-        {/* Top Badge */}
-       
+      <div className="absolute top-24 left-24 w-72 h-72 bg-orange-100 rounded-full blur-3xl opacity-40"></div>
+      <div className="absolute bottom-0 right-0 w-80 h-80 bg-orange-200 rounded-full blur-3xl opacity-30"></div>
 
-        {/* Heading */}
-        <div className="text-center max-w-4xl mx-auto">
+      <div className="relative max-w-7xl mx-auto px-5 lg:px-8">
 
-          <h1 className="text-5xl md:text-7xl font-extrabold text-gray-900 leading-tight">
-            Learn Skills That
-            <span className="text-orange-500">
-              {" "}Get You Hired
-            </span>
-          </h1>
+        <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
 
-          <p className="mt-8 text-gray-600 text-lg leading-8">
-            Learn from industry experts through live classes,
-            hands-on projects, certifications, internship guidance,
-            and complete placement support.
-          </p>
+          <div>
 
-          <div className="flex justify-center flex-wrap gap-5 mt-10">
+           
 
-            <button className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl flex items-center gap-3 font-semibold transition">
-              Start Learning
+            <h2 className="text-3xl md:text-5xl font-bold mt-6 leading-tight text-gray-900">
+              Learn Smarter,
+              <br />
+              <span className="text-orange-500">
+                Grow Faster
+              </span>
+            </h2>
+
+            <p className="mt-6 text-gray-600 text-base md:text-lg leading-8">
+              We prepare students for successful careers through expert
+              mentorship, live projects, practical training, internships,
+              and placement support.
+            </p>
+
+            <button
+              onClick={() => navigate("/courses")}
+              className="mt-8 inline-flex items-center gap-3 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-semibold transition hover:scale-105 shadow-lg"
+            >
+              Explore Courses
               <FaArrowRight />
             </button>
 
-            <button className="border-2 border-orange-500 text-orange-500 px-8 py-4 rounded-xl flex items-center gap-3 hover:bg-orange-500 hover:text-white transition">
-              <FaPlay />
-              Watch Demo
-            </button>
+          </div>
+
+            {/* Right Image */}
+          <div className="relative hidden lg:flex justify-center">
+
+            {/* Background Decoration */}
+            <div className="absolute -top-6 -left-6 w-48 h-48 bg-orange-200 rounded-full blur-3xl opacity-30"></div>
+
+            <div className="absolute -bottom-8 -right-8 w-56 h-56 bg-orange-100 rounded-full blur-3xl opacity-40"></div>
+
+            <img
+              src="https://media.istockphoto.com/id/1486721631/photo/e-learning-graduate-certificate-program-concept-businessman-hand-holding-light-bulb-with.webp?a=1&b=1&s=612x612&w=0&k=20&c=3xMByKV9lOp0nMA18OVSwajf81V8ZJTQKzUyw7i4RvI="
+              alt="Students Learning"
+              className="relative w-full max-w-lg rounded-3xl shadow-2xl object-cover"
+            />
 
           </div>
 
         </div>
 
-        {/* Main Cards */}
-        <div className="grid lg:grid-cols-2 gap-10 mt-20">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
 
-          {/* Left Image */}
-          <div className="relative">
+          {features.map((item, index) => (
 
-            <img
-              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1000"
-              alt=""
-              className="rounded-3xl w-full h-[500px] object-cover"
-            />
+            <div
+              key={index}
+              className="group bg-white rounded-3xl p-8 border border-orange-100 shadow-md hover:shadow-2xl hover:-translate-y-3 transition-all duration-300"
+            >
 
-            <div className="absolute bottom-6 left-6 bg-white rounded-2xl shadow-xl px-6 py-5">
+              <div className="w-16 h-16 rounded-2xl bg-orange-100 text-orange-500 flex items-center justify-center text-3xl mb-6 group-hover:bg-orange-500 group-hover:text-white transition">
 
-              <h3 className="text-3xl font-bold text-orange-500">
-                10K+
+                {item.icon}
+
+              </div>
+
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                {item.title}
               </h3>
 
-              <p className="text-gray-500">
-                Students Trained
+              <p className="text-gray-600 leading-7">
+                {item.desc}
               </p>
 
             </div>
 
-          </div>
-
-          {/* Right Content */}
-          <div className="flex flex-col justify-center gap-6">
-
-            <div className="bg-white rounded-3xl shadow-lg p-7 flex gap-5">
-
-              <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center">
-                <FaLaptopCode className="text-3xl text-orange-500" />
-              </div>
-
-              <div>
-
-                <h3 className="text-2xl font-bold text-gray-900">
-                  Live Interactive Classes
-                </h3>
-
-                <p className="text-gray-600 mt-2">
-                  Learn directly from experienced mentors with
-                  live coding sessions.
-                </p>
-
-              </div>
-
-            </div>
-
-            <div className="bg-white rounded-3xl shadow-lg p-7 flex gap-5">
-
-              <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center">
-                <FaCertificate className="text-3xl text-orange-500" />
-              </div>
-
-              <div>
-
-                <h3 className="text-2xl font-bold text-gray-900">
-                  Industry Certifications
-                </h3>
-
-                <p className="text-gray-600 mt-2">
-                  Earn certificates that strengthen your resume
-                  and job opportunities.
-                </p>
-
-              </div>
-
-            </div>
-
-            <div className="bg-white rounded-3xl shadow-lg p-7 flex gap-5">
-
-              <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center">
-                <FaUserGraduate className="text-3xl text-orange-500" />
-              </div>
-
-              <div>
-
-                <h3 className="text-2xl font-bold text-gray-900">
-                  Placement Assistance
-                </h3>
-
-                <p className="text-gray-600 mt-2">
-                  Resume preparation, mock interviews, and
-                  hiring support from top companies.
-                </p>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* Bottom Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20">
-
-          <div className="bg-white rounded-2xl p-6 text-center shadow">
-            <h2 className="text-4xl font-bold text-orange-500">10K+</h2>
-            <p className="text-gray-600 mt-2">Students</p>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 text-center shadow">
-            <h2 className="text-4xl font-bold text-orange-500">120+</h2>
-            <p className="text-gray-600 mt-2">Courses</p>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 text-center shadow">
-            <h2 className="text-4xl font-bold text-orange-500">95%</h2>
-            <p className="text-gray-600 mt-2">Placement</p>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 text-center shadow">
-            <h2 className="text-4xl font-bold text-orange-500">15+</h2>
-            <p className="text-gray-600 mt-2">Years Experience</p>
-          </div>
+          ))}
 
         </div>
 
       </div>
+
     </section>
   );
 };
 
-export default Hero;
+export default Features;
