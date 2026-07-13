@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaHtml5,
   FaCss3Alt,
@@ -16,6 +17,7 @@ import {
   SiTailwindcss,
   SiVite,
 } from "react-icons/si";
+
 
 const technologies = [
   { icon: <FaHtml5 />, title: "HTML5", color: "text-orange-600" },
@@ -40,6 +42,8 @@ const roadmap = [
 ];
 
 const FrontendCourse = () => {
+
+  const navigate = useNavigate();
   return (
     <section className="pt-32 pb-20 bg-[#FFF8F0]">
 
@@ -94,7 +98,9 @@ const FrontendCourse = () => {
 
             </div>
 
-            <button className="mt-10 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl flex items-center gap-3 font-semibold">
+            <button 
+              onClick={() => navigate("/enroll")}
+              className="mt-10 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl flex items-center gap-3 font-semibold">
 
               Apply Now
 

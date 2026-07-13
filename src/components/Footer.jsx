@@ -128,7 +128,7 @@ const Footer = () => {
                 "Backend Development",
                 "Full Stack Development",
                 "Digital Marketing",
-                "UI/UX Design",
+                "HR Management",
               ].map((course) => (
 
                 <li key={course}>
@@ -195,7 +195,7 @@ const Footer = () => {
                 </div>
 
                 <p className="text-gray-300 break-all">
-                  info@firsttrackskills.com
+                  contact@firsttrackskillsacademy.in
                 </p>
 
               </div>
@@ -208,51 +208,60 @@ const Footer = () => {
 
       </div>
 
+
       {/* Bottom */}
 
       <div className="border-t border-gray-700">
+        <div className="max-w-7xl mx-auto px-5 py-6">
 
-        <div className="max-w-7xl mx-auto px-5 py-5 flex flex-col md:flex-row justify-between items-center gap-3">
+          <div className="flex flex-col items-center gap-5 md:flex-row md:justify-between">
 
-          <p className="text-gray-400 text-sm text-center">
-            © {new Date().getFullYear()} First Track Skills Academy. All Rights Reserved.
-          </p>
+            {/* Copyright */}
 
-          <div className="flex justify-center gap-2 text-sm">
+            <p className="text-gray-400 text-sm text-center leading-6">
+              © {new Date().getFullYear()} First Track Skills Academy.
+              <br className="block md:hidden" />
+              All Rights Reserved.
+            </p>
 
-            <Link
-              to="/privacy-policy"
-              className="text-gray-400 hover:text-orange-400 transition"
-            >
-              Privacy Policy
-            </Link>
+            {/* Footer Links */}
 
-            <Link
-              to="/terms-of-use"
-              className="text-gray-400 hover:text-orange-400 transition"
-            >
-              Terms
-            </Link>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3 text-sm text-center">
 
-            <Link
-              to="/refund-cancel"
-              className="text-gray-400 hover:text-orange-400 transition"
-            >
-              Refund & Cancellation
-            </Link>
+              <Link
+                to="/privacy-policy"
+                className="text-gray-400 hover:text-orange-400 transition"
+              >
+                Privacy Policy
+              </Link>
 
-            <Link
-              to="/faq"
-              className="text-gray-400 hover:text-orange-400 transition"
-            >
-              FAQ
-            </Link>
+              <Link
+                to="/terms-of-use"
+                className="text-gray-400 hover:text-orange-400 transition"
+              >
+                Terms
+              </Link>
+
+              <Link
+                to="/refund-cancel"
+                className="text-gray-400 hover:text-orange-400 transition"
+              >
+                Refund Policy
+              </Link>
+
+              <Link
+                to="/faq"
+                className="text-gray-400 hover:text-orange-400 transition"
+              >
+                FAQ
+              </Link>
+
+            </div>
 
           </div>
 
         </div>
-
-      </div>
+</div>
 
     </footer>
   );

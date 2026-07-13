@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaReact,
   FaNodeJs,
@@ -74,6 +75,8 @@ const FullStackCourse = () => {
     "Mock Interviews",
     "Placement Assistance",
   ];
+
+  const navigate = useNavigate();
 
   return (
     <section className="py-24 bg-[#FFF8F0]">
@@ -256,7 +259,9 @@ const FullStackCourse = () => {
 
             </div>
 
-            <button className="mt-10 w-full bg-white text-orange-600 py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:scale-105 transition">
+            <button
+              onClick={() => navigate("/enroll")}
+              className="mt-10 w-full bg-white text-orange-600 py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:scale-105 transition">
 
               Enroll Now
 

@@ -208,7 +208,7 @@ const Navbar = () => {
           <div className="absolute bottom-8 left-6 right-6">
 
             <NavLink
-              to="/contact"
+              to="/enroll"
               onClick={() => setOpen(false)}
               className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-2xl font-semibold transition"
             >

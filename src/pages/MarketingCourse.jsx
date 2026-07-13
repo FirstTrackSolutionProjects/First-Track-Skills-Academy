@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaBullhorn,
   FaUsers,
@@ -14,6 +15,9 @@ import {
 } from "react-icons/fa";
 
 const MarketingCourse = () => {
+
+  const navigate = useNavigate();
+
   return (
     <section className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-6">
@@ -246,7 +250,9 @@ const MarketingCourse = () => {
 
             </div>
 
-            <button className="mt-10 w-full bg-white text-orange-600 py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:scale-105 transition">
+            <button
+              onClick={() => navigate("/enroll")}
+              className="mt-10 w-full bg-white text-orange-600 py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:scale-105 transition">
 
               Enroll Now
 

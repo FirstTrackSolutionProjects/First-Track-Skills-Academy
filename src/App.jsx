@@ -18,6 +18,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import RefundCancel from "./pages/RefundCancel";
 import FAQ from "./pages/FAQ";
+import Enroll from "./pages/Enroll";
 
 function App() {
   const { pathname} = useLocation();
@@ -50,6 +51,7 @@ function App() {
         <Route path="/faq" element={<FAQ />} />
         <Route path="/career" element={<Career />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/enroll" element={<Enroll />} />
       </Routes>
 
       <Footer />

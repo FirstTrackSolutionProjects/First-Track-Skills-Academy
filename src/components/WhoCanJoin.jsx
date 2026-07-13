@@ -140,7 +140,7 @@ const WhoCanJoin = () => {
           </div>
 
           <button
-            onClick={() => navigate("/career")}
+            onClick={() => navigate("/enroll")}
             className="bg-white text-orange-600 hover:bg-orange-50 px-8 py-4 rounded-xl font-bold flex items-center gap-3 transition hover:scale-105 whitespace-nowrap"
           >
             Enroll Now

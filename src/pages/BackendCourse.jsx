@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaServer,
   FaDatabase,
@@ -43,6 +44,8 @@ const roadmap = [
 ];
 
 const BackendCourse = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="pt-32 pb-20 bg-[#FFF8F0]">
 
@@ -97,7 +100,9 @@ const BackendCourse = () => {
 
             </div>
 
-            <button className="mt-10 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl flex items-center gap-3 font-semibold transition">
+            <button
+              onClick={() => navigate("/enroll")}
+              className="mt-10 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl flex items-center gap-3 font-semibold transition">
 
               Apply Now
 
