@@ -169,9 +169,9 @@ const Footer = () => {
                 </div>
 
                 <p className="text-gray-300 text-sm leading-6">
-                  First Track Skills Academy
+                  Saheed Nagar, Bhubaneswar,
                   <br />
-                  Bhubaneswar, Odisha
+                   Odisha, India
                 </p>
 
               </div>
@@ -183,7 +183,7 @@ const Footer = () => {
                 </div>
 
                 <p className="text-gray-300">
-                  +91 9876543210
+                  +91 9040170727
                 </p>
 
               </div>

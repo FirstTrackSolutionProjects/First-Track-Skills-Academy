@@ -10,7 +10,7 @@ import {
 const fees = [
   {
     program: "Frontend Development",
-    duration: "90 Days",
+    duration: "60 Days",
     fees: "₹25,750",
   },
   {

@@ -245,7 +245,7 @@ const MarketingCourse = () => {
 
               <div className="flex justify-between text-3xl font-bold mt-8">
                 <span>Fees</span>
-                <span>₹35,750</span>
+                <span>₹22,750</span>
               </div>
 
             </div>
