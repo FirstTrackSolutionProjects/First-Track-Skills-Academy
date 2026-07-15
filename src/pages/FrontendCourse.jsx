@@ -353,7 +353,7 @@ const FrontendCourse = () => {
 
               <div className="flex justify-between text-2xl font-bold pt-4">
                 <span>Course Fee</span>
-                <span>₹29,999</span>
+                <span>₹25,750</span>
               </div>
 
             </div>
