@@ -354,8 +354,11 @@ const BackendCourse = () => {
               </div>
 
             </div>
+            
 
-            <button className="mt-10 w-full bg-white text-orange-600 py-4 rounded-xl font-bold flex justify-center items-center gap-3 hover:scale-105 transition">
+            <button 
+               onClick={() => navigate("/enroll")}
+               className="mt-10 w-full bg-white text-orange-600 py-4 rounded-xl font-bold flex justify-center items-center gap-3 hover:scale-105 transition">
 
               Apply Now
 

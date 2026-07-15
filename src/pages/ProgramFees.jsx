@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   FaCertificate,
   FaClock,
@@ -305,11 +306,12 @@ const ProgramFees = () => {
 
           </p>
 
-          <button
-            className="mt-8 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-10 py-4 rounded-xl font-semibold shadow-lg hover:shadow-orange-300 transition-all duration-300 hover:-translate-y-1"
-          >
-            Enroll Now
-          </button>
+          <Link
+  to="/enroll"
+  className="mt-8 inline-block bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition"
+>
+  Enroll Now
+</Link>
 
         </div>
 

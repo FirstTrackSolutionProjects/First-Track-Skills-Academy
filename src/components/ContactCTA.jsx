@@ -90,7 +90,7 @@ const ContactCTA = () => {
               </h4>
 
               <p className="text-gray-600 mt-2 break-all">
-                info@firsttrackskills.com
+                info@firsttrackskillsacademy.com
               </p>
 
             </div>
@@ -104,7 +104,7 @@ const ContactCTA = () => {
               </h4>
 
               <p className="text-gray-600 mt-2">
-                www.firsttrackskills.com
+                www.firsttrackskillsacademy.com
               </p>
 
             </div>
