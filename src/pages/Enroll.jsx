@@ -121,21 +121,21 @@ const Enroll = () => {
               required
               className="border rounded-xl px-4 py-3"
             />
-            <input
-            type={formData.dob ? "date" : "text"}
-            name="dob"
-            placeholder="Date of Birth"
-            value={formData.dob}
-            onFocus={(e) => (e.target.type = "date")}
-            onBlur={(e) => {
-              if (!e.target.value) {
-                e.target.type = "text";
-              }
-            }}
-            onChange={handleChange}
-            required
-            className="w-full border rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-orange-500"
-          />
+    <div>
+  <label className="block mb-2 font-semibold text-gray-700">
+    Date of Birth
+  </label>
+
+  <input
+    type="date"
+    name="dob"
+    value={formData.dob}
+    onChange={handleChange}
+    required
+    className="w-full border border-gray-300 rounded-xl px-4 py-4 bg-white
+               focus:outline-none focus:ring-2 focus:ring-orange-500"
+  />
+</div>
 
             <select
               name="gender"
