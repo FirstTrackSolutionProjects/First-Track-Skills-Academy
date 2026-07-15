@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   FaMapMarkerAlt,
   FaPhoneAlt,
@@ -165,6 +166,14 @@ const Contact = () => {
                 Chat on WhatsApp
               </a>
 
+            </div>
+            <div className="mt-5">
+              <Link
+                to="/enroll"
+                className="w-full inline-flex items-center justify-center bg-white border-2 border-white text-orange-600 px-6 py-4 rounded-xl font-bold hover:bg-orange-100 transition"
+              >
+                Apply Now
+              </Link>
             </div>
 
             {/* Google Map */}

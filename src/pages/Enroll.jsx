@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const Enroll = () => {
   const navigate = useNavigate();
@@ -9,22 +10,29 @@ const Enroll = () => {
     phone: "",
     dob: "",
     gender: "",
-    city: "",
+    district: "",
     course: "",
     mode: "",
     batch: "",
     qualification: "",
     college: "",
     message: "",
+    profileImage: null,
+    resume: null,
     agree: false,
   });
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-
+    const { name, value, type, checked, files } = e.target;
+  
     setFormData({
       ...formData,
-      [name]: type === "checkbox" ? checked : value,
+      [name]:
+        type === "checkbox"
+          ? checked
+          : type === "file"
+          ? files[0]
+          : value,
     });
   };
 
@@ -113,14 +121,20 @@ const Enroll = () => {
               required
               className="border rounded-xl px-4 py-3"
             />
+            <div>
+  <label className="block mb-2 font-semibold">
+    Date of Birth
+  </label>
 
-            <input
-              type="date"
-              name="dob"
-              value={formData.dob}
-              onChange={handleChange}
-              className="border rounded-xl px-4 py-3"
-            />
+  <input
+    type="date"
+    name="dob"
+    value={formData.dob}
+    onChange={handleChange}
+    required
+    className="w-full h-14 border rounded-xl px-4 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+  />
+</div>
 
             <select
               name="gender"
@@ -131,14 +145,13 @@ const Enroll = () => {
               <option value="">Select Gender</option>
               <option>Male</option>
               <option>Female</option>
-              <option>Other</option>
             </select>
 
             <input
               type="text"
-              name="city"
-              placeholder="City"
-              value={formData.city}
+              name="district"
+              placeholder="District"
+              value={formData.district}
               onChange={handleChange}
               className="border rounded-xl px-4 py-3"
             />
@@ -247,6 +260,58 @@ const Enroll = () => {
             </span>
 
           </div>
+
+          <h2 className="text-2xl font-bold mt-10 mb-6">
+  Upload Documents
+</h2>
+
+<div className="grid md:grid-cols-2 gap-6">
+
+  {/* Profile Image */}
+
+  <div>
+    <label className="block font-semibold mb-2">
+      Profile Image
+    </label>
+
+    <input
+      type="file"
+      name="profileImage"
+      accept="image/*"
+      onChange={handleChange}
+      className="w-full border rounded-xl px-4 py-3 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-2 file:rounded-lg file:cursor-pointer"
+    />
+
+    {formData.profileImage && (
+      <p className="text-sm text-green-600 mt-2">
+        Selected: {formData.profileImage.name}
+      </p>
+    )}
+  </div>
+
+  {/* Resume */}
+
+  <div>
+    <label className="block font-semibold mb-2">
+      Upload Resume
+    </label>
+
+    <input
+      type="file"
+      name="resume"
+      accept=".pdf,.doc,.docx"
+      onChange={handleChange}
+      className="w-full border rounded-xl px-4 py-3 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-2 file:rounded-lg file:cursor-pointer"
+    />
+
+    {formData.resume && (
+      <p className="text-sm text-green-600 mt-2">
+        Selected: {formData.resume.name}
+      </p>
+    )}
+  </div>
+
+</div>
 
           <button
             type="submit"

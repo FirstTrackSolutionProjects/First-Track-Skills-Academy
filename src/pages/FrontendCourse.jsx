@@ -358,7 +358,9 @@ const FrontendCourse = () => {
 
             </div>
 
-            <button className="w-full mt-10 bg-white text-orange-600 py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:scale-105 transition">
+            <button 
+              onClick={() => navigate("/enroll")}
+              className="mt-10 bg-white hover:bg--600 text-orange-600 px-8 py-4 rounded-xl flex items-center gap-3 font-semibold">
 
               Apply Now
 
