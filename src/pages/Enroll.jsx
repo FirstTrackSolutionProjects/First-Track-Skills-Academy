@@ -121,14 +121,20 @@ const Enroll = () => {
               required
               className="border rounded-xl px-4 py-3"
             />
+            <div>
+  <label className="block mb-2 font-semibold">
+    Date of Birth
+  </label>
 
-            <input
-              type="date"
-              name="dob"
-              value={formData.dob}
-              onChange={handleChange}
-              className="border rounded-xl px-4 py-3"
-            />
+  <input
+    type="date"
+    name="dob"
+    value={formData.dob}
+    onChange={handleChange}
+    required
+    className="w-full h-14 border rounded-xl px-4 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+  />
+</div>
 
             <select
               name="gender"
