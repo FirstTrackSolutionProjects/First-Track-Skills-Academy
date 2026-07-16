@@ -11,6 +11,8 @@ const Enroll = () => {
     dob: "",
     gender: "",
     district: "",
+    state: "",
+    pin: "",
     course: "",
     mode: "",
     batch: "",
@@ -49,7 +51,9 @@ const Enroll = () => {
       phone: "",
       dob: "",
       gender: "",
-      city: "",
+      district: "",
+      state: "",
+      pin: "",
       course: "",
       mode: "",
       batch: "",
@@ -154,11 +158,39 @@ const Enroll = () => {
             <input
               type="text"
               name="district"
-              placeholder="District"
+              placeholder="District / City"
               value={formData.district}
               onChange={handleChange}
               className="border rounded-xl px-4 py-3"
             />
+
+            <input
+              type="text"
+              name="state"
+              placeholder="State"
+              value={formData.state}
+              onChange={handleChange}
+              className="border rounded-xl px-4 py-3"
+            />
+
+            <input
+              type="text"
+              name="pin"
+              placeholder="PIN Code"
+              value={formData.pin}
+              onChange={handleChange}
+              maxLength={6}
+              className="border rounded-xl px-4 py-3"
+            />
+
+            {/* <input
+              type="text"
+              name="district"
+              placeholder="District"
+              value={formData.district}
+              onChange={handleChange}
+              className="border rounded-xl px-4 py-3"
+            /> */}
 
           </div>
 
