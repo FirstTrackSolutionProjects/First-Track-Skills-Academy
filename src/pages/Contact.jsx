@@ -7,6 +7,7 @@ import {
   FaWhatsapp,
   FaClock,
   FaPaperPlane,
+  FaSpinner,
 } from "react-icons/fa";
 import { COURSES_ENUM } from "../constants/enums";
 import { useState } from "react";
@@ -21,6 +22,7 @@ const Contact = () => {
     course: "",
     message: "",
   })
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState(INITIAL_CONTACT_FORM_STATE);
   const handleChange = (e) => {
     const name = e.target.name;
@@ -33,12 +35,15 @@ const Contact = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      setLoading(true);
       await sendContactUs(formData);
       setFormData(INITIAL_CONTACT_FORM_STATE);
       toast.success("Message sent successfully");
     } catch (error) {
       console.error(error.message || "Something Went Wrong");
       toast.error(error.message || "Failed to send message")
+    } finally{
+      setLoading(false);
     }
   }
   return (
@@ -172,9 +177,14 @@ const Contact = () => {
 
               <button
                 className="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-3 transition"
+                disabled={loading}
               >
                 Send Message
-                <FaPaperPlane />
+                {loading ? (
+                  <FaSpinner className="animate-spin" />
+                ) : (
+                  <FaPaperPlane />
+                )}
               </button>
 
             </form>
