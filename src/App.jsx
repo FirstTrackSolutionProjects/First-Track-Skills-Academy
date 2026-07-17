@@ -19,6 +19,7 @@ import TermsOfUse from "./pages/TermsOfUse";
 import RefundCancel from "./pages/RefundCancel";
 import FAQ from "./pages/FAQ";
 import Enroll from "./pages/Enroll";
+import { ToastContainer } from 'react-toastify';
 
 function App() {
   const { pathname} = useLocation();
@@ -34,8 +35,8 @@ function App() {
 
   return (
     <>
+      <ToastContainer />
       <Navbar />
-
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />

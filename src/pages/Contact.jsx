@@ -8,8 +8,39 @@ import {
   FaClock,
   FaPaperPlane,
 } from "react-icons/fa";
+import { COURSES_ENUM } from "../constants/enums";
+import { useState } from "react";
+import { toast } from "react-toastify";
+import sendContactUs from "../services/contact/send_contact_us.contact.service";
 
 const Contact = () => {
+  const INITIAL_CONTACT_FORM_STATE = Object.freeze({
+    name: "",
+    phone: "",
+    email: "",
+    course: "",
+    message: "",
+  })
+  const [formData, setFormData] = useState(INITIAL_CONTACT_FORM_STATE);
+  const handleChange = (e) => {
+    const name = e.target.name;
+    const value = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await sendContactUs(formData);
+      setFormData(INITIAL_CONTACT_FORM_STATE);
+      toast.success("Message sent successfully");
+    } catch (error) {
+      console.error(error.message || "Something Went Wrong");
+      toast.error(error.message || "Failed to send message")
+    }
+  }
   return (
     <section className="pt-36 pb-24 bg-[#FFF8F0]">
       <div className="max-w-7xl mx-auto px-6">
@@ -88,34 +119,45 @@ const Contact = () => {
               Send Us a Message
             </h2>
 
-            <form className="space-y-6">
+            <form className="space-y-6" onSubmit={handleSubmit}>
 
               <input
                 type="text"
                 placeholder="Full Name"
                 className="w-full border rounded-xl px-5 py-4 outline-none focus:border-orange-500"
+                onChange={handleChange}
+                name="name"
+                value={formData.name}
               />
 
               <input
                 type="email"
                 placeholder="Email Address"
                 className="w-full border rounded-xl px-5 py-4 outline-none focus:border-orange-500"
+                onChange={handleChange}
+                name="email"
+                value={formData.email}
               />
 
               <input
                 type="tel"
                 placeholder="Phone Number"
                 className="w-full border rounded-xl px-5 py-4 outline-none focus:border-orange-500"
+                onChange={handleChange}
+                name="phone"
+                value={formData.phone}
               />
 
-              <select className="w-full border rounded-xl px-5 py-4 outline-none focus:border-orange-500">
+              <select className="w-full border rounded-xl px-5 py-4 outline-none focus:border-orange-500"
+                onChange={handleChange}
+                name="course"
+                value={formData.course}
+              >
 
                 <option>Select Course</option>
-                <option>Frontend Development</option>
-                <option>Backend Development</option>
-                <option>Full Stack Development</option>
-                <option>Digital Marketing</option>
-                <option>HR Management</option>
+                {Object.values(COURSES_ENUM).map((course) => (
+                  <option key={course}>{course}</option>
+                ))}
 
               </select>
 
@@ -123,6 +165,9 @@ const Contact = () => {
                 rows="5"
                 placeholder="Your Message"
                 className="w-full border rounded-xl px-5 py-4 outline-none focus:border-orange-500"
+                onChange={handleChange}
+                name="message"
+                value={formData.message}
               ></textarea>
 
               <button
