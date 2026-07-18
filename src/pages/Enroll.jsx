@@ -92,16 +92,16 @@ const Enroll = () => {
 
       if (failedFiles > 0) return;
 
-      setFormData((prev) => ({
-        ...prev,
-        files: Object.fromEntries(
-          Object.entries(uploadUrlObject).map(([key, value]) => [key, value.fileKey])
-        ),
-      }));
+      // Build the updated files map synchronously so it is available immediately
+      const updatedFiles = Object.fromEntries(
+        Object.entries(uploadUrlObject).map(([key, value]) => [key, value.fileKey])
+      );
 
+      // Keep React state in sync (for any re-renders after submission)
+      setFormData((prev) => ({ ...prev, files: updatedFiles }));
 
       // --- Step 4: Submit form data + fileKeys to backend ---
-      await sendEnrollment(formData);
+      await sendEnrollment({ ...formData, files: updatedFiles });
 
       // --- Success ---
       toast.success("Enrollment submitted successfully!");
