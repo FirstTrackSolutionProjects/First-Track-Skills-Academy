@@ -1,67 +1,119 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useRef } from "react";
 import { Link } from "react-router-dom";
+import { FaPaperPlane, FaSpinner } from "react-icons/fa";
+import { toast } from "react-toastify";
+import { COURSES_ENUM } from "../constants/enums";
+import getEnrollUploadUrls from "@/services/courses/get_enroll_upload_urls.courses.service";
+import putObjectService from "@/services/putObjectService";
+import sendEnrollment from "@/services/courses/send_enrollment.courses.service";
+
+const INITIAL_FORM_STATE = Object.freeze({
+  fullName: "Test",
+  email: "test@gmail.com",
+  phone: "9123465569",
+  dob: "2004-04-29",
+  gender: "Male",
+  district: "Motihari",
+  state: "Bihar",
+  pin: "845401",
+  course: COURSES_ENUM.FRONTEND_DEVELOPMENT,
+  mode: "Online",
+  batch: "Evening",
+  qualification: "B.Tech",
+  college: "IIITBH",
+  message: "Message",
+  files: {
+    profileImage: "",
+    resume: "",
+  },
+  agree: false,
+});
 
 const Enroll = () => {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    dob: "",
-    gender: "",
-    district: "",
-    state: "",
-    pin: "",
-    course: "",
-    mode: "",
-    batch: "",
-    qualification: "",
-    college: "",
-    message: "",
-    profileImage: null,
-    resume: null,
-    agree: false,
-  });
+  const [formData, setFormData] = useState(INITIAL_FORM_STATE);
+  const [files, setFiles] = useState(Object.keys(INITIAL_FORM_STATE.files).reduce((acc, key) => {
+    acc[key] = null
+    return acc
+  }, {}));
+
+  const [loading, setLoading] = useState(false);
+
+  const fileRefsObject = Object.keys(formData.files).reduce((acc, key) => {
+    acc[key] = useRef(null);
+    return acc;
+  }, {})
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
-  
-    setFormData({
-      ...formData,
-      [name]:
-        type === "checkbox"
-          ? checked
-          : type === "file"
-          ? files[0]
-          : value,
-    });
+    if (Object.keys(INITIAL_FORM_STATE.files).includes(name)) {
+      setFiles((prev) => ({
+        ...prev,
+        [name]: files[0] || null,
+      }));
+    }
+    else if (type === "checkbox") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: checked,
+      }));
+    }
+    else setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    try {
+      setLoading(true);
 
-    console.log(formData);
+      // --- Step 1: Get presigned upload URLs for all files at once ---
+      const fileArray = Object.keys(files).map((fileKey) => ({
+        inputName: fileKey,
+        filename: files[fileKey].name,
+        filetype: files[fileKey].type,
+      }))
+      const uploadUrlObject = await getEnrollUploadUrls(fileArray);
 
-    alert("Enrollment Submitted Successfully!");
+      // upload files
+      const uploadStatus = await Promise.allSettled(
+        Object.keys(uploadUrlObject).map((key) => putObjectService(uploadUrlObject[key].uploadUrl, files[key], files[key].type))
+      )
 
-    setFormData({
-      fullName: "",
-      email: "",
-      phone: "",
-      dob: "",
-      gender: "",
-      district: "",
-      state: "",
-      pin: "",
-      course: "",
-      mode: "",
-      batch: "",
-      qualification: "",
-      college: "",
-      message: "",
-      agree: false,
-    });
+      let failedFiles = 0;
+
+      for (let i = 0; i < uploadStatus.length; i++) {
+        if (uploadStatus[i].status === "rejected") {
+          failedFiles++;
+          toast.error(`Failed to upload file`)
+        }
+      }
+
+      if (failedFiles > 0) return;
+
+      setFormData((prev) => ({
+        ...prev,
+        files: Object.fromEntries(
+          Object.entries(uploadUrlObject).map(([key, value]) => [key, value.fileKey])
+        ),
+      }));
+
+
+      // --- Step 4: Submit form data + fileKeys to backend ---
+      await sendEnrollment(formData);
+
+      // --- Success ---
+      toast.success("Enrollment submitted successfully!");
+      // setFormData({ ...INITIAL_FORM_STATE });
+      // if (fileRefsObject.profileImage.current) fileRefsObject.profileImage.current.value = "";
+      // if (fileRefsObject.resume.current) fileRefsObject.resume.current.value = "";
+    } catch (error) {
+      console.error(error.message || "Something went wrong");
+      toast.error(error.message || "Failed to submit enrollment");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -125,29 +177,30 @@ const Enroll = () => {
               required
               className="border rounded-xl px-4 py-3"
             />
-          <div className="relative">
-            <input
-              type="date"
-              name="dob"
-              value={formData.dob}
-              onChange={handleChange}
-              required
-              className="w-full h-14 border border-gray-300 rounded-xl px-4 bg-white
-                        text-gray-700 focus:outline-none focus:ring-2
-                        focus:ring-orange-500"
-            />
 
-            {!formData.dob && (
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                Select Date of Birth
-              </span>
-            )}
-          </div>
+            <div className="relative">
+              <input
+                type="date"
+                name="dob"
+                value={formData.dob}
+                onChange={handleChange}
+                required
+                className="w-full h-14 border border-gray-300 rounded-xl px-4 bg-white
+                          text-gray-700 focus:outline-none focus:ring-2
+                          focus:ring-orange-500"
+              />
+              {!formData.dob && (
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                  Select Date of Birth
+                </span>
+              )}
+            </div>
 
             <select
               name="gender"
               value={formData.gender}
               onChange={handleChange}
+              required
               className="border rounded-xl px-4 py-3"
             >
               <option value="">Select Gender</option>
@@ -160,6 +213,7 @@ const Enroll = () => {
               name="district"
               placeholder="District / City"
               value={formData.district}
+              required
               onChange={handleChange}
               className="border rounded-xl px-4 py-3"
             />
@@ -169,6 +223,7 @@ const Enroll = () => {
               name="state"
               placeholder="State"
               value={formData.state}
+              required
               onChange={handleChange}
               className="border rounded-xl px-4 py-3"
             />
@@ -178,19 +233,11 @@ const Enroll = () => {
               name="pin"
               placeholder="PIN Code"
               value={formData.pin}
+              required
               onChange={handleChange}
               maxLength={6}
               className="border rounded-xl px-4 py-3"
             />
-
-            {/* <input
-              type="text"
-              name="district"
-              placeholder="District"
-              value={formData.district}
-              onChange={handleChange}
-              className="border rounded-xl px-4 py-3"
-            /> */}
 
           </div>
 
@@ -208,17 +255,16 @@ const Enroll = () => {
               className="border rounded-xl px-4 py-3"
             >
               <option value="">Select Course</option>
-              <option>Frontend Development</option>
-              <option>Backend Development</option>
-              <option>Full Stack Development</option>
-              <option>Digital Marketing</option>
-              <option>HR Management</option>
+              {Object.values(COURSES_ENUM).map((course) => (
+                <option key={course}>{course}</option>
+              ))}
             </select>
 
             <select
               name="mode"
               value={formData.mode}
               onChange={handleChange}
+              required
               className="border rounded-xl px-4 py-3"
             >
               <option value="">Learning Mode</option>
@@ -231,6 +277,7 @@ const Enroll = () => {
               name="batch"
               value={formData.batch}
               onChange={handleChange}
+              required
               className="border rounded-xl px-4 py-3"
             >
               <option value="">Preferred Batch</option>
@@ -252,6 +299,7 @@ const Enroll = () => {
               type="text"
               name="qualification"
               placeholder="Highest Qualification"
+              required
               value={formData.qualification}
               onChange={handleChange}
               className="border rounded-xl px-4 py-3"
@@ -261,6 +309,7 @@ const Enroll = () => {
               type="text"
               name="college"
               placeholder="College / University"
+              required
               value={formData.college}
               onChange={handleChange}
               className="border rounded-xl px-4 py-3"
@@ -274,10 +323,61 @@ const Enroll = () => {
               rows="5"
               name="message"
               placeholder="Additional Message"
+              required
               value={formData.message}
               onChange={handleChange}
               className="w-full border rounded-xl px-4 py-3"
             />
+
+          </div>
+
+          <h2 className="text-2xl font-bold mt-10 mb-6">
+            Upload Documents
+          </h2>
+
+          <div className="grid md:grid-cols-2 gap-6">
+
+            {/* Profile Image */}
+            <div>
+              <label className="block font-semibold mb-2">
+                Profile Image
+              </label>
+              <input
+                ref={fileRefsObject.profileImage}
+                type="file"
+                name="profileImage"
+                accept="image/*"
+                required
+                onChange={handleChange}
+                className="w-full border rounded-xl px-4 py-3 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-2 file:rounded-lg file:cursor-pointer"
+              />
+              {formData.profileImage && (
+                <p className="text-sm text-green-600 mt-2">
+                  Selected: {formData.profileImage.name}
+                </p>
+              )}
+            </div>
+
+            {/* Resume */}
+            <div>
+              <label className="block font-semibold mb-2">
+                Upload Resume
+              </label>
+              <input
+                ref={fileRefsObject.resume}
+                type="file"
+                name="resume"
+                required
+                accept=".pdf,.doc,.docx"
+                onChange={handleChange}
+                className="w-full border rounded-xl px-4 py-3 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-2 file:rounded-lg file:cursor-pointer"
+              />
+              {formData.resume && (
+                <p className="text-sm text-green-600 mt-2">
+                  Selected: {formData.resume.name}
+                </p>
+              )}
+            </div>
 
           </div>
 
@@ -292,68 +392,25 @@ const Enroll = () => {
             />
 
             <span className="text-gray-600">
-              I agree to the Terms & Conditions and Privacy Policy.
+              I agree to the{" "}
+              <Link to="/terms-of-use" className="text-orange-500 underline">Terms &amp; Conditions</Link>
+              {" "}and{" "}
+              <Link to="/privacy-policy" className="text-orange-500 underline">Privacy Policy</Link>.
             </span>
 
           </div>
 
-          <h2 className="text-2xl font-bold mt-10 mb-6">
-  Upload Documents
-</h2>
-
-<div className="grid md:grid-cols-2 gap-6">
-
-  {/* Profile Image */}
-
-  <div>
-    <label className="block font-semibold mb-2">
-      Profile Image
-    </label>
-
-    <input
-      type="file"
-      name="profileImage"
-      accept="image/*"
-      onChange={handleChange}
-      className="w-full border rounded-xl px-4 py-3 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-2 file:rounded-lg file:cursor-pointer"
-    />
-
-    {formData.profileImage && (
-      <p className="text-sm text-green-600 mt-2">
-        Selected: {formData.profileImage.name}
-      </p>
-    )}
-  </div>
-
-  {/* Resume */}
-
-  <div>
-    <label className="block font-semibold mb-2">
-      Upload Resume
-    </label>
-
-    <input
-      type="file"
-      name="resume"
-      accept=".pdf,.doc,.docx"
-      onChange={handleChange}
-      className="w-full border rounded-xl px-4 py-3 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-2 file:rounded-lg file:cursor-pointer"
-    />
-
-    {formData.resume && (
-      <p className="text-sm text-green-600 mt-2">
-        Selected: {formData.resume.name}
-      </p>
-    )}
-  </div>
-
-</div>
-
           <button
             type="submit"
-            className="mt-8 w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl text-lg font-semibold transition"
+            disabled={loading}
+            className="mt-8 w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white py-4 rounded-xl text-lg font-semibold flex items-center justify-center gap-3 transition"
           >
-            Enroll Now
+            {loading ? "Submitting..." : "Enroll Now"}
+            {loading ? (
+              <FaSpinner className="animate-spin" />
+            ) : (
+              <FaPaperPlane />
+            )}
           </button>
 
         </form>
