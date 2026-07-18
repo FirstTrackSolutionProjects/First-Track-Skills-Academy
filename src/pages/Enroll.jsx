@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import { FaPaperPlane, FaSpinner } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { COURSES_ENUM } from "../constants/enums";
+import getEnrollUploadUrls from "@/services/courses/get_enroll_upload_urls.courses.service";
+import putObjectService from "@/services/putObjectService";
+import sendEnrollment from "@/services/courses/send_enrollment.courses.service";
 
 const INITIAL_FORM_STATE = Object.freeze({
   fullName: "Test",
@@ -65,18 +68,40 @@ const Enroll = () => {
     try {
       setLoading(true);
 
-      // --- Step 1: Collect files that need upload URLs ---
-      
+      // --- Step 1: Get presigned upload URLs for all files at once ---
+      const fileArray = Object.keys(files).map((fileKey) => ({
+        inputName: fileKey,
+        filename: files[fileKey].name,
+        filetype: files[fileKey].type,
+      }))
+      const uploadUrlObject = await getEnrollUploadUrls(fileArray);
 
-      // --- Step 2: Get presigned upload URLs for all files at once ---
-      
+      // upload files
+      const uploadStatus = await Promise.allSettled(
+        Object.keys(uploadUrlObject).map((key) => putObjectService(uploadUrlObject[key].uploadUrl, files[key], files[key].type))
+      )
 
-        // Build fileData with only keys (no File objects)
-       
+      let failedFiles = 0;
+
+      for (let i = 0; i < uploadStatus.length; i++) {
+        if (uploadStatus[i].status === "rejected") {
+          failedFiles++;
+          toast.error(`Failed to upload file`)
+        }
+      }
+
+      if (failedFiles > 0) return;
+
+      setFormData((prev) => ({
+        ...prev,
+        files: Object.fromEntries(
+          Object.entries(uploadUrlObject).map(([key, value]) => [key, value.fileKey])
+        ),
+      }));
+
 
       // --- Step 4: Submit form data + fileKeys to backend ---
-      // const { profileImage, resume, agree, ...textFields } = formData;
-      // await sendEnrollment({ ...textFields, fileData });
+      await sendEnrollment(formData);
 
       // --- Success ---
       toast.success("Enrollment submitted successfully!");
