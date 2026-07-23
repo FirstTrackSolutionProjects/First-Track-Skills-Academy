@@ -230,7 +230,7 @@ const MarketingCourse = () => {
 
               <div className="flex justify-between border-b border-white/20 pb-3">
                 <span>Projects</span>
-                <strong>6+ Live Projects</strong>
+                <strong>2 Live Projects</strong>
               </div>
 
               <div className="flex justify-between border-b border-white/20 pb-3">
