@@ -87,7 +87,7 @@ const FrontendCourse = () => {
               <div className="bg-white rounded-2xl p-6 shadow">
 
                 <h2 className="text-3xl font-bold text-orange-500">
-                  8+
+                  2
                 </h2>
 
                 <p className="text-gray-500 mt-2">
@@ -338,7 +338,7 @@ const FrontendCourse = () => {
 
               <div className="flex justify-between border-b border-white/20 pb-3">
                 <span>Projects</span>
-                <strong>8+</strong>
+                <strong>2</strong>
               </div>
 
               <div className="flex justify-between border-b border-white/20 pb-3">
