@@ -1,4 +1,4 @@
-import React, { useEffect} from "react";
+import { useEffect} from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
@@ -19,10 +19,19 @@ import TermsOfUse from "./pages/TermsOfUse";
 import RefundCancel from "./pages/RefundCancel";
 import FAQ from "./pages/FAQ";
 import Enroll from "./pages/Enroll";
+import Login from "./pages/Login";
+import CollegeOnboarding from "./pages/CollegeOnboarding";
+import AdminOnboarding from "./pages/AdminOnboarding";
+import PartnerJoin from "./pages/PartnerJoin";
+import AdminApprovals from "./pages/AdminApprovals";
+import CollegeDashboard from "./pages/CollegeDashboard";
+import RoleDashboard from "./pages/RoleDashboard";
+import PartnerEnroll from "./pages/PartnerEnroll";
 import { ToastContainer } from 'react-toastify';
 
 function App() {
   const { pathname} = useLocation();
+  const isDashboardRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/college-dashboard") || pathname.startsWith("/admin/approvals");
 
   useEffect(() => {
     // Scroll to the top of the page when the route changes
@@ -36,7 +45,7 @@ function App() {
   return (
     <>
       <ToastContainer />
-      <Navbar />
+      {!isDashboardRoute && <Navbar />}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
@@ -53,9 +62,17 @@ function App() {
         <Route path="/career" element={<Career />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/enroll" element={<Enroll />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/college-onboarding" element={<CollegeOnboarding />} />
+        <Route path="/admin-onboarding" element={<AdminOnboarding />} />
+        <Route path="/admin/approvals" element={<AdminApprovals />} />
+        <Route path="/college-dashboard" element={<CollegeDashboard />} />
+        <Route path="/dashboard" element={<RoleDashboard />} />
+        <Route path="/join/:partnerCode/enroll" element={<PartnerEnroll />} />
+        <Route path="/join/:partnerCode" element={<PartnerJoin />} />
       </Routes>
 
-      <Footer />
+      {!isDashboardRoute && <Footer />}
     </>
   );
 }

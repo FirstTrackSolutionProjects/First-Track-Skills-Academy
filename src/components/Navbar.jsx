@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { HiMenuAlt3, HiX } from "react-icons/hi";
 import { FaArrowRight } from "react-icons/fa";
+import useStore, { storeActions } from "../store/useStore";
 
 const Navbar = () => {
+  const { auth } = useStore();
   const [open, setOpen] = useState(false);
   const [scroll, setScroll] = useState(false);
+  const role = auth?.user?.role;
 
   useEffect(() => {
     const handleScroll = () => setScroll(window.scrollY > 40);
@@ -19,14 +22,48 @@ const Navbar = () => {
     document.body.style.overflow = open ? "hidden" : "auto";
   }, [open]);
 
-  const menu = [
+  const guestMenu = [
     { name: "Home", path: "/" },
     { name: "Courses", path: "/courses" },
     { name: "About", path: "/about" },
     { name: "Career", path: "/career" },
     { name: "Program Details", path: "/program-details" },
     { name: "Contact", path: "/contact" },
+    { name: "College Partner", path: "/college-onboarding" },
+    { name: "Login", path: "/login" },
   ];
+
+  const roleMenu = {
+    STUDENT: [
+      { name: "Home", path: "/" },
+      { name: "Courses", path: "/courses" },
+      { name: "Dashboard", path: "/dashboard" },
+      { name: "Contact", path: "/contact" },
+    ],
+    MENTOR: [
+      { name: "Home", path: "/" },
+      { name: "Courses", path: "/courses" },
+      { name: "Dashboard", path: "/dashboard" },
+      { name: "Contact", path: "/contact" },
+    ],
+    COLLEGE: [
+      { name: "Home", path: "/" },
+      { name: "Dashboard", path: "/dashboard" },
+      { name: "Contact", path: "/contact" },
+    ],
+    ADMIN: [
+      { name: "Home", path: "/" },
+      { name: "Dashboard", path: "/dashboard" },
+      { name: "Contact", path: "/contact" },
+    ],
+    SUPERADMIN: [
+      { name: "Home", path: "/" },
+      { name: "Dashboard", path: "/dashboard" },
+      { name: "Contact", path: "/contact" },
+    ],
+  };
+
+  const menu = auth ? roleMenu[role] || roleMenu.STUDENT : guestMenu;
 
   return (
     <>
@@ -109,13 +146,23 @@ const Navbar = () => {
           </nav>
 
           {/* Desktop CTA */}
-          <NavLink
-            to="/contact"
-            className="hidden lg:flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full font-semibold transition hover:scale-105"
-          >
-            Enroll Now
-            <FaArrowRight size={14} />
-          </NavLink>
+          {auth ? (
+            <button
+              onClick={storeActions.clearAuth}
+              className="hidden lg:flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full font-semibold transition hover:scale-105"
+            >
+              Logout
+              <FaArrowRight size={14} />
+            </button>
+          ) : (
+            <NavLink
+              to="/enroll"
+              className="hidden lg:flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full font-semibold transition hover:scale-105"
+            >
+              Enroll Now
+              <FaArrowRight size={14} />
+            </NavLink>
+          )}
 
           {/* Mobile Menu Button */}
           <button
@@ -207,14 +254,27 @@ const Navbar = () => {
           {/* Bottom */}
           <div className="absolute bottom-8 left-6 right-6">
 
-            <NavLink
-              to="/enroll"
-              onClick={() => setOpen(false)}
-              className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-2xl font-semibold transition"
-            >
-              Enroll Now
-              <FaArrowRight />
-            </NavLink>
+            {auth ? (
+              <button
+                onClick={() => {
+                  storeActions.clearAuth();
+                  setOpen(false);
+                }}
+                className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-2xl font-semibold transition"
+              >
+                Logout
+                <FaArrowRight />
+              </button>
+            ) : (
+              <NavLink
+                to="/enroll"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-2xl font-semibold transition"
+              >
+                Enroll Now
+                <FaArrowRight />
+              </NavLink>
+            )}
 
           </div>
 
