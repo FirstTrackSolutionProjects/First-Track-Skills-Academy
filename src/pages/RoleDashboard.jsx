@@ -12,7 +12,7 @@ import {
   FaUserGraduate,
   FaUserTie,
 } from "react-icons/fa";
-import { getCourses } from "../services/api";
+import { getCourses } from "../service/courseService";
 import useStore, { storeActions } from "../store/useStore";
 
 const roleCopy = {

@@ -5,9 +5,15 @@ import { FaPaperPlane, FaSignInAlt, FaSpinner } from "react-icons/fa";
 import AuthFormShell from "../components/forms/AuthFormShell";
 import FormInput from "../components/forms/FormInput";
 import FormSelect from "../components/forms/FormSelect";
-import { createStudent, getCourses, login, verifyPartner } from "../services/api";
+import { login } from "../service/authService";
+import { verifyPartner } from "../service/collegeService";
+import { getCourses } from "../service/courseService";
+import { createStudent } from "../service/userService";
 import useStore from "../store/useStore";
 import { storeActions } from "../store/useStore";
+import { loginSchema } from "../validator/loginSchema";
+import { userRegistrationSchema } from "../validator/userSchema";
+import { mapZodIssuesToFieldErrors } from "../validator/validation";
 
 const INITIAL_FORM = {
   first_name: "",
@@ -25,6 +31,8 @@ const PartnerJoin = () => {
   const { auth } = useStore();
   const [form, setForm] = useState(INITIAL_FORM);
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [loginFieldErrors, setLoginFieldErrors] = useState({});
   const [partner, setPartner] = useState(null);
   const [courses, setCourses] = useState([]);
   const [courseBatchTiming, setCourseBatchTiming] = useState({});
@@ -64,11 +72,13 @@ const PartnerJoin = () => {
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleLoginChange = (event) => {
     const { name, value } = event.target;
     setLoginForm((prev) => ({ ...prev, [name]: value }));
+    setLoginFieldErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const saveAuthAndLoadCourses = async (authData) => {
@@ -82,24 +92,44 @@ const PartnerJoin = () => {
 
   const handleAccountSubmit = async (event) => {
     event.preventDefault();
+
+    const accountPayload = {
+      first_name: form.first_name,
+      middle_name: form.middle_name,
+      last_name: form.last_name,
+      email: form.email,
+      password: form.password,
+      confirm_password: form.confirm_password,
+      role: "STUDENT",
+    };
+
+    const parsed = userRegistrationSchema.safeParse(accountPayload);
+
+    if (!parsed.success) {
+      setFieldErrors(mapZodIssuesToFieldErrors(parsed.error));
+      toast.error("Please fix the highlighted errors");
+      return;
+    }
+
+    const loginPayload = loginSchema.safeParse({
+      email: parsed.data.email,
+      password: parsed.data.password,
+    });
+
+    if (!loginPayload.success) {
+      setFieldErrors(mapZodIssuesToFieldErrors(loginPayload.error));
+      toast.error("Please fix the highlighted errors");
+      return;
+    }
+
     try {
       setLoading(true);
-      await createStudent({
-        first_name: form.first_name,
-        middle_name: form.middle_name,
-        last_name: form.last_name,
-        email: form.email,
-        password: form.password,
-        confirm_password: form.confirm_password,
-        role: "STUDENT",
-      });
+      await createStudent(parsed.data);
 
-      const authData = await login({
-        email: form.email,
-        password: form.password,
-      });
+      const authData = await login(loginPayload.data);
 
       await saveAuthAndLoadCourses(authData);
+      setFieldErrors({});
       toast.success("Student account created");
     } catch (error) {
       toast.error(error.message);
@@ -110,14 +140,24 @@ const PartnerJoin = () => {
 
   const handleLoginSubmit = async (event) => {
     event.preventDefault();
+
+    const parsed = loginSchema.safeParse(loginForm);
+
+    if (!parsed.success) {
+      setLoginFieldErrors(mapZodIssuesToFieldErrors(parsed.error));
+      toast.error("Please fix the highlighted errors");
+      return;
+    }
+
     try {
       setLoading(true);
-      const authData = await login(loginForm);
+      const authData = await login(parsed.data);
       if (authData.user.role !== "STUDENT") {
         toast.error("Please login with a student account to join this college cohort.");
         return;
       }
       await saveAuthAndLoadCourses(authData);
+      setLoginFieldErrors({});
       toast.success("Logged in successfully");
     } catch (error) {
       toast.error(error.message);
@@ -162,12 +202,12 @@ const PartnerJoin = () => {
         mode === "signup" ? (
       <form onSubmit={handleAccountSubmit}>
         <div className="grid md:grid-cols-3 gap-6">
-          <FormInput label="First Name" name="first_name" value={form.first_name} onChange={handleChange} required />
-          <FormInput label="Middle Name" name="middle_name" value={form.middle_name} onChange={handleChange} />
-          <FormInput label="Last Name" name="last_name" value={form.last_name} onChange={handleChange} />
-          <FormInput label="Email" type="email" name="email" value={form.email} onChange={handleChange} required />
-          <FormInput label="Password" type="password" name="password" value={form.password} onChange={handleChange} required />
-          <FormInput label="Confirm Password" type="password" name="confirm_password" value={form.confirm_password} onChange={handleChange} required />
+          <FieldErrorInput label="First Name" name="first_name" value={form.first_name} onChange={handleChange} error={fieldErrors.first_name} required />
+          <FieldErrorInput label="Middle Name" name="middle_name" value={form.middle_name} onChange={handleChange} error={fieldErrors.middle_name} />
+          <FieldErrorInput label="Last Name" name="last_name" value={form.last_name} onChange={handleChange} error={fieldErrors.last_name} />
+          <FieldErrorInput label="Email" type="email" name="email" value={form.email} onChange={handleChange} error={fieldErrors.email} required />
+          <FieldErrorInput label="Password" type="password" name="password" value={form.password} onChange={handleChange} error={fieldErrors.password} required />
+          <FieldErrorInput label="Confirm Password" type="password" name="confirm_password" value={form.confirm_password} onChange={handleChange} error={fieldErrors.confirm_password} required />
         </div>
 
         <button
@@ -195,16 +235,22 @@ const PartnerJoin = () => {
               name="email"
               value={loginForm.email}
               onChange={handleLoginChange}
+              className={loginFieldErrors.email ? "border-red-400 focus:ring-red-300" : ""}
+              aria-invalid={Boolean(loginFieldErrors.email)}
               required
             />
+            {loginFieldErrors.email && <p className="-mt-4 text-sm font-medium text-red-500">{loginFieldErrors.email}</p>}
             <FormInput
               label="Password"
               type="password"
               name="password"
               value={loginForm.password}
               onChange={handleLoginChange}
+              className={loginFieldErrors.password ? "border-red-400 focus:ring-red-300" : ""}
+              aria-invalid={Boolean(loginFieldErrors.password)}
               required
             />
+            {loginFieldErrors.password && <p className="-mt-4 text-sm font-medium text-red-500">{loginFieldErrors.password}</p>}
             <button
               type="submit"
               disabled={loading}
@@ -275,5 +321,16 @@ const PartnerJoin = () => {
     </AuthFormShell>
   );
 };
+
+const FieldErrorInput = ({ error, ...props }) => (
+  <div>
+    <FormInput
+      {...props}
+      className={error ? "border-red-400 focus:ring-red-300" : ""}
+      aria-invalid={Boolean(error)}
+    />
+    {error && <p className="mt-1.5 text-sm font-medium text-red-500">{error}</p>}
+  </div>
+);
 
 export default PartnerJoin;

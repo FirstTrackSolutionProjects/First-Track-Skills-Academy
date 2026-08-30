@@ -15,7 +15,7 @@ import {
   FaUserGraduate,
 } from "react-icons/fa";
 import useStore, { storeActions } from "../store/useStore";
-import { getCollegeDashboard } from "../services/api";
+import { getCollegeDashboard } from "../service/collegeService";
 
 const menuSections = [
   {

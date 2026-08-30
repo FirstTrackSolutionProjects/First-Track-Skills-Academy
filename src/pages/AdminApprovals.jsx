@@ -20,9 +20,11 @@ import {
   getColleges,
   getSuperadminColleges,
   getSuperadminStudents,
-  getUsers,
   updateCollegeStatus,
-} from "../services/api";
+} from "../service/collegeService";
+import { getUsers } from "../service/userService";
+import { collegeProfileIdParamSchema, updateCollegeProfileStatusSchema } from "../validator/collegeProfileSchema";
+import { mapZodIssuesToFieldErrors } from "../validator/validation";
 
 const statusColors = {
   PENDING: "bg-amber-50 text-amber-700 border-amber-100",
@@ -176,9 +178,21 @@ const AdminApprovals = () => {
   }, [superColleges]);
 
   const handleStatus = async (collegeId, status) => {
+    const parsedParams = collegeProfileIdParamSchema.safeParse({ college_id: collegeId });
+    const parsedBody = updateCollegeProfileStatusSchema.safeParse({ status });
+
+    if (!parsedParams.success || !parsedBody.success) {
+      const errors = {
+        ...(!parsedParams.success ? mapZodIssuesToFieldErrors(parsedParams.error) : {}),
+        ...(!parsedBody.success ? mapZodIssuesToFieldErrors(parsedBody.error) : {}),
+      };
+      toast.error(Object.values(errors)[0] || "Please fix the highlighted errors");
+      return;
+    }
+
     try {
       setUpdatingId(collegeId);
-      await updateCollegeStatus(collegeId, status, auth.token);
+      await updateCollegeStatus(parsedParams.data.college_id, parsedBody.data.status, auth.token);
       toast.success(`College ${status.toLowerCase()}`);
       await loadBaseData(false);
       if (selectedCollege?.id === collegeId) {

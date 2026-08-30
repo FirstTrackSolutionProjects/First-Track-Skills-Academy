@@ -16,11 +16,13 @@ export const storeActions = {
   setAuth(auth) {
     state = { ...state, auth };
     localStorage.setItem("skillsacademy_auth", JSON.stringify(auth));
+    localStorage.setItem("accessToken", auth.token);
     emit();
   },
   clearAuth() {
     state = { ...state, auth: null };
     localStorage.removeItem("skillsacademy_auth");
+    localStorage.removeItem("accessToken");
     emit();
   },
 };

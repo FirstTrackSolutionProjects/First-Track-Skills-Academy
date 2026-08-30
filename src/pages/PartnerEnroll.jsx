@@ -4,8 +4,12 @@ import { toast } from "react-toastify";
 import { FaArrowLeft, FaCheck, FaPaperPlane, FaSpinner } from "react-icons/fa";
 import AuthFormShell from "../components/forms/AuthFormShell";
 import FormSelect from "../components/forms/FormSelect";
-import { enrollCohort, getCourses, verifyPartner } from "../services/api";
+import { getCourses } from "../service/courseService";
+import { enrollCohort } from "../service/enrollmentService";
+import { verifyPartner } from "../service/collegeService";
 import useStore from "../store/useStore";
+import { enrollCohortCourseSchema } from "../validator/enrollmentSchema";
+import { mapZodIssuesToFieldErrors } from "../validator/validation";
 
 const PartnerEnroll = () => {
   const { partnerCode } = useParams();
@@ -17,6 +21,7 @@ const PartnerEnroll = () => {
   const [checking, setChecking] = useState(true);
   const [loading, setLoading] = useState(false);
   const [enrolled, setEnrolled] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const courseId = Number(searchParams.get("courseId"));
   const batchTiming = searchParams.get("batchTiming") || "EVENING";
@@ -54,17 +59,25 @@ const PartnerEnroll = () => {
   };
 
   const handleEnroll = async () => {
+    const payload = {
+      course_id: courseId,
+      partner_code: partnerCode,
+      batch_timing: batchTiming,
+    };
+
+    const parsed = enrollCohortCourseSchema.safeParse(payload);
+
+    if (!parsed.success) {
+      setFieldErrors(mapZodIssuesToFieldErrors(parsed.error));
+      toast.error("Please fix the highlighted errors");
+      return;
+    }
+
     try {
       setLoading(true);
-      await enrollCohort(
-        {
-          course_id: courseId,
-          partner_code: partnerCode,
-          batch_timing: batchTiming,
-        },
-        auth.token
-      );
+      await enrollCohort(parsed.data, auth.token);
       setEnrolled(true);
+      setFieldErrors({});
       toast.success("Course enrolled successfully");
     } catch (error) {
       toast.error(error.message);
@@ -162,6 +175,9 @@ const PartnerEnroll = () => {
           <option value="EVENING">Evening</option>
           <option value="NIGHT">Night</option>
         </FormSelect>
+        {fieldErrors.batch_timing && <p className="mt-1.5 text-sm font-medium text-red-500">{fieldErrors.batch_timing}</p>}
+        {fieldErrors.course_id && <p className="mt-1.5 text-sm font-medium text-red-500">{fieldErrors.course_id}</p>}
+        {fieldErrors.partner_code && <p className="mt-1.5 text-sm font-medium text-red-500">{fieldErrors.partner_code}</p>}
       </div>
 
       <button
