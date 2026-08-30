@@ -202,12 +202,12 @@ const Navbar = () => {
 
         {/* Panel */}
         <div
-          className={`absolute right-0 top-0 h-full w-[90%] max-w-sm bg-white transition-transform duration-300 ${
+          className={`absolute right-0 top-0 flex h-full w-[90%] max-w-sm flex-col bg-white transition-transform duration-300 ${
             open ? "translate-x-0" : "translate-x-full"
           }`}
         >
           {/* Top */}
-          <div className="flex justify-between items-center p-6 border-b">
+          <div className="flex shrink-0 justify-between items-center p-6 border-b">
 
             <div className="flex items-center gap-3">
 
@@ -239,7 +239,7 @@ const Navbar = () => {
           </div>
 
           {/* Links */}
-          <div className="p-6 flex max-h-[calc(100vh-270px)] flex-col gap-3 overflow-y-auto">
+          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-6">
 
             {menu.filter((item) => auth || !["Login", "College Account"].includes(item.name)).map((item) => (
               <NavLink
@@ -261,7 +261,7 @@ const Navbar = () => {
           </div>
 
           {/* Bottom */}
-          <div className="absolute bottom-8 left-6 right-6">
+          <div className="shrink-0 border-t border-orange-100 bg-white p-6">
 
             {auth ? (
               <button
