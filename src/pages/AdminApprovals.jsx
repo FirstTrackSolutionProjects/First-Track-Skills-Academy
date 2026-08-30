@@ -58,10 +58,16 @@ const menuSections = (role) =>
           icon: <FaBuilding />,
           items: [
             { name: "College Names", icon: <FaBuilding /> },
-            { name: "College Verification", icon: <FaClipboardList /> },
-            { name: "Approved", icon: <FaCheck /> },
-            { name: "Rejected", icon: <FaTimes /> },
-            { name: "All Colleges", icon: <FaBuilding /> },
+            {
+              name: "College Verification",
+              icon: <FaClipboardList />,
+              items: [
+                { name: "Pending", icon: <FaClipboardList /> },
+                { name: "Approved", icon: <FaCheck /> },
+                { name: "Rejected", icon: <FaTimes /> },
+                { name: "All Colleges", icon: <FaBuilding /> },
+              ],
+            },
           ],
         },
         { title: "Students", icon: <FaUserGraduate />, items: [{ name: "Students", icon: <FaUsers /> }] },
@@ -97,6 +103,7 @@ const AdminApprovals = () => {
     Overview: true,
     Admin: true,
     Colleges: true,
+    "College Verification": true,
     Students: true,
     College: true,
     Account: true,
@@ -243,6 +250,7 @@ const AdminApprovals = () => {
               activeMenu={activeMenu}
               isOpen={openSections[section.title]}
               onToggle={(title) => setOpenSections((prev) => ({ ...prev, [title]: !prev[title] }))}
+              openSections={openSections}
               onMenuClick={handleMenuClick}
             />
           ))}
@@ -578,7 +586,7 @@ const StudentsPanel = ({ colleges, courseOptions, filters, studentsPage, loading
   </Panel>
 );
 
-const SidebarSection = ({ section, activeMenu, isOpen, onToggle, onMenuClick }) => (
+const SidebarSection = ({ section, activeMenu, isOpen, onToggle, openSections, onMenuClick }) => (
   <div>
     <button
       onClick={() => onToggle(section.title)}
@@ -589,18 +597,49 @@ const SidebarSection = ({ section, activeMenu, isOpen, onToggle, onMenuClick }) 
     </button>
     {isOpen && (
       <div className="mt-1 space-y-1">
-        {section.items.map((item) => (
-          <button
-            key={item.name}
-            onClick={() => onMenuClick(item.name)}
-            className={`flex h-11 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-semibold transition ${
-              activeMenu === item.name ? "bg-sky-100 text-blue-700" : "text-slate-800 hover:bg-slate-100"
-            }`}
-          >
-            <span className="w-5 text-base">{item.icon}</span>
-            {item.name}
-          </button>
-        ))}
+        {section.items.map((item) =>
+          item.items ? (
+            <div key={item.name}>
+              <button
+                onClick={() => onToggle(item.name)}
+                className="flex h-11 w-full items-center justify-between rounded-lg px-4 text-left text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
+              >
+                <span className="flex items-center gap-3">
+                  <span className="w-5 text-base">{item.icon}</span>
+                  {item.name}
+                </span>
+                <FaChevronDown className={`transition ${openSections[item.name] ? "rotate-180" : ""}`} />
+              </button>
+              {openSections[item.name] && (
+                <div className="ml-5 mt-1 space-y-1 border-l border-slate-200 pl-3">
+                  {item.items.map((child) => (
+                    <button
+                      key={child.name}
+                      onClick={() => onMenuClick(child.name)}
+                      className={`flex h-10 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-semibold transition ${
+                        activeMenu === child.name ? "bg-sky-100 text-blue-700" : "text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      <span className="w-5 text-base">{child.icon}</span>
+                      {child.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              key={item.name}
+              onClick={() => onMenuClick(item.name)}
+              className={`flex h-11 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-semibold transition ${
+                activeMenu === item.name ? "bg-sky-100 text-blue-700" : "text-slate-800 hover:bg-slate-100"
+              }`}
+            >
+              <span className="w-5 text-base">{item.icon}</span>
+              {item.name}
+            </button>
+          )
+        )}
       </div>
     )}
   </div>
