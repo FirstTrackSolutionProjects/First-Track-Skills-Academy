@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_APP_API_URL;
+const API_URL = import.meta.env.VITE_APP_BACKEND_URL;
 
 /**
  * Submits the enrollment form data (text fields + fileData keys).
