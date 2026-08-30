@@ -128,7 +128,7 @@ const RoleDashboard = () => {
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-950">
-      <aside className="fixed left-0 top-0 h-screen w-[245px] border-r border-slate-200 bg-white px-4 py-6">
+      <aside className="border-b border-slate-200 bg-white px-4 py-5 lg:fixed lg:left-0 lg:top-0 lg:h-screen lg:w-[245px] lg:border-b-0 lg:border-r lg:py-6">
         <h1 className="text-2xl font-bold text-blue-700">First Track</h1>
         <p className="mt-1 text-xs font-semibold text-slate-500">Skills Academy</p>
 
@@ -145,7 +145,7 @@ const RoleDashboard = () => {
           ))}
         </nav>
 
-        <div className="absolute bottom-6 left-4 right-4 border-t border-slate-200 pt-5">
+        <div className="mt-8 border-t border-slate-200 pt-5 lg:absolute lg:bottom-6 lg:left-4 lg:right-4 lg:mt-0">
           <button
             onClick={storeActions.clearAuth}
             className="flex w-full items-center gap-3 rounded-md px-4 py-3 text-base font-semibold text-red-600 hover:bg-red-50"
@@ -156,26 +156,26 @@ const RoleDashboard = () => {
         </div>
       </aside>
 
-      <section className="ml-[245px] min-h-screen">
-        <header className="sticky top-0 z-20 border-b border-slate-200 bg-white px-6 py-4 shadow-sm">
-          <div className="flex items-center justify-between gap-5">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-xl text-blue-700">
+      <section className="min-h-screen lg:ml-[245px]">
+        <header className="sticky top-0 z-20 border-b border-slate-200 bg-white px-4 py-4 shadow-sm sm:px-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
+            <div className="flex min-w-0 items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-xl text-blue-700">
                 {copy.icon}
               </div>
-              <div>
-                <p className="text-xs font-bold tracking-[0.28em] text-blue-700">{copy.label}</p>
-                <h2 className="text-2xl font-bold leading-tight">{activeMenu}</h2>
+              <div className="min-w-0">
+                <p className="text-xs font-bold tracking-[0.2em] text-blue-700 sm:tracking-[0.28em]">{copy.label}</p>
+                <h2 className="break-words text-2xl font-bold leading-tight">{activeMenu}</h2>
                 <p className="text-sm text-slate-500">{copy.subtitle}</p>
               </div>
             </div>
-            <span className="rounded-full border border-slate-200 px-5 py-2 text-sm font-bold text-slate-600">
+            <span className="w-fit rounded-full border border-slate-200 px-5 py-2 text-sm font-bold text-slate-600">
               {role}
             </span>
           </div>
         </header>
 
-        <main className="space-y-6 p-6">
+        <main className="space-y-6 p-4 sm:p-6">
           {loading ? (
             <div className="flex min-h-[360px] items-center justify-center gap-3 font-semibold text-blue-700">
               <FaSpinner className="animate-spin" />
@@ -241,13 +241,13 @@ const SidebarSection = ({ section, activeMenu, isOpen, onToggle, onMenuClick }) 
 
 const HeroPanel = ({ copy, user, metrics }) => (
   <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-    <div className="grid gap-6 xl:grid-cols-[1fr_480px] xl:items-center">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(280px,480px)] xl:items-center">
       <div>
         <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700">
           {copy.icon}
           {copy.label}
         </span>
-        <h1 className="mt-6 text-4xl font-bold">{copy.title}</h1>
+        <h1 className="mt-6 text-3xl font-bold sm:text-4xl">{copy.title}</h1>
         <p className="mt-4 text-lg text-slate-600">
           Welcome {user.first_name || user.name || "back"}. Your menu is limited to the role and permissions on your account.
         </p>
@@ -312,7 +312,7 @@ const InfoBox = ({ label, value }) => (
 );
 
 const Panel = ({ icon, title, children }) => (
-  <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+  <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
     <div className="mb-6 flex items-center gap-4">
       <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100 text-lg text-slate-700">
         {icon}

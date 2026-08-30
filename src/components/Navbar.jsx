@@ -28,8 +28,9 @@ const Navbar = () => {
     { name: "About", path: "/about" },
     { name: "Career", path: "/career" },
     { name: "Program Details", path: "/program-details" },
+    { name: "Enroll", path: "/enroll" },
     { name: "Contact", path: "/contact" },
-    { name: "College Partner", path: "/college-onboarding" },
+    { name: "College Account", path: "/college-onboarding" },
     { name: "Login", path: "/login" },
   ];
 
@@ -124,14 +125,14 @@ const Navbar = () => {
           </NavLink>
 
           {/* Desktop Menu */}
-          <nav className="hidden lg:flex items-center gap-2 bg-white/10 backdrop-blur-xl rounded-full border border-white/20 px-3 py-2">
+          <nav className="hidden lg:flex max-w-[760px] items-center gap-1 overflow-x-auto bg-white/10 backdrop-blur-xl rounded-full border border-white/20 px-3 py-2">
 
-            {menu.filter((item) => auth || item.name !== "Login").map((item) => (
+            {menu.filter((item) => auth || !["Login", "College Account"].includes(item.name)).map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `px-5 py-2 rounded-full font-medium transition ${
+                  `whitespace-nowrap px-4 py-2 rounded-full font-medium transition ${
                     isActive
                       ? "bg-orange-500 text-white"
                       : scroll
@@ -155,13 +156,21 @@ const Navbar = () => {
               <FaArrowRight size={14} />
             </button>
           ) : (
-            <NavLink
-              to="/enroll"
-              className="hidden lg:flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full font-semibold transition hover:scale-105"
-            >
-              Enroll Now
-              <FaArrowRight size={14} />
-            </NavLink>
+            <div className="hidden lg:flex items-center gap-3">
+              <NavLink
+                to="/college-onboarding"
+                className="flex items-center gap-2 rounded-full border border-orange-200 bg-white px-5 py-3 font-semibold text-orange-600 transition hover:bg-orange-50"
+              >
+                College Account
+              </NavLink>
+              <NavLink
+                to="/login"
+                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full font-semibold transition hover:scale-105"
+              >
+                Login
+                <FaArrowRight size={14} />
+              </NavLink>
+            </div>
           )}
 
           {/* Mobile Menu Button */}
@@ -230,9 +239,9 @@ const Navbar = () => {
           </div>
 
           {/* Links */}
-          <div className="p-6 flex flex-col gap-3">
+          <div className="p-6 flex max-h-[calc(100vh-270px)] flex-col gap-3 overflow-y-auto">
 
-            {menu.map((item) => (
+            {menu.filter((item) => auth || !["Login", "College Account"].includes(item.name)).map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
@@ -274,6 +283,13 @@ const Navbar = () => {
                 >
                   Login
                   <FaArrowRight />
+                </NavLink>
+                <NavLink
+                  to="/college-onboarding"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-center gap-2 rounded-2xl border border-orange-300 bg-white py-3.5 font-bold text-orange-600 shadow-sm transition hover:bg-orange-50"
+                >
+                  Create College Account
                 </NavLink>
                 <NavLink
                   to="/enroll"

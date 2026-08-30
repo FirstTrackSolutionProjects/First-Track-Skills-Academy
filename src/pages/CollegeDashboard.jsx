@@ -121,7 +121,7 @@ const CollegeDashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#f3f6fa] text-slate-950">
-      <aside className="fixed left-0 top-0 h-screen w-[245px] bg-white border-r border-slate-200 px-4 py-6">
+      <aside className="border-b border-slate-200 bg-white px-4 py-5 lg:fixed lg:left-0 lg:top-0 lg:h-screen lg:w-[245px] lg:border-b-0 lg:border-r lg:py-6">
         <h1 className="text-2xl font-bold text-[#26749d]">First Track</h1>
         <p className="mt-1 text-xs font-semibold text-slate-500">Skills Academy</p>
 
@@ -138,7 +138,7 @@ const CollegeDashboard = () => {
           ))}
         </nav>
 
-        <div className="absolute bottom-6 left-4 right-4 border-t pt-5">
+        <div className="mt-8 border-t pt-5 lg:absolute lg:bottom-6 lg:left-4 lg:right-4 lg:mt-0">
           <button
             onClick={storeActions.clearAuth}
             className="flex items-center gap-3 px-4 py-3 text-base font-semibold text-red-600"
@@ -149,27 +149,27 @@ const CollegeDashboard = () => {
         </div>
       </aside>
 
-      <div className="ml-[245px]">
-        <header className="sticky top-0 z-20 bg-white border-b border-slate-200 shadow-sm px-6 py-3">
-          <div className="flex items-center justify-between gap-5">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-blue-50 border border-blue-100 text-blue-700 flex items-center justify-center text-xl">
+      <div className="lg:ml-[245px]">
+        <header className="sticky top-0 z-20 bg-white border-b border-slate-200 shadow-sm px-4 py-4 sm:px-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
+            <div className="flex min-w-0 items-center gap-4">
+              <div className="h-12 w-12 shrink-0 rounded-xl bg-blue-50 border border-blue-100 text-blue-700 flex items-center justify-center text-xl">
                 <FaChartBar />
               </div>
-              <div>
-                <p className="text-blue-700 font-bold tracking-[0.28em] text-xs">COLLEGE PANEL</p>
-                <h2 className="text-2xl font-bold leading-tight">{activeMenu}</h2>
+              <div className="min-w-0">
+                <p className="text-blue-700 font-bold tracking-[0.2em] text-xs sm:tracking-[0.28em]">COLLEGE PANEL</p>
+                <h2 className="break-words text-2xl font-bold leading-tight">{activeMenu}</h2>
                 <p className="text-sm text-slate-500">Course and student activity for {profile.college_name}</p>
               </div>
             </div>
 
-            <div className="rounded-full border border-slate-200 px-5 py-2 text-sm font-bold text-slate-600">
+            <div className="w-fit rounded-full border border-slate-200 px-5 py-2 text-sm font-bold text-slate-600">
               {auth.user.role}
             </div>
           </div>
         </header>
 
-        <main className="p-6 space-y-6">
+        <main className="p-4 space-y-6 sm:p-6">
           {activeMenu === "Dashboard" && (
             <>
               <HeroPanel profile={profile} metrics={dashboard.metrics} />
@@ -201,14 +201,14 @@ const CollegeDashboard = () => {
 };
 
 const HeroPanel = ({ profile, metrics }) => (
-  <section className="bg-white border border-slate-200 rounded-lg shadow-sm p-6">
-    <div className="grid xl:grid-cols-[1fr_520px] gap-6 items-center">
+  <section className="bg-white border border-slate-200 rounded-lg shadow-sm p-4 sm:p-6">
+    <div className="grid xl:grid-cols-[minmax(0,1fr)_minmax(280px,520px)] gap-6 items-center">
       <div>
         <span className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 border border-blue-100 rounded-full px-4 py-2 text-sm font-bold">
           <FaChartBar />
           LIVE COLLEGE OPERATIONS
         </span>
-        <h1 className="text-4xl font-bold mt-6">{profile.college_name}</h1>
+        <h1 className="break-words text-3xl font-bold mt-6 sm:text-4xl">{profile.college_name}</h1>
         <p className="text-lg text-slate-600 mt-4">
           Monitor enrolled students, course movement, batch activity, and partner link performance.
         </p>
@@ -242,7 +242,7 @@ const MiniMetric = ({ label, value, tone }) => {
 
 const MetricSection = ({ dashboard }) => (
   <Panel icon={<FaFolderOpen />} title="Course And Student Metrics">
-    <div className="grid md:grid-cols-3 gap-5">
+    <div className="grid gap-5 md:grid-cols-3">
       <MetricCard label="TOTAL STUDENTS" value={dashboard.metrics.total_students} icon={<FaUsers />} tone="blue" />
       <MetricCard label="COURSES WITH STUDENTS" value={dashboard.metrics.total_courses} icon={<FaBookOpen />} tone="green" />
       <MetricCard label="ACTIVE BATCH TIMINGS" value={dashboard.metrics.active_batches} icon={<FaClock />} tone="amber" />
@@ -320,7 +320,7 @@ const CourseSummary = ({ courses, onOpenCourse }) => (
             <p className="text-xs font-bold tracking-wide text-blue-700">{course.category}</p>
             <h3 className="text-xl font-bold mt-2">{course.title}</h3>
             <p className="text-sm text-slate-500 mt-1">{course.duration_weeks} weeks</p>
-            <div className="mt-6 flex items-end justify-between">
+            <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-sm font-bold text-slate-500">ENROLLED STUDENTS</p>
                 <p className="text-4xl font-bold mt-2">{course.students_count}</p>
@@ -386,12 +386,12 @@ const InfoBox = ({ label, value }) => (
 );
 
 const Panel = ({ icon, title, children }) => (
-  <section className="bg-white border border-slate-200 rounded-lg shadow-sm p-6">
-    <div className="flex items-center gap-4 mb-6">
-      <div className="h-11 w-11 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-lg">
+  <section className="bg-white border border-slate-200 rounded-lg shadow-sm p-4 sm:p-6">
+    <div className="flex min-w-0 items-center gap-4 mb-6">
+      <div className="h-11 w-11 shrink-0 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-lg">
         {icon}
       </div>
-      <h2 className="text-2xl font-bold">{title}</h2>
+      <h2 className="break-words text-xl font-bold sm:text-2xl">{title}</h2>
     </div>
     {children}
   </section>

@@ -1,6 +1,6 @@
 const AuthFormShell = ({ badge, title, subtitle, children }) => {
   return (
-    <section className="bg-[#FFF8F0] py-24">
+    <section className="bg-[#FFF8F0] px-4 pb-16 pt-28 sm:px-0 sm:py-28">
       <div className="max-w-5xl mx-auto px-5">
         <div className="text-center mb-10">
           <span className="bg-orange-100 text-orange-600 px-5 py-2 rounded-full font-semibold">
@@ -12,7 +12,7 @@ const AuthFormShell = ({ badge, title, subtitle, children }) => {
           )}
         </div>
 
-        <div className="bg-white rounded-3xl shadow-xl p-8 md:p-10">
+        <div className="bg-white rounded-3xl shadow-xl p-5 sm:p-8 md:p-10">
           {children}
         </div>
       </div>

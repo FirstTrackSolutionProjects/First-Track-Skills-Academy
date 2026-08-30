@@ -236,7 +236,7 @@ const AdminApprovals = () => {
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-950">
-      <aside className="fixed left-0 top-0 h-screen w-[245px] overflow-y-auto border-r border-slate-200 bg-white px-5 py-7">
+      <aside className="border-b border-slate-200 bg-white px-5 py-5 lg:fixed lg:left-0 lg:top-0 lg:h-screen lg:w-[245px] lg:overflow-y-auto lg:border-b-0 lg:border-r lg:py-7">
         <div className="mb-10">
           <h1 className="text-3xl font-bold text-sky-700">First Track</h1>
           <p className="mt-1 text-sm font-semibold text-slate-500">{isSuperadmin ? "Superadmin Panel" : "Admin Panel"}</p>
@@ -267,22 +267,22 @@ const AdminApprovals = () => {
         </div>
       </aside>
 
-      <section className="ml-[245px] min-h-screen">
-        <header className="sticky top-0 z-10 flex min-h-[92px] items-center justify-between border-b border-slate-200 bg-white px-9 shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-xl text-blue-700">
+      <section className="min-h-screen lg:ml-[245px]">
+        <header className="sticky top-0 z-10 flex min-h-[92px] flex-col gap-4 border-b border-slate-200 bg-white px-5 py-5 shadow-sm sm:flex-row sm:items-center sm:justify-between lg:px-9">
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-xl text-blue-700 sm:h-14 sm:w-14">
               <FaUserShield />
             </div>
-            <div>
-              <p className="text-sm font-bold tracking-[0.35em] text-blue-700">{isSuperadmin ? "SUPERADMIN" : "ADMIN"} PANEL</p>
-              <h2 className="text-3xl font-bold">{activeMenu}</h2>
+            <div className="min-w-0">
+              <p className="text-xs font-bold tracking-[0.2em] text-blue-700 sm:text-sm sm:tracking-[0.35em]">{isSuperadmin ? "SUPERADMIN" : "ADMIN"} PANEL</p>
+              <h2 className="break-words text-2xl font-bold sm:text-3xl">{activeMenu}</h2>
               <p className="mt-1 text-slate-500">Role-based data and permissions for Skills Academy.</p>
             </div>
           </div>
-          <span className="rounded-full border border-slate-200 px-5 py-2 text-sm font-bold text-slate-600">{role}</span>
+          <span className="w-fit rounded-full border border-slate-200 px-5 py-2 text-sm font-bold text-slate-600">{role}</span>
         </header>
 
-        <main className="p-8">
+        <main className="p-4 sm:p-6 lg:p-8">
           {loading ? (
             <div className="flex min-h-[360px] items-center justify-center gap-3 font-semibold text-blue-700">
               <FaSpinner className="animate-spin" />
@@ -383,13 +383,13 @@ const AdminApprovals = () => {
 
 const HeroPanel = ({ metrics, isSuperadmin }) => (
   <Panel>
-    <div className="grid gap-8 lg:grid-cols-[1fr_560px] lg:items-center">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,560px)] lg:items-center">
       <div>
         <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700">
           <FaUserShield />
           LIVE {isSuperadmin ? "SUPERADMIN" : "ADMIN"} OPERATIONS
         </span>
-        <h2 className="mt-8 max-w-xl text-5xl font-bold leading-tight">{isSuperadmin ? "Academy Control Dashboard" : "College Partner Dashboard"}</h2>
+        <h2 className="mt-8 max-w-xl text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">{isSuperadmin ? "Academy Control Dashboard" : "College Partner Dashboard"}</h2>
         <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">
           {isSuperadmin
             ? "Review admins, colleges, courses, and student enrollments from one place."
@@ -414,7 +414,7 @@ const MetricSection = ({ metrics, isSuperadmin }) => (
       </div>
       <h3 className="text-2xl font-bold">{isSuperadmin ? "Academy Data Summary" : "College Numbers By Status"}</h3>
     </div>
-    <div className="grid gap-4 lg:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <MetricCard label="Total Colleges" value={metrics.total} icon={<FaBuilding />} />
       <MetricCard label="Approved Colleges" value={metrics.approved} icon={<FaCheck />} tone="green" />
       <MetricCard label="Pending Review" value={metrics.pending} icon={<FaClipboardList />} tone="amber" />
@@ -524,7 +524,7 @@ const StudentsPanel = ({ colleges, courseOptions, filters, studentsPage, loading
       <p className="text-sm font-bold text-slate-500">{studentsPage.count} records</p>
     </div>
 
-    <div className="mb-6 grid gap-4 lg:grid-cols-4">
+    <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <TextInput label="Search" value={filters.search} onChange={(value) => onFilterChange("search", value)} placeholder="Name or email" />
       <SelectInput label="Select College" value={filters.college_id} onChange={(value) => onFilterChange("college_id", value)}>
         <option value="">All colleges</option>
@@ -915,7 +915,7 @@ const EmptyState = ({ text }) => (
 );
 
 const Panel = ({ children }) => (
-  <section className="rounded-lg border border-slate-200 bg-white p-7 shadow-sm">{children}</section>
+  <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6 lg:p-7">{children}</section>
 );
 
 const fullName = (user) =>
