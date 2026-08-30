@@ -126,7 +126,7 @@ const Navbar = () => {
           {/* Desktop Menu */}
           <nav className="hidden lg:flex items-center gap-2 bg-white/10 backdrop-blur-xl rounded-full border border-white/20 px-3 py-2">
 
-            {menu.map((item) => (
+            {menu.filter((item) => auth || item.name !== "Login").map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
@@ -266,14 +266,23 @@ const Navbar = () => {
                 <FaArrowRight />
               </button>
             ) : (
-              <NavLink
-                to="/enroll"
-                onClick={() => setOpen(false)}
-                className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-2xl font-semibold transition"
-              >
-                Enroll Now
-                <FaArrowRight />
-              </NavLink>
+              <div className="grid gap-3">
+                <NavLink
+                  to="/login"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-2xl text-lg font-bold shadow-lg shadow-orange-200 transition"
+                >
+                  Login
+                  <FaArrowRight />
+                </NavLink>
+                <NavLink
+                  to="/enroll"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-center gap-2 rounded-2xl border border-orange-200 bg-orange-50 py-3 font-semibold text-orange-600 transition hover:bg-orange-100"
+                >
+                  Enroll Now
+                </NavLink>
+              </div>
             )}
 
           </div>
