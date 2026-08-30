@@ -1,49 +1,69 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FaLaptopCode,
   FaServer,
   FaCode,
-  FaBullhorn,
+  FaRobot,
+  FaCloud,
   FaArrowRight,
 } from "react-icons/fa";
+import { getCourses } from "../service/courseService";
 
-const courses = [
-  {
-    title: "Frontend Development",
-    duration: "60 Days",
-    desc: "Master HTML, CSS, JavaScript, React, Tailwind CSS and build responsive modern websites.",
+const coursePresentation = {
+  FRONTEND: {
     icon: <FaLaptopCode />,
     link: "/frontend-course",
     color: "from-blue-500 to-cyan-500",
   },
-  {
-    title: "Backend Development",
-    duration: "120 Days",
-    desc: "Learn Node.js, Express.js, MySQL, MongoDB, REST APIs, Authentication and Deployment.",
+  BACKEND: {
     icon: <FaServer />,
     link: "/backend-course",
     color: "from-green-500 to-emerald-600",
   },
-  {
-    title: "Full Stack Development",
-    duration: "6 Months",
-    desc: "Become a MERN Stack Developer by mastering frontend, backend and real industry projects.",
+  FULLSTACK: {
     icon: <FaCode />,
     link: "/fullstack-course",
     color: "from-orange-500 to-red-500",
   },
-  {
-    title: "Digital Marketing & HR",
-    duration: "90 Days",
-    desc: "Learn SEO, Google Ads, Social Media Marketing, Recruitment, Payroll and HR Operations.",
-    icon: <FaBullhorn />,
-    link: "/marketing-course",
+  DEVOPS: {
+    icon: <FaCloud />,
+    link: "/program-details",
+    color: "from-slate-700 to-blue-700",
+  },
+  AI_ML: {
+    icon: <FaRobot />,
+    link: "/program-details",
     color: "from-purple-500 to-pink-500",
   },
-];
+};
+
+const formatDuration = (weeks) => {
+  if (!weeks) return "Duration available soon";
+  if (weeks >= 24) return `${Math.round(weeks / 4)} Months`;
+  return `${weeks} Weeks`;
+};
 
 const CourseSection = () => {
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCourses = async () => {
+      try {
+        const data = await getCourses();
+        setCourses(data || []);
+      } catch (error) {
+        console.error(error);
+        setCourses([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCourses();
+  }, []);
+
   return (
     <section className="py-24 bg-[#FFF8F0]">
       <div className="max-w-7xl mx-auto px-6">
@@ -68,20 +88,27 @@ const CourseSection = () => {
         {/* Cards */}
 
         <div className="grid md:grid-cols-2 gap-8">
-          {courses.map((course, index) => (
+          {loading ? (
+            <div className="col-span-full rounded-3xl bg-white p-8 text-center font-semibold text-gray-600 shadow-lg">
+              Loading courses...
+            </div>
+          ) : courses.length ? courses.map((course) => {
+            const presentation = coursePresentation[course.category] || coursePresentation.FULLSTACK;
+
+            return (
             <div
-              key={index}
+              key={course.id}
               className="group bg-white rounded-3xl shadow-lg overflow-hidden hover:-translate-y-2 hover:shadow-2xl transition duration-300"
             >
               <div
-                className={`h-2 bg-gradient-to-r ${course.color}`}
+                className={`h-2 bg-gradient-to-r ${presentation.color}`}
               ></div>
 
               <div className="p-8">
                 <div
-                  className={`w-20 h-20 rounded-2xl bg-gradient-to-r ${course.color} text-white flex items-center justify-center text-4xl shadow-lg`}
+                  className={`w-20 h-20 rounded-2xl bg-gradient-to-r ${presentation.color} text-white flex items-center justify-center text-4xl shadow-lg`}
                 >
-                  {course.icon}
+                  {presentation.icon}
                 </div>
 
                 <h3 className="text-3xl font-bold mt-6">
@@ -89,15 +116,15 @@ const CourseSection = () => {
                 </h3>
 
                 <p className="text-orange-500 font-semibold mt-3">
-                  Duration : {course.duration}
+                  Duration : {formatDuration(course.duration_weeks)}
                 </p>
 
                 <p className="text-gray-600 mt-5 leading-7">
-                  {course.desc}
+                  {course.description}
                 </p>
 
                 <Link
-                  to={course.link}
+                  to={presentation.link}
                   className="inline-flex items-center gap-3 mt-8 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-semibold transition group-hover:gap-4"
                 >
                   View Details
@@ -105,7 +132,12 @@ const CourseSection = () => {
                 </Link>
               </div>
             </div>
-          ))}
+          );
+        }) : (
+            <div className="col-span-full rounded-3xl bg-white p-8 text-center font-semibold text-gray-600 shadow-lg">
+              Courses will appear here soon.
+            </div>
+          )}
         </div>
 
         {/* Bottom CTA */}
