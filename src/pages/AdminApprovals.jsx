@@ -53,7 +53,17 @@ const menuSections = (role) =>
     ? [
         { title: "Overview", icon: <FaHome />, items: [{ name: "Dashboard", icon: <FaHome /> }] },
         { title: "Admin", icon: <FaUserShield />, items: [{ name: "Admin Data", icon: <FaUserShield /> }] },
-        { title: "Colleges", icon: <FaBuilding />, items: [{ name: "College Names", icon: <FaBuilding /> }] },
+        {
+          title: "Colleges",
+          icon: <FaBuilding />,
+          items: [
+            { name: "College Names", icon: <FaBuilding /> },
+            { name: "College Verification", icon: <FaClipboardList /> },
+            { name: "Approved", icon: <FaCheck /> },
+            { name: "Rejected", icon: <FaTimes /> },
+            { name: "All Colleges", icon: <FaBuilding /> },
+          ],
+        },
         { title: "Students", icon: <FaUserGraduate />, items: [{ name: "Students", icon: <FaUsers /> }] },
         { title: "Account", icon: <FaUserShield />, items: [{ name: "Profile", icon: <FaUserShield /> }] },
       ]
@@ -159,7 +169,7 @@ const AdminApprovals = () => {
   }, [colleges, studentsPage.count, users]);
 
   const visibleColleges = useMemo(() => {
-    const statusByMenu = { Pending: "PENDING", Approved: "APPROVED", Rejected: "REJECTED" };
+    const statusByMenu = { Pending: "PENDING", "College Verification": "PENDING", Approved: "APPROVED", Rejected: "REJECTED" };
     const status = statusByMenu[activeMenu];
     const term = search.trim().toLowerCase();
     return colleges.filter((college) => {
@@ -302,12 +312,16 @@ const AdminApprovals = () => {
                 />
               )}
 
-              {["Pending", "Approved", "Rejected", "All Colleges"].includes(activeMenu) && (
+              {["Pending", "College Verification", "Approved", "Rejected", "All Colleges"].includes(activeMenu) && (
                 <Panel>
                   <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div>
                       <h3 className="text-2xl font-bold">{activeMenu}</h3>
-                      <p className="mt-1 text-slate-500">Open a college to view details or update its approval status.</p>
+                      <p className="mt-1 text-slate-500">
+                        {activeMenu === "College Verification"
+                          ? "Verify newly created college accounts and approve or reject access."
+                          : "Open a college to view details or update its approval status."}
+                      </p>
                     </div>
                     <SearchBox value={search} onChange={setSearch} placeholder="Search colleges" />
                   </div>
