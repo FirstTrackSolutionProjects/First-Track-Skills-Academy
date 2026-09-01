@@ -7,6 +7,9 @@ import {
   FaChevronDown,
   FaClipboardList,
   FaHome,
+  FaLayerGroup,
+  FaPaperPlane,
+  FaPlus,
   FaSearch,
   FaSignOutAlt,
   FaSpinner,
@@ -16,14 +19,20 @@ import {
   FaUsers,
 } from "react-icons/fa";
 import useStore, { storeActions } from "../store/useStore";
+import { createAdmin } from "../service/adminService";
 import {
   getColleges,
   getSuperadminColleges,
   getSuperadminStudents,
   updateCollegeStatus,
 } from "../service/collegeService";
+import { createBatch, createCourse, getBatches, getCourses } from "../service/courseService";
+import { createMentor } from "../service/mentorService";
 import { getUsers } from "../service/userService";
 import { collegeProfileIdParamSchema, updateCollegeProfileStatusSchema } from "../validator/collegeProfileSchema";
+import { createBatchSchema, createCourseSchema } from "../validator/courseSchema";
+import { adminOnboardingSchema } from "../validator/adminProfileSchema";
+import { mentorOnboardingSchema } from "../validator/mentorSchema";
 import { mapZodIssuesToFieldErrors } from "../validator/validation";
 
 const statusColors = {
@@ -48,11 +57,71 @@ const initialStudentFilters = {
   limit: 20,
 };
 
+const initialAdminForm = {
+  first_name: "",
+  middle_name: "",
+  last_name: "",
+  email: "",
+  password: "",
+  confirm_password: "",
+  department: "",
+  phone_number: "",
+  role: "ADMIN",
+};
+
+const initialMentorForm = {
+  first_name: "",
+  middle_name: "",
+  last_name: "",
+  email: "",
+  password: "",
+  confirm_password: "",
+  subjects_text: "",
+  years_of_experience: 0,
+  bio: "",
+  role: "MENTOR",
+};
+
+const initialCourseForm = {
+  title: "",
+  slug: "",
+  category: "FRONTEND",
+  description: "",
+  duration_weeks: 12,
+  thumbnail_url: "",
+};
+
+const initialBatchForm = {
+  course_id: "",
+  mentor_id: "",
+  batch_name: "",
+  batch_timing: "MORNING",
+  start_date: "",
+  end_date: "",
+  status: "ACTIVE",
+};
+
 const menuSections = (role) =>
   role === "SUPERADMIN"
     ? [
         { title: "Overview", icon: <FaHome />, items: [{ name: "Dashboard", icon: <FaHome /> }] },
-        { title: "Admin", icon: <FaUserShield />, items: [{ name: "Admin Data", icon: <FaUserShield /> }] },
+        {
+          title: "Admin",
+          icon: <FaUserShield />,
+          items: [
+            { name: "Admin Data", icon: <FaUserShield /> },
+            { name: "Add Admin", icon: <FaPlus /> },
+          ],
+        },
+        { title: "Mentors", icon: <FaUsers />, items: [{ name: "Add Mentor", icon: <FaPlus /> }] },
+        {
+          title: "Courses",
+          icon: <FaBookOpen />,
+          items: [
+            { name: "Add Course", icon: <FaPlus /> },
+            { name: "Add Batch", icon: <FaLayerGroup /> },
+          ],
+        },
         {
           title: "Colleges",
           icon: <FaBuilding />,
@@ -75,6 +144,15 @@ const menuSections = (role) =>
       ]
     : [
         { title: "Overview", icon: <FaHome />, items: [{ name: "Dashboard", icon: <FaHome /> }] },
+        { title: "Mentors", icon: <FaUsers />, items: [{ name: "Add Mentor", icon: <FaPlus /> }] },
+        {
+          title: "Courses",
+          icon: <FaBookOpen />,
+          items: [
+            { name: "Add Course", icon: <FaPlus /> },
+            { name: "Add Batch", icon: <FaLayerGroup /> },
+          ],
+        },
         {
           title: "College",
           icon: <FaBuilding />,
@@ -93,15 +171,20 @@ const AdminApprovals = () => {
   const [colleges, setColleges] = useState([]);
   const [users, setUsers] = useState([]);
   const [superColleges, setSuperColleges] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [batches, setBatches] = useState([]);
   const [studentsPage, setStudentsPage] = useState({ data: [], page: 1, limit: 20, totalPages: 1, count: 0 });
   const [studentFilters, setStudentFilters] = useState(initialStudentFilters);
   const [loading, setLoading] = useState(true);
   const [studentsLoading, setStudentsLoading] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
   const [updatingId, setUpdatingId] = useState(null);
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const [openSections, setOpenSections] = useState({
     Overview: true,
     Admin: true,
+    Mentors: true,
+    Courses: true,
     Colleges: true,
     "College Verification": true,
     Students: true,
@@ -112,6 +195,11 @@ const AdminApprovals = () => {
   const [openCourseIds, setOpenCourseIds] = useState({});
   const [search, setSearch] = useState("");
   const [selectedCollege, setSelectedCollege] = useState(null);
+  const [adminForm, setAdminForm] = useState(initialAdminForm);
+  const [mentorForm, setMentorForm] = useState(initialMentorForm);
+  const [courseForm, setCourseForm] = useState(initialCourseForm);
+  const [batchForm, setBatchForm] = useState(initialBatchForm);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const role = auth?.user?.role;
   const isAdmin = role === "ADMIN" || role === "SUPERADMIN";
@@ -120,14 +208,18 @@ const AdminApprovals = () => {
   const loadBaseData = useCallback(async (showLoading = true) => {
     try {
       if (showLoading) setLoading(true);
-      const [collegeData, userData, superCollegeData] = await Promise.all([
+      const [collegeData, userData, superCollegeData, courseData, batchData] = await Promise.all([
         getColleges(auth.token),
         getUsers(auth.token, { limit: 100 }),
         isSuperadmin ? getSuperadminColleges(auth.token) : Promise.resolve([]),
+        getCourses(),
+        getBatches(),
       ]);
       setColleges(collegeData || []);
       setUsers(userData?.data || []);
       setSuperColleges(superCollegeData || []);
+      setCourses(courseData || []);
+      setBatches(batchData || []);
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -172,8 +264,10 @@ const AdminApprovals = () => {
       totalUsers: users.length,
       admins: users.filter((user) => user.role === "ADMIN" || user.role === "SUPERADMIN").length,
       students: studentsPage.count,
+      courses: courses.length,
+      batches: batches.length,
     };
-  }, [colleges, studentsPage.count, users]);
+  }, [batches, colleges, courses, studentsPage.count, users]);
 
   const visibleColleges = useMemo(() => {
     const statusByMenu = { Pending: "PENDING", "College Verification": "PENDING", Approved: "APPROVED", Rejected: "REJECTED" };
@@ -224,11 +318,136 @@ const AdminApprovals = () => {
 
   const handleMenuClick = (name) => {
     setActiveMenu(name);
+    setFieldErrors({});
     if (name !== "College Details") setSelectedCollege(null);
   };
 
   const updateStudentFilter = (name, value) => {
     setStudentFilters((prev) => ({ ...prev, [name]: value, page: name === "page" ? value : 1 }));
+  };
+
+  const mentors = users.filter((user) => user.role === "MENTOR");
+
+  const changeAdminForm = (name, value) => {
+    setAdminForm((prev) => ({ ...prev, [name]: value }));
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const changeMentorForm = (name, value) => {
+    setMentorForm((prev) => ({ ...prev, [name]: value }));
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const changeCourseForm = (name, value) => {
+    setCourseForm((prev) => ({ ...prev, [name]: value }));
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const changeBatchForm = (name, value) => {
+    setBatchForm((prev) => ({ ...prev, [name]: value }));
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const submitAdmin = async (event) => {
+    event.preventDefault();
+
+    const parsed = adminOnboardingSchema.safeParse(adminForm);
+    if (!parsed.success) {
+      setFieldErrors(mapZodIssuesToFieldErrors(parsed.error));
+      toast.error("Please fix the highlighted errors");
+      return;
+    }
+
+    try {
+      setFormLoading(true);
+      await createAdmin(parsed.data);
+      toast.success("Admin account created");
+      setAdminForm(initialAdminForm);
+      setFieldErrors({});
+      await loadBaseData(false);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const submitMentor = async (event) => {
+    event.preventDefault();
+
+    const mentorPayload = {
+      ...mentorForm,
+      subjects: mentorForm.subjects_text.split(",").map((subject) => subject.trim()).filter(Boolean),
+    };
+    delete mentorPayload.subjects_text;
+
+    const parsed = mentorOnboardingSchema.safeParse(mentorPayload);
+    if (!parsed.success) {
+      setFieldErrors(mapZodIssuesToFieldErrors(parsed.error));
+      toast.error("Please fix the highlighted errors");
+      return;
+    }
+
+    try {
+      setFormLoading(true);
+      await createMentor(parsed.data);
+      toast.success("Mentor account created");
+      setMentorForm(initialMentorForm);
+      setFieldErrors({});
+      await loadBaseData(false);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const submitCourse = async (event) => {
+    event.preventDefault();
+
+    const parsed = createCourseSchema.safeParse(courseForm);
+    if (!parsed.success) {
+      setFieldErrors(mapZodIssuesToFieldErrors(parsed.error));
+      toast.error("Please fix the highlighted errors");
+      return;
+    }
+
+    try {
+      setFormLoading(true);
+      await createCourse(parsed.data);
+      toast.success("Course created");
+      setCourseForm(initialCourseForm);
+      setFieldErrors({});
+      await loadBaseData(false);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const submitBatch = async (event) => {
+    event.preventDefault();
+
+    const parsed = createBatchSchema.safeParse(batchForm);
+    if (!parsed.success) {
+      setFieldErrors(mapZodIssuesToFieldErrors(parsed.error));
+      toast.error("Please fix the highlighted errors");
+      return;
+    }
+
+    try {
+      setFormLoading(true);
+      await createBatch(parsed.data);
+      toast.success("Batch created");
+      setBatchForm(initialBatchForm);
+      setFieldErrors({});
+      await loadBaseData(false);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setFormLoading(false);
+    }
   };
 
   if (!auth) return <Navigate to="/login" replace />;
@@ -298,6 +517,27 @@ const AdminApprovals = () => {
               )}
 
               {activeMenu === "Admin Data" && <AdminDataPanel admins={users.filter((user) => ["ADMIN", "SUPERADMIN"].includes(user.role))} />}
+              {activeMenu === "Add Admin" && isSuperadmin && (
+                <AdminFormPanel form={adminForm} errors={fieldErrors} loading={formLoading} onChange={changeAdminForm} onSubmit={submitAdmin} />
+              )}
+              {activeMenu === "Add Mentor" && (
+                <MentorFormPanel form={mentorForm} errors={fieldErrors} loading={formLoading} onChange={changeMentorForm} onSubmit={submitMentor} />
+              )}
+              {activeMenu === "Add Course" && (
+                <CourseFormPanel form={courseForm} errors={fieldErrors} loading={formLoading} onChange={changeCourseForm} onSubmit={submitCourse} />
+              )}
+              {activeMenu === "Add Batch" && (
+                <BatchFormPanel
+                  form={batchForm}
+                  errors={fieldErrors}
+                  loading={formLoading}
+                  courses={courses}
+                  mentors={mentors}
+                  batches={batches}
+                  onChange={changeBatchForm}
+                  onSubmit={submitBatch}
+                />
+              )}
 
               {activeMenu === "College Names" && (
                 <CollegeDrilldown
@@ -436,6 +676,211 @@ const AdminDataPanel = ({ admins }) => (
     </div>
     <UserTable users={admins} />
   </Panel>
+);
+
+const AdminFormPanel = ({ form, errors, loading, onChange, onSubmit }) => (
+  <Panel>
+    <FormHeader icon={<FaUserShield />} title="Add Admin" text="Create an admin account for academy operations." />
+    <form onSubmit={onSubmit} className="grid gap-5">
+      <div className="grid gap-5 md:grid-cols-3">
+        <FormField label="First Name" name="first_name" value={form.first_name} error={errors.first_name} onChange={onChange} required />
+        <FormField label="Middle Name" name="middle_name" value={form.middle_name} error={errors.middle_name} onChange={onChange} />
+        <FormField label="Last Name" name="last_name" value={form.last_name} error={errors.last_name} onChange={onChange} />
+      </div>
+      <div className="grid gap-5 md:grid-cols-2">
+        <FormField label="Email" type="email" name="email" value={form.email} error={errors.email} onChange={onChange} required />
+        <FormField label="Phone Number" name="phone_number" value={form.phone_number} error={errors.phone_number} onChange={onChange} required />
+        <FormField label="Password" type="password" name="password" value={form.password} error={errors.password} onChange={onChange} required />
+        <FormField label="Confirm Password" type="password" name="confirm_password" value={form.confirm_password} error={errors.confirm_password} onChange={onChange} required />
+        <FormField label="Department" name="department" value={form.department} error={errors.department} onChange={onChange} required />
+      </div>
+      <SubmitButton loading={loading} text="Create Admin" />
+    </form>
+  </Panel>
+);
+
+const MentorFormPanel = ({ form, errors, loading, onChange, onSubmit }) => (
+  <Panel>
+    <FormHeader icon={<FaUsers />} title="Add Mentor" text="Create a mentor account and profile." />
+    <form onSubmit={onSubmit} className="grid gap-5">
+      <div className="grid gap-5 md:grid-cols-3">
+        <FormField label="First Name" name="first_name" value={form.first_name} error={errors.first_name} onChange={onChange} required />
+        <FormField label="Middle Name" name="middle_name" value={form.middle_name} error={errors.middle_name} onChange={onChange} />
+        <FormField label="Last Name" name="last_name" value={form.last_name} error={errors.last_name} onChange={onChange} />
+      </div>
+      <div className="grid gap-5 md:grid-cols-2">
+        <FormField label="Email" type="email" name="email" value={form.email} error={errors.email} onChange={onChange} required />
+        <FormField label="Years Of Experience" type="number" name="years_of_experience" value={form.years_of_experience} error={errors.years_of_experience} onChange={onChange} required />
+        <FormField label="Password" type="password" name="password" value={form.password} error={errors.password} onChange={onChange} required />
+        <FormField label="Confirm Password" type="password" name="confirm_password" value={form.confirm_password} error={errors.confirm_password} onChange={onChange} required />
+      </div>
+      <FormField label="Subjects" name="subjects_text" value={form.subjects_text} error={errors.subjects} onChange={onChange} placeholder="Frontend, Backend, Database" required />
+      <TextAreaField label="Bio" name="bio" value={form.bio} error={errors.bio} onChange={onChange} />
+      <SubmitButton loading={loading} text="Create Mentor" />
+    </form>
+  </Panel>
+);
+
+const CourseFormPanel = ({ form, errors, loading, onChange, onSubmit }) => (
+  <Panel>
+    <FormHeader icon={<FaBookOpen />} title="Add Course" text="Create a course before assigning batches." />
+    <form onSubmit={onSubmit} className="grid gap-5">
+      <div className="grid gap-5 md:grid-cols-2">
+        <FormField label="Title" name="title" value={form.title} error={errors.title} onChange={onChange} required />
+        <FormField label="Slug" name="slug" value={form.slug} error={errors.slug} onChange={onChange} placeholder="optional" />
+        <SelectField label="Category" name="category" value={form.category} error={errors.category} onChange={onChange}>
+          <option value="FRONTEND">Frontend</option>
+          <option value="BACKEND">Backend</option>
+          <option value="DATABASE">Database</option>
+          <option value="FULLSTACK">Fullstack</option>
+          <option value="DEVOPS">Devops</option>
+          <option value="AI_ML">AI/ML</option>
+        </SelectField>
+        <FormField label="Duration Weeks" type="number" name="duration_weeks" value={form.duration_weeks} error={errors.duration_weeks} onChange={onChange} required />
+        <FormField label="Thumbnail URL" name="thumbnail_url" value={form.thumbnail_url} error={errors.thumbnail_url} onChange={onChange} />
+      </div>
+      <TextAreaField label="Description" name="description" value={form.description} error={errors.description} onChange={onChange} />
+      <SubmitButton loading={loading} text="Create Course" />
+    </form>
+  </Panel>
+);
+
+const BatchFormPanel = ({ form, errors, loading, courses, mentors, batches, onChange, onSubmit }) => (
+  <Panel>
+    <FormHeader icon={<FaLayerGroup />} title="Add Batch" text="Assign a course batch to a mentor." />
+    <form onSubmit={onSubmit} className="grid gap-5">
+      <div className="grid gap-5 md:grid-cols-2">
+        <SelectField label="Course" name="course_id" value={form.course_id} error={errors.course_id} onChange={onChange} required>
+          <option value="">Select course</option>
+          {courses.map((course) => (
+            <option key={course.id} value={course.id}>{course.title}</option>
+          ))}
+        </SelectField>
+        <SelectField label="Mentor" name="mentor_id" value={form.mentor_id} error={errors.mentor_id} onChange={onChange} required>
+          <option value="">Select mentor</option>
+          {mentors.map((mentor) => (
+            <option key={mentor.id} value={mentor.id}>{fullName(mentor) || mentor.email}</option>
+          ))}
+        </SelectField>
+        <FormField label="Batch Name" name="batch_name" value={form.batch_name} error={errors.batch_name} onChange={onChange} required />
+        <SelectField label="Batch Timing" name="batch_timing" value={form.batch_timing} error={errors.batch_timing} onChange={onChange}>
+          <option value="MORNING">Morning</option>
+          <option value="AFTERNOON">Afternoon</option>
+          <option value="EVENING">Evening</option>
+          <option value="NIGHT">Night</option>
+        </SelectField>
+        <FormField label="Start Date" type="date" name="start_date" value={form.start_date} error={errors.start_date} onChange={onChange} />
+        <FormField label="End Date" type="date" name="end_date" value={form.end_date} error={errors.end_date} onChange={onChange} />
+        <SelectField label="Status" name="status" value={form.status} error={errors.status} onChange={onChange}>
+          <option value="ACTIVE">Active</option>
+          <option value="COMPLETED">Completed</option>
+          <option value="CANCELLED">Cancelled</option>
+        </SelectField>
+      </div>
+      <SubmitButton loading={loading} text="Create Batch" />
+    </form>
+    <div className="mt-8">
+      <h4 className="mb-4 text-lg font-bold">Current Batches</h4>
+      <BatchTable batches={batches} />
+    </div>
+  </Panel>
+);
+
+const BatchTable = ({ batches }) =>
+  batches.length ? (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left text-sm">
+        <thead>
+          <tr className="border-b border-slate-200 text-slate-500">
+            <th className="py-3 pr-4">BATCH</th>
+            <th className="py-3 pr-4">COURSE</th>
+            <th className="py-3 pr-4">MENTOR</th>
+            <th className="py-3 pr-4">TIMING</th>
+            <th className="py-3 pr-4">STATUS</th>
+          </tr>
+        </thead>
+        <tbody>
+          {batches.map((batch) => (
+            <tr key={batch.id} className="border-b border-slate-100 last:border-b-0">
+              <td className="py-4 pr-4 font-semibold">{batch.batch_name}</td>
+              <td className="py-4 pr-4 text-slate-600">{batch.course?.title || "N/A"}</td>
+              <td className="py-4 pr-4 text-slate-600">{batch.mentor ? fullName(batch.mentor) || batch.mentor.email : "N/A"}</td>
+              <td className="py-4 pr-4 text-slate-600">{batch.batch_timing}</td>
+              <td className="py-4 pr-4"><StatusBadge status={batch.status} /></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  ) : (
+    <EmptyState text="No batches created yet." />
+  );
+
+const FormHeader = ({ icon, title, text }) => (
+  <div className="mb-6 flex items-center gap-4">
+    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+      {icon}
+    </div>
+    <div>
+      <h3 className="text-2xl font-bold">{title}</h3>
+      <p className="text-slate-500">{text}</p>
+    </div>
+  </div>
+);
+
+const FormField = ({ label, name, value, error, onChange, ...props }) => (
+  <label className="grid gap-2">
+    <span className="text-sm font-bold text-slate-500">{label}</span>
+    <input
+      name={name}
+      value={value}
+      onChange={(event) => onChange(name, event.target.value)}
+      className={`h-11 rounded-lg border bg-white px-4 outline-none focus:border-blue-400 ${error ? "border-red-400" : "border-slate-200"}`}
+      {...props}
+    />
+    {error && <span className="text-sm font-semibold text-red-500">{error}</span>}
+  </label>
+);
+
+const SelectField = ({ label, name, value, error, onChange, children, ...props }) => (
+  <label className="grid gap-2">
+    <span className="text-sm font-bold text-slate-500">{label}</span>
+    <select
+      name={name}
+      value={value}
+      onChange={(event) => onChange(name, event.target.value)}
+      className={`h-11 rounded-lg border bg-white px-4 outline-none focus:border-blue-400 ${error ? "border-red-400" : "border-slate-200"}`}
+      {...props}
+    >
+      {children}
+    </select>
+    {error && <span className="text-sm font-semibold text-red-500">{error}</span>}
+  </label>
+);
+
+const TextAreaField = ({ label, name, value, error, onChange }) => (
+  <label className="grid gap-2">
+    <span className="text-sm font-bold text-slate-500">{label}</span>
+    <textarea
+      name={name}
+      value={value}
+      onChange={(event) => onChange(name, event.target.value)}
+      rows={4}
+      className={`rounded-lg border bg-white px-4 py-3 outline-none focus:border-blue-400 ${error ? "border-red-400" : "border-slate-200"}`}
+    />
+    {error && <span className="text-sm font-semibold text-red-500">{error}</span>}
+  </label>
+);
+
+const SubmitButton = ({ loading, text }) => (
+  <button
+    type="submit"
+    disabled={loading}
+    className="flex h-12 w-full items-center justify-center gap-3 rounded-lg bg-blue-600 px-5 font-semibold text-white hover:bg-blue-700 disabled:opacity-60 md:w-fit"
+  >
+    {loading ? <FaSpinner className="animate-spin" /> : <FaPaperPlane />}
+    {loading ? "Submitting..." : text}
+  </button>
 );
 
 const CollegeDrilldown = ({ colleges, openCollegeIds, openCourseIds, onToggleCollege, onToggleCourse }) => (

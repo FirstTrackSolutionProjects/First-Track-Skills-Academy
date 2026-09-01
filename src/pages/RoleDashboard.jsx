@@ -12,7 +12,7 @@ import {
   FaUserGraduate,
   FaUserTie,
 } from "react-icons/fa";
-import { getCourses } from "../service/courseService";
+import { getBatches, getCourses } from "../service/courseService";
 import useStore, { storeActions } from "../store/useStore";
 
 const roleCopy = {
@@ -81,8 +81,10 @@ const menuByRole = {
 const RoleDashboard = () => {
   const { auth } = useStore();
   const [courses, setCourses] = useState([]);
+  const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeMenu, setActiveMenu] = useState("Dashboard");
+  const [selectedBatch, setSelectedBatch] = useState(null);
   const [openSections, setOpenSections] = useState({
     Overview: true,
     Batches: true,
@@ -96,8 +98,13 @@ const RoleDashboard = () => {
   useEffect(() => {
     const loadCourses = async () => {
       try {
-        const data = await getCourses(auth.token);
-        setCourses(data || []);
+        const courseData = await getCourses(auth.token);
+        setCourses(courseData || []);
+
+        if (role === "MENTOR") {
+          const batchData = await getBatches();
+          setBatches(batchData || []);
+        }
       } catch (error) {
         toast.error(error.message);
       } finally {
@@ -108,15 +115,15 @@ const RoleDashboard = () => {
     if (copy && auth?.token) {
       loadCourses();
     }
-  }, [auth, copy]);
+  }, [auth, copy, role]);
 
   const metrics = useMemo(
     () => ({
       courses: courses.length,
-      batches: role === "MENTOR" ? 0 : "N/A",
+      batches: role === "MENTOR" ? batches.length : "N/A",
       status: role || "USER",
     }),
-    [courses, role]
+    [batches, courses, role]
   );
 
   if (!auth) return <Navigate to="/login" replace />;
@@ -125,6 +132,18 @@ const RoleDashboard = () => {
   if (!copy) return <Navigate to="/" replace />;
 
   const sections = menuByRole[role] || menuByRole.STUDENT;
+
+  const handleMenuClick = (name) => {
+    setActiveMenu(name);
+    if (name !== "Batch Details") {
+      setSelectedBatch(null);
+    }
+  };
+
+  const openBatch = (batch) => {
+    setSelectedBatch(batch);
+    setActiveMenu("Batch Details");
+  };
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-950">
@@ -140,7 +159,7 @@ const RoleDashboard = () => {
               activeMenu={activeMenu}
               isOpen={openSections[section.title]}
               onToggle={(title) => setOpenSections((prev) => ({ ...prev, [title]: !prev[title] }))}
-              onMenuClick={setActiveMenu}
+              onMenuClick={handleMenuClick}
             />
           ))}
         </nav>
@@ -187,12 +206,18 @@ const RoleDashboard = () => {
                 <>
                   <HeroPanel copy={copy} user={auth.user} metrics={metrics} />
                   <CoursePanel courses={courses} />
+                  {role === "MENTOR" && <BatchPanel batches={batches} onOpenBatch={openBatch} />}
                 </>
               )}
               {activeMenu === "Courses" && <CoursePanel courses={courses} />}
-              {["Batches", "Batch Timings", "Enrollments"].includes(activeMenu) && (
+              {activeMenu === "Batches" && <BatchPanel batches={batches} onOpenBatch={openBatch} />}
+              {activeMenu === "Batch Details" && selectedBatch && (
+                <BatchDetails batch={selectedBatch} onBack={() => handleMenuClick("Batches")} />
+              )}
+              {activeMenu === "Batch Timings" && <BatchTimingsPanel batches={batches} />}
+              {activeMenu === "Enrollments" && (
                 <PlaceholderPanel
-                  icon={activeMenu === "Batch Timings" ? <FaClock /> : <FaLayerGroup />}
+                  icon={<FaLayerGroup />}
                   title={activeMenu}
                   description="This section is ready in the UI. Data will appear here when the backend endpoint is available."
                 />
@@ -282,6 +307,78 @@ const CoursePanel = ({ courses }) => (
       </div>
     ) : (
       <p className="text-slate-600">No courses found.</p>
+    )}
+  </Panel>
+);
+
+const BatchPanel = ({ batches, onOpenBatch }) => (
+  <Panel icon={<FaLayerGroup />} title="Batches">
+    {batches.length ? (
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {batches.map((batch) => (
+          <button
+            key={batch.id}
+            onClick={() => onOpenBatch(batch)}
+            className="rounded-lg border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50/30"
+          >
+            <p className="text-xs font-bold text-blue-700">{batch.course?.category || "COURSE"}</p>
+            <h3 className="mt-2 text-xl font-bold">{batch.batch_name}</h3>
+            <p className="mt-2 text-sm font-semibold text-slate-700">{batch.course?.title || "Course not found"}</p>
+            <div className="mt-5 grid gap-2 text-sm text-slate-500">
+              <p>{batch.batch_timing}</p>
+              <p>{batch.start_date || "Start date not added"}</p>
+            </div>
+            <span className="mt-5 inline-flex rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-bold text-blue-700">
+              View Details
+            </span>
+          </button>
+        ))}
+      </div>
+    ) : (
+      <p className="text-slate-600">No batches assigned yet.</p>
+    )}
+  </Panel>
+);
+
+const BatchDetails = ({ batch, onBack }) => (
+  <Panel icon={<FaLayerGroup />} title={batch.batch_name}>
+    <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div>
+        <p className="text-sm font-bold text-blue-700">{batch.course?.title || "Course not found"}</p>
+        <p className="mt-1 text-slate-500">{batch.course?.duration_weeks || "N/A"} weeks</p>
+      </div>
+      <button
+        onClick={onBack}
+        className="rounded-md border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50"
+      >
+        Back to Batches
+      </button>
+    </div>
+    <div className="grid gap-4 md:grid-cols-3">
+      <InfoBox label="Batch Timing" value={batch.batch_timing} />
+      <InfoBox label="Start Date" value={batch.start_date || "N/A"} />
+      <InfoBox label="End Date" value={batch.end_date || "N/A"} />
+      <InfoBox label="Status" value={batch.status} />
+      <InfoBox label="Course Category" value={batch.course?.category || "N/A"} />
+      <InfoBox label="Mentor Email" value={batch.mentor?.email || "N/A"} />
+    </div>
+  </Panel>
+);
+
+const BatchTimingsPanel = ({ batches }) => (
+  <Panel icon={<FaClock />} title="Batch Timings">
+    {batches.length ? (
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {batches.map((batch) => (
+          <InfoBox
+            key={batch.id}
+            label={batch.batch_name}
+            value={`${batch.batch_timing} | ${batch.start_date || "No start date"}`}
+          />
+        ))}
+      </div>
+    ) : (
+      <p className="text-slate-600">No batch timings found.</p>
     )}
   </Panel>
 );
