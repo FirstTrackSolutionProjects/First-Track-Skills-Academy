@@ -626,6 +626,7 @@ const AdminDashboard = () => {
                   openCourseIds={openCourseIds}
                   onToggleCollege={(id) => setOpenCollegeIds((prev) => ({ ...prev, [id]: !prev[id] }))}
                   onToggleCourse={(key) => setOpenCourseIds((prev) => ({ ...prev, [key]: !prev[key] }))}
+                  onOpenStudent={(student) => openDetail("Student Details", getStudentRows(student))}
                 />
               )}
 
@@ -1082,7 +1083,7 @@ const SubmitButton = ({ loading, text }) => (
   </button>
 );
 
-const CollegeDrilldown = ({ colleges, openCollegeIds, openCourseIds, onToggleCollege, onToggleCourse }) => (
+const CollegeDrilldown = ({ colleges, openCollegeIds, openCourseIds, onToggleCollege, onToggleCourse, onOpenStudent }) => (
   <Panel>
     <div className="mb-6 flex items-center gap-4">
       <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
@@ -1090,7 +1091,7 @@ const CollegeDrilldown = ({ colleges, openCollegeIds, openCourseIds, onToggleCol
       </div>
       <div>
         <h3 className="text-2xl font-bold">College Names</h3>
-        <p className="text-slate-500">Open a college to view active courses, then open a course to view enrolled students.</p>
+        <p className="text-slate-500">Open a college to view active courses, then open a course to view enrolled students. Click on any student to see their full details.</p>
       </div>
     </div>
 
@@ -1140,7 +1141,7 @@ const CollegeDrilldown = ({ colleges, openCollegeIds, openCourseIds, onToggleCol
                         </button>
                         {openCourseIds[courseKey] && (
                           <div className="border-t border-slate-200 bg-white p-4">
-                            <StudentMiniTable students={course.students || []} />
+                            <StudentMiniTable students={course.students || []} onOpenStudent={onOpenStudent} />
                           </div>
                         )}
                       </div>
@@ -1426,7 +1427,7 @@ const UserTable = ({ users, emptyText = "No admin users found.", onOpenUser }) =
     <EmptyState text={emptyText} />
   );
 
-const StudentMiniTable = ({ students }) =>
+const StudentMiniTable = ({ students, onOpenStudent }) =>
   students.length ? (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
@@ -1440,8 +1441,12 @@ const StudentMiniTable = ({ students }) =>
         </thead>
         <tbody>
           {students.map((student) => (
-            <tr key={`${student.id}-${student.batch_timing}-${student.joined_at}`} className="border-b border-slate-100 last:border-b-0">
-              <td className="py-3 pr-4 font-semibold">{fullName(student) || "Unnamed Student"}</td>
+            <tr
+              key={`${student.id}-${student.batch_timing}-${student.joined_at}`}
+              onClick={() => onOpenStudent?.(student)}
+              className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 last:border-b-0"
+            >
+              <td className="py-3 pr-4 font-semibold text-blue-700">{fullName(student) || "Unnamed Student"}</td>
               <td className="py-3 pr-4 text-slate-600">{student.email}</td>
               <td className="py-3 pr-4 text-slate-600">{student.batch_timing}</td>
               <td className="py-3 pr-4"><StatusBadge status={student.enrollment_status} /></td>
