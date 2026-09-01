@@ -1,5 +1,5 @@
 import { useEffect} from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Navigate, Routes, Route, useLocation } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -32,7 +32,11 @@ import { ToastContainer } from 'react-toastify';
 
 function App() {
   const { pathname} = useLocation();
-  const isDashboardRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/college-dashboard") || pathname.startsWith("/admin/approvals");
+  const isDashboardRoute =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/college-dashboard") ||
+    pathname.startsWith("/admin-dashboard") ||
+    pathname.startsWith("/admin/approvals");
 
   useEffect(() => {
     // Scroll to the top of the page when the route changes
@@ -67,7 +71,8 @@ function App() {
         <Route path="/college-onboarding" element={<CollegeOnboarding />} />
         <Route path="/admin-onboarding" element={<AdminOnboarding />} />
         <Route path="/mentor-onboarding" element={<MentorOnboarding />} />
-        <Route path="/admin/approvals" element={<AdminApprovals />} />
+        <Route path="/admin-dashboard" element={<AdminApprovals />} />
+        <Route path="/admin/approvals" element={<Navigate to="/admin-dashboard" replace />} />
         <Route path="/college-dashboard" element={<CollegeDashboard />} />
         <Route path="/dashboard" element={<RoleDashboard />} />
         <Route path="/join/:partnerCode/enroll" element={<PartnerEnroll />} />

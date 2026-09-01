@@ -127,7 +127,7 @@ const RoleDashboard = () => {
   );
 
   if (!auth) return <Navigate to="/login" replace />;
-  if (role === "SUPERADMIN" || role === "ADMIN") return <Navigate to="/admin/approvals" replace />;
+  if (role === "SUPERADMIN" || role === "ADMIN") return <Navigate to="/admin-dashboard" replace />;
   if (role === "COLLEGE") return <Navigate to="/college-dashboard" replace />;
   if (!copy) return <Navigate to="/" replace />;
 

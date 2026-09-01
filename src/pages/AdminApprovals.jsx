@@ -28,7 +28,7 @@ import {
   updateCollegeStatus,
 } from "../service/collegeService";
 import { createBatch, createCourse, getBatches, getCourses } from "../service/courseService";
-import { createMentor } from "../service/mentorService";
+import { createMentor, getMentors } from "../service/mentorService";
 import { getUsers } from "../service/userService";
 import { collegeProfileIdParamSchema, updateCollegeProfileStatusSchema } from "../validator/collegeProfileSchema";
 import { createBatchSchema, createCourseSchema } from "../validator/courseSchema";
@@ -191,6 +191,7 @@ const AdminApprovals = () => {
   const { auth } = useStore();
   const [colleges, setColleges] = useState([]);
   const [users, setUsers] = useState([]);
+  const [mentors, setMentors] = useState([]);
   const [superColleges, setSuperColleges] = useState([]);
   const [courses, setCourses] = useState([]);
   const [batches, setBatches] = useState([]);
@@ -229,15 +230,20 @@ const AdminApprovals = () => {
   const loadBaseData = useCallback(async (showLoading = true) => {
     try {
       if (showLoading) setLoading(true);
-      const [collegeData, userData, superCollegeData, courseData, batchData] = await Promise.all([
+      const [collegeData, userData, mentorData, superCollegeData, courseData, batchData] = await Promise.all([
         getColleges(auth.token),
         getUsers(auth.token, { limit: 100 }),
+        getMentors({ limit: 100 }),
         isSuperadmin ? getSuperadminColleges(auth.token) : Promise.resolve([]),
         getCourses(),
         getBatches(),
       ]);
       setColleges(collegeData || []);
       setUsers(userData?.data || []);
+      setMentors((mentorData?.data || []).map((mentor) => ({
+        ...mentor.user,
+        mentor_profile: mentor,
+      })));
       setSuperColleges(superCollegeData || []);
       setCourses(courseData || []);
       setBatches(batchData || []);
@@ -346,8 +352,6 @@ const AdminApprovals = () => {
   const updateStudentFilter = (name, value) => {
     setStudentFilters((prev) => ({ ...prev, [name]: value, page: name === "page" ? value : 1 }));
   };
-
-  const mentors = users.filter((user) => user.role === "MENTOR");
 
   const changeAdminForm = (name, value) => {
     setAdminForm((prev) => ({ ...prev, [name]: value }));

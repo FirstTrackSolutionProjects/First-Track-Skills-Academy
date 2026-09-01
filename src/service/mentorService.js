@@ -19,3 +19,10 @@ export const createMentor = async (payload) => {
   const response = await axiosMentorInstance.post("/", payload);
   return response.data.data;
 };
+
+export const getMentors = async (params = {}) => {
+  const response = await axiosMentorInstance.get("/", {
+    params,
+  });
+  return response.data.data;
+};
