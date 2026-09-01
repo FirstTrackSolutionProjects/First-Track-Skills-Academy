@@ -21,10 +21,8 @@ import FAQ from "./pages/FAQ";
 import Enroll from "./pages/Enroll";
 import Login from "./pages/Login";
 import CollegeOnboarding from "./pages/CollegeOnboarding";
-import AdminOnboarding from "./pages/AdminOnboarding";
-import MentorOnboarding from "./pages/MentorOnboarding";
 import PartnerJoin from "./pages/PartnerJoin";
-import AdminApprovals from "./pages/AdminApprovals";
+import AdminDashboard from "./pages/AdminDashboard";
 import CollegeDashboard from "./pages/CollegeDashboard";
 import RoleDashboard from "./pages/RoleDashboard";
 import PartnerEnroll from "./pages/PartnerEnroll";
@@ -69,9 +67,9 @@ function App() {
         <Route path="/enroll" element={<Enroll />} />
         <Route path="/login" element={<Login />} />
         <Route path="/college-onboarding" element={<CollegeOnboarding />} />
-        <Route path="/admin-onboarding" element={<AdminOnboarding />} />
-        <Route path="/mentor-onboarding" element={<MentorOnboarding />} />
-        <Route path="/admin-dashboard" element={<AdminApprovals />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/admin-onboarding" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/mentor-onboarding" element={<Navigate to="/dashboard" replace />} />
         <Route path="/admin/approvals" element={<Navigate to="/admin-dashboard" replace />} />
         <Route path="/college-dashboard" element={<CollegeDashboard />} />
         <Route path="/dashboard" element={<RoleDashboard />} />

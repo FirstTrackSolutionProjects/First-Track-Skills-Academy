@@ -187,7 +187,7 @@ const menuSections = (role) =>
         { title: "Account", icon: <FaUserShield />, items: [{ name: "Profile", icon: <FaUserShield /> }] },
       ];
 
-const AdminApprovals = () => {
+const AdminDashboard = () => {
   const { auth } = useStore();
   const [colleges, setColleges] = useState([]);
   const [users, setUsers] = useState([]);
@@ -1471,4 +1471,4 @@ const Panel = ({ children }) => (
 const fullName = (user) =>
   [user.first_name, user.middle_name, user.last_name].filter(Boolean).join(" ");
 
-export default AdminApprovals;
+export default AdminDashboard;
