@@ -104,6 +104,44 @@ const initialBatchForm = {
   status: "ACTIVE",
 };
 
+const fullName = (user) =>
+  [user?.first_name, user?.middle_name, user?.last_name].filter(Boolean).join(" ");
+
+const getAdminRows = (admin) => [
+  { label: "Full Name", value: fullName(admin) || "N/A" },
+  { label: "Email", value: admin.email || "N/A" },
+  { label: "Role", value: admin.role || "ADMIN" },
+  { label: "Phone Number", value: admin.phone_number || "Not provided" },
+  { label: "Department", value: admin.department || admin.admin_profile?.department || "Not provided" },
+  { label: "Account Created", value: admin.created_at ? new Date(admin.created_at).toLocaleString() : "N/A" },
+];
+
+const getMentorRows = (mentor) => {
+  const profile = mentor.mentor_profile || {};
+  const subjects = Array.isArray(profile.subjects)
+    ? profile.subjects.join(", ")
+    : profile.subjects || "None listed";
+
+  return [
+    { label: "Full Name", value: fullName(mentor) || "N/A" },
+    { label: "Email", value: mentor.email || "N/A" },
+    { label: "Role", value: mentor.role || "MENTOR" },
+    { label: "Experience", value: `${profile.years_of_experience ?? 0} years` },
+    { label: "Subjects", value: subjects },
+    { label: "Bio", value: profile.bio || "No bio added." },
+  ];
+};
+
+const getStudentRows = (student) => [
+  { label: "Student Name", value: student.student_name || fullName(student) || "N/A" },
+  { label: "Email", value: student.email || "N/A" },
+  { label: "College", value: student.college_name || "N/A" },
+  { label: "Enrolled Course", value: student.course_title || "N/A" },
+  { label: "Batch Timing", value: student.batch_timing || "N/A" },
+  { label: "Enrollment Status", value: student.enrollment_status || "N/A" },
+  { label: "Joined Date", value: student.joined_at ? new Date(student.joined_at).toLocaleDateString() : "N/A" },
+];
+
 const menuSections = (role) =>
   role === "SUPERADMIN"
     ? [
@@ -177,13 +215,9 @@ const menuSections = (role) =>
         {
           title: "College",
           icon: <FaBuilding />,
-          items: [
-            { name: "Pending", icon: <FaClipboardList /> },
-            { name: "Approved", icon: <FaCheck /> },
-            { name: "Rejected", icon: <FaTimes /> },
-            { name: "All Colleges", icon: <FaBuilding /> },
-          ],
+          items: [{ name: "All Colleges", icon: <FaBuilding /> }],
         },
+        { title: "Students", icon: <FaUserGraduate />, items: [{ name: "Students", icon: <FaUsers /> }] },
         { title: "Account", icon: <FaUserShield />, items: [{ name: "Profile", icon: <FaUserShield /> }] },
       ];
 
@@ -222,6 +256,7 @@ const AdminDashboard = () => {
   const [courseForm, setCourseForm] = useState(initialCourseForm);
   const [batchForm, setBatchForm] = useState(initialBatchForm);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [selectedDetail, setSelectedDetail] = useState(null);
 
   const role = auth?.user?.role;
   const isAdmin = role === "ADMIN" || role === "SUPERADMIN";
@@ -255,7 +290,7 @@ const AdminDashboard = () => {
   }, [auth, isSuperadmin]);
 
   const loadStudents = useCallback(async () => {
-    if (!isSuperadmin) return;
+    if (!isAdmin) return;
     try {
       setStudentsLoading(true);
       const data = await getSuperadminStudents(auth.token, studentFilters);
@@ -265,7 +300,7 @@ const AdminDashboard = () => {
     } finally {
       setStudentsLoading(false);
     }
-  }, [auth, isSuperadmin, studentFilters]);
+  }, [auth, isAdmin, studentFilters]);
 
   useEffect(() => {
     if (isAdmin) {
@@ -308,12 +343,14 @@ const AdminDashboard = () => {
   }, [activeMenu, colleges, search]);
 
   const courseOptions = useMemo(() => {
+    if (!isSuperadmin) return courses.map((course) => ({ id: course.id, title: course.title }));
+
     const map = new Map();
     superColleges.forEach((college) => {
       college.courses?.forEach((course) => map.set(course.id, course.title));
     });
     return Array.from(map.entries()).map(([id, title]) => ({ id, title }));
-  }, [superColleges]);
+  }, [courses, isSuperadmin, superColleges]);
 
   const handleStatus = async (collegeId, status) => {
     const parsedParams = collegeProfileIdParamSchema.safeParse({ college_id: collegeId });
@@ -346,7 +383,12 @@ const AdminDashboard = () => {
   const handleMenuClick = (name) => {
     setActiveMenu(name);
     setFieldErrors({});
+    setSelectedDetail(null);
     if (name !== "College Details") setSelectedCollege(null);
+  };
+
+  const openDetail = (title, rows) => {
+    setSelectedDetail({ title, rows });
   };
 
   const updateStudentFilter = (name, value) => {
@@ -541,8 +583,18 @@ const AdminDashboard = () => {
                 </>
               )}
 
-              {activeMenu === "Admin Data" && <AdminDataPanel admins={users.filter((user) => ["ADMIN", "SUPERADMIN"].includes(user.role))} />}
-              {activeMenu === "Mentor Data" && <MentorDataPanel mentors={mentors} />}
+              {activeMenu === "Admin Data" && isSuperadmin && (
+                <AdminDataPanel
+                  admins={users.filter((user) => ["ADMIN", "SUPERADMIN"].includes(user.role))}
+                  onOpenAdmin={(admin) => openDetail("Admin Details", getAdminRows(admin))}
+                />
+              )}
+              {activeMenu === "Mentor Data" && (
+                <MentorDataPanel
+                  mentors={mentors}
+                  onOpenMentor={(mentor) => openDetail("Mentor Details", getMentorRows(mentor))}
+                />
+              )}
               {activeMenu === "Course Data" && <CourseDataPanel courses={courses} />}
               {activeMenu === "Batch Data" && <BatchDataPanel batches={batches} />}
               {activeMenu === "Add Admin" && isSuperadmin && (
@@ -585,6 +637,7 @@ const AdminDashboard = () => {
                   studentsPage={studentsPage}
                   loading={studentsLoading}
                   onFilterChange={updateStudentFilter}
+                  onOpenStudent={(student) => openDetail("Student Details", getStudentRows(student))}
                 />
               )}
 
@@ -635,9 +688,9 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                   <div className="grid gap-4 lg:grid-cols-3">
-                    <InfoBox label="Name" value={auth.user.name || auth.user.first_name || "Admin"} />
-                    <InfoBox label="Email" value={auth.user.email} />
-                    <InfoBox label="Role" value={auth.user.role} />
+                    <InfoBox label="Name" value={auth?.user?.name || auth?.user?.first_name || "Admin"} />
+                    <InfoBox label="Email" value={auth?.user?.email} />
+                    <InfoBox label="Role" value={auth?.user?.role} />
                   </div>
                 </Panel>
               )}
@@ -645,9 +698,49 @@ const AdminDashboard = () => {
           )}
         </main>
       </section>
+
+      {selectedDetail && (
+        <DetailModal
+          title={selectedDetail.title}
+          rows={selectedDetail.rows}
+          onClose={() => setSelectedDetail(null)}
+        />
+      )}
     </div>
   );
 };
+
+const DetailModal = ({ title, rows, onClose }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+    <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
+      <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+        <h3 className="text-xl font-bold text-slate-900">{title}</h3>
+        <button
+          onClick={onClose}
+          className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+        >
+          <FaTimes />
+        </button>
+      </div>
+      <div className="mt-4 grid gap-4">
+        {rows?.map((row) => (
+          <div key={row.label} className="border-b border-slate-50 pb-2 last:border-b-0">
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{row.label}</p>
+            <p className="mt-1 break-words text-sm font-semibold text-slate-800">{row.value}</p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-6 flex justify-end">
+        <button
+          onClick={onClose}
+          className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-200"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+);
 
 const HeroPanel = ({ metrics, isSuperadmin }) => (
   <Panel>
@@ -657,7 +750,9 @@ const HeroPanel = ({ metrics, isSuperadmin }) => (
           <FaUserShield />
           LIVE {isSuperadmin ? "SUPERADMIN" : "ADMIN"} OPERATIONS
         </span>
-        <h2 className="mt-8 max-w-xl text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">{isSuperadmin ? "Academy Control Dashboard" : "College Partner Dashboard"}</h2>
+        <h2 className="mt-8 max-w-xl text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
+          {isSuperadmin ? "Academy Control Dashboard" : "College Partner Dashboard"}
+        </h2>
         <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">
           {isSuperadmin
             ? "Review admins, colleges, courses, and student enrollments from one place."
@@ -691,7 +786,7 @@ const MetricSection = ({ metrics, isSuperadmin }) => (
   </Panel>
 );
 
-const AdminDataPanel = ({ admins }) => (
+const AdminDataPanel = ({ admins, onOpenAdmin }) => (
   <Panel>
     <div className="mb-6 flex items-center gap-4">
       <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
@@ -702,11 +797,11 @@ const AdminDataPanel = ({ admins }) => (
         <p className="text-slate-500">Admins and superadmins currently in the system.</p>
       </div>
     </div>
-    <UserTable users={admins} />
+    <UserTable users={admins} onOpenUser={onOpenAdmin} />
   </Panel>
 );
 
-const MentorDataPanel = ({ mentors }) => (
+const MentorDataPanel = ({ mentors, onOpenMentor }) => (
   <Panel>
     <div className="mb-6 flex items-center gap-4">
       <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
@@ -717,7 +812,7 @@ const MentorDataPanel = ({ mentors }) => (
         <p className="text-slate-500">Mentors currently available in the system.</p>
       </div>
     </div>
-    <UserTable users={mentors} emptyText="No mentors found." />
+    <UserTable users={mentors} emptyText="No mentors found." onOpenUser={onOpenMentor} />
   </Panel>
 );
 
@@ -920,7 +1015,6 @@ const CourseTable = ({ courses }) =>
     <EmptyState text="No courses found." />
   );
 
-
 const FormHeader = ({ icon, title, text }) => (
   <div className="mb-6 flex items-center gap-4">
     <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
@@ -1064,7 +1158,7 @@ const CollegeDrilldown = ({ colleges, openCollegeIds, openCourseIds, onToggleCol
   </Panel>
 );
 
-const StudentsPanel = ({ colleges, courseOptions, filters, studentsPage, loading, onFilterChange }) => (
+const StudentsPanel = ({ colleges, courseOptions, filters, studentsPage, loading, onFilterChange, onOpenStudent }) => (
   <Panel>
     <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div>
@@ -1129,7 +1223,7 @@ const StudentsPanel = ({ colleges, courseOptions, filters, studentsPage, loading
       </div>
     ) : (
       <>
-        <StudentEnrollmentTable students={studentsPage.data} />
+        <StudentEnrollmentTable students={studentsPage.data} onOpenStudent={onOpenStudent} />
         <Pagination page={studentsPage.page} totalPages={studentsPage.totalPages} onPageChange={(page) => onFilterChange("page", page)} />
       </>
     )}
@@ -1302,7 +1396,7 @@ const CollegeDetails = ({ college, updatingId, onBack, onStatus }) => (
   </Panel>
 );
 
-const UserTable = ({ users, emptyText = "No admin users found." }) =>
+const UserTable = ({ users, emptyText = "No admin users found.", onOpenUser }) =>
   users.length ? (
     <div className="overflow-x-auto">
       <table className="w-full text-left">
@@ -1315,8 +1409,12 @@ const UserTable = ({ users, emptyText = "No admin users found." }) =>
         </thead>
         <tbody>
           {users.map((user) => (
-            <tr key={user.id} className="border-b border-slate-100 last:border-b-0">
-              <td className="py-4 pr-4 font-semibold">{fullName(user) || "Unnamed User"}</td>
+            <tr
+              key={user.id}
+              onClick={() => onOpenUser?.(user)}
+              className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 last:border-b-0"
+            >
+              <td className="py-4 pr-4 font-semibold text-blue-700">{fullName(user) || "Unnamed User"}</td>
               <td className="py-4 pr-4 text-slate-600">{user.email}</td>
               <td className="py-4 pr-4"><StatusBadge status={user.role} /></td>
             </tr>
@@ -1356,7 +1454,7 @@ const StudentMiniTable = ({ students }) =>
     <EmptyState text="No students enrolled in this course." />
   );
 
-const StudentEnrollmentTable = ({ students }) =>
+const StudentEnrollmentTable = ({ students, onOpenStudent }) =>
   students.length ? (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
@@ -1373,8 +1471,12 @@ const StudentEnrollmentTable = ({ students }) =>
         </thead>
         <tbody>
           {students.map((student) => (
-            <tr key={student.enrollment_id} className="border-b border-slate-100 last:border-b-0">
-              <td className="py-4 pr-4 font-semibold">{student.student_name || "Unnamed Student"}</td>
+            <tr
+              key={student.enrollment_id}
+              onClick={() => onOpenStudent?.(student)}
+              className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 last:border-b-0"
+            >
+              <td className="py-4 pr-4 font-semibold text-blue-700">{student.student_name || "Unnamed Student"}</td>
               <td className="py-4 pr-4 text-slate-600">{student.email}</td>
               <td className="py-4 pr-4 text-slate-600">{student.college_name}</td>
               <td className="py-4 pr-4 text-slate-600">{student.course_title}</td>
@@ -1467,8 +1569,5 @@ const EmptyState = ({ text }) => (
 const Panel = ({ children }) => (
   <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6 lg:p-7">{children}</section>
 );
-
-const fullName = (user) =>
-  [user.first_name, user.middle_name, user.last_name].filter(Boolean).join(" ");
 
 export default AdminDashboard;
