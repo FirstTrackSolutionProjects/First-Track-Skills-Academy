@@ -51,8 +51,8 @@ const CollegeDashboard = () => {
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const [openSections, setOpenSections] = useState({
     Overview: true,
-    Courses: true,
-    College: true,
+    Courses: false,
+    College: false,
   });
   const [selectedCourse, setSelectedCourse] = useState(null);
 

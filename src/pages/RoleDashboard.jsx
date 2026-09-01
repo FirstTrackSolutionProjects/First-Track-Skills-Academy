@@ -87,9 +87,9 @@ const RoleDashboard = () => {
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [openSections, setOpenSections] = useState({
     Overview: true,
-    Batches: true,
-    Courses: true,
-    Account: true,
+    Batches: false,
+    Courses: false,
+    Account: false,
   });
 
   const role = auth?.user?.role;

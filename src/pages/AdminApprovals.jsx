@@ -203,14 +203,14 @@ const AdminApprovals = () => {
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const [openSections, setOpenSections] = useState({
     Overview: true,
-    Admin: true,
-    Mentors: true,
-    Courses: true,
-    Colleges: true,
-    "College Verification": true,
-    Students: true,
-    College: true,
-    Account: true,
+    Admin: false,
+    Mentors: false,
+    Courses: false,
+    Colleges: false,
+    "College Verification": false,
+    Students: false,
+    College: false,
+    Account: false,
   });
   const [openCollegeIds, setOpenCollegeIds] = useState({});
   const [openCourseIds, setOpenCourseIds] = useState({});
