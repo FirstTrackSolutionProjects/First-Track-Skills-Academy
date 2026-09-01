@@ -44,6 +44,8 @@ const statusColors = {
   IN_PROGRESS: "bg-amber-50 text-amber-700 border-amber-100",
   COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-100",
   CANCELLED: "bg-rose-50 text-rose-700 border-rose-100",
+  ACTIVE: "bg-emerald-50 text-emerald-700 border-emerald-100",
+  INACTIVE: "bg-slate-50 text-slate-700 border-slate-200",
 };
 
 const initialStudentFilters = {
@@ -114,12 +116,21 @@ const menuSections = (role) =>
             { name: "Add Admin", icon: <FaPlus /> },
           ],
         },
-        { title: "Mentors", icon: <FaUsers />, items: [{ name: "Add Mentor", icon: <FaPlus /> }] },
+        {
+          title: "Mentors",
+          icon: <FaUsers />,
+          items: [
+            { name: "Mentor Data", icon: <FaUsers /> },
+            { name: "Add Mentor", icon: <FaPlus /> },
+          ],
+        },
         {
           title: "Courses",
           icon: <FaBookOpen />,
           items: [
+            { name: "Course Data", icon: <FaBookOpen /> },
             { name: "Add Course", icon: <FaPlus /> },
+            { name: "Batch Data", icon: <FaLayerGroup /> },
             { name: "Add Batch", icon: <FaLayerGroup /> },
           ],
         },
@@ -145,12 +156,21 @@ const menuSections = (role) =>
       ]
     : [
         { title: "Overview", icon: <FaHome />, items: [{ name: "Dashboard", icon: <FaHome /> }] },
-        { title: "Mentors", icon: <FaUsers />, items: [{ name: "Add Mentor", icon: <FaPlus /> }] },
+        {
+          title: "Mentors",
+          icon: <FaUsers />,
+          items: [
+            { name: "Mentor Data", icon: <FaUsers /> },
+            { name: "Add Mentor", icon: <FaPlus /> },
+          ],
+        },
         {
           title: "Courses",
           icon: <FaBookOpen />,
           items: [
+            { name: "Course Data", icon: <FaBookOpen /> },
             { name: "Add Course", icon: <FaPlus /> },
+            { name: "Batch Data", icon: <FaLayerGroup /> },
             { name: "Add Batch", icon: <FaLayerGroup /> },
           ],
         },
@@ -518,6 +538,9 @@ const AdminApprovals = () => {
               )}
 
               {activeMenu === "Admin Data" && <AdminDataPanel admins={users.filter((user) => ["ADMIN", "SUPERADMIN"].includes(user.role))} />}
+              {activeMenu === "Mentor Data" && <MentorDataPanel mentors={mentors} />}
+              {activeMenu === "Course Data" && <CourseDataPanel courses={courses} />}
+              {activeMenu === "Batch Data" && <BatchDataPanel batches={batches} />}
               {activeMenu === "Add Admin" && isSuperadmin && (
                 <AdminFormPanel form={adminForm} errors={fieldErrors} loading={formLoading} onChange={changeAdminForm} onSubmit={submitAdmin} />
               )}
@@ -679,6 +702,51 @@ const AdminDataPanel = ({ admins }) => (
   </Panel>
 );
 
+const MentorDataPanel = ({ mentors }) => (
+  <Panel>
+    <div className="mb-6 flex items-center gap-4">
+      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+        <FaUsers />
+      </div>
+      <div>
+        <h3 className="text-2xl font-bold">Mentor Data</h3>
+        <p className="text-slate-500">Mentors currently available in the system.</p>
+      </div>
+    </div>
+    <UserTable users={mentors} emptyText="No mentors found." />
+  </Panel>
+);
+
+const CourseDataPanel = ({ courses }) => (
+  <Panel>
+    <div className="mb-6 flex items-center gap-4">
+      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+        <FaBookOpen />
+      </div>
+      <div>
+        <h3 className="text-2xl font-bold">Course Data</h3>
+        <p className="text-slate-500">Existing courses available for batch creation.</p>
+      </div>
+    </div>
+    <CourseTable courses={courses} />
+  </Panel>
+);
+
+const BatchDataPanel = ({ batches }) => (
+  <Panel>
+    <div className="mb-6 flex items-center gap-4">
+      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+        <FaLayerGroup />
+      </div>
+      <div>
+        <h3 className="text-2xl font-bold">Batch Data</h3>
+        <p className="text-slate-500">Existing batches and assigned mentors.</p>
+      </div>
+    </div>
+    <BatchTable batches={batches} />
+  </Panel>
+);
+
 const AdminFormPanel = ({ form, errors, loading, onChange, onSubmit }) => (
   <Panel>
     <FormHeader icon={<FaUserShield />} title="Add Admin" text="Create an admin account for academy operations." />
@@ -816,6 +884,38 @@ const BatchTable = ({ batches }) =>
   ) : (
     <EmptyState text="No batches created yet." />
   );
+
+const CourseTable = ({ courses }) =>
+  courses.length ? (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left text-sm">
+        <thead>
+          <tr className="border-b border-slate-200 text-slate-500">
+            <th className="py-3 pr-4">COURSE</th>
+            <th className="py-3 pr-4">CATEGORY</th>
+            <th className="py-3 pr-4">DURATION</th>
+            <th className="py-3 pr-4">STATUS</th>
+          </tr>
+        </thead>
+        <tbody>
+          {courses.map((course) => (
+            <tr key={course.id} className="border-b border-slate-100 last:border-b-0">
+              <td className="py-4 pr-4">
+                <p className="font-semibold">{course.title}</p>
+                <p className="mt-1 text-xs text-slate-500">{course.slug || "No slug"}</p>
+              </td>
+              <td className="py-4 pr-4 text-slate-600">{course.category}</td>
+              <td className="py-4 pr-4 text-slate-600">{course.duration_weeks} weeks</td>
+              <td className="py-4 pr-4"><StatusBadge status={course.is_active ? "ACTIVE" : "INACTIVE"} /></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  ) : (
+    <EmptyState text="No courses found." />
+  );
+
 
 const FormHeader = ({ icon, title, text }) => (
   <div className="mb-6 flex items-center gap-4">
@@ -1198,7 +1298,7 @@ const CollegeDetails = ({ college, updatingId, onBack, onStatus }) => (
   </Panel>
 );
 
-const UserTable = ({ users }) =>
+const UserTable = ({ users, emptyText = "No admin users found." }) =>
   users.length ? (
     <div className="overflow-x-auto">
       <table className="w-full text-left">
@@ -1221,7 +1321,7 @@ const UserTable = ({ users }) =>
       </table>
     </div>
   ) : (
-    <EmptyState text="No admin users found." />
+    <EmptyState text={emptyText} />
   );
 
 const StudentMiniTable = ({ students }) =>
