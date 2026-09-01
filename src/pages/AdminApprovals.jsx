@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
+  FaBookOpen,
   FaBuilding,
   FaCheck,
   FaChevronDown,
