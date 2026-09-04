@@ -76,28 +76,28 @@ const BackendCourse = () => {
   ];
 
   return (
-    <section className="py-24 bg-[#FFF8F0]">
-      <div className="max-w-7xl mx-auto px-6">
+    <section className="py-16 sm:py-24 bg-[#FFF8F0]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Heading */}
-        <div className="text-center mb-16">
-          <span className="inline-block bg-orange-100 text-orange-600 px-5 py-2 rounded-full font-semibold">
+        <div className="text-center mb-12 sm:mb-16">
+          <span className="inline-block bg-orange-100 text-orange-600 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full font-semibold text-xs sm:text-sm">
             PROGRAM 02
           </span>
 
-          <h2 className="text-5xl font-bold mt-5 text-gray-900">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mt-4 sm:mt-5 text-gray-900">
             Backend Development
           </h2>
 
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto mt-6 leading-8">
+          <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto mt-4 sm:mt-6 leading-relaxed sm:leading-8">
             Become a professional Backend Developer by mastering Node.js, Express.js,
             RESTful APIs, databases, authentication, cloud deployment, and system
             architecture with hands-on projects and placement preparation.
           </p>
 
-          <div className="mt-8 flex justify-center">
+          <div className="mt-6 sm:mt-8 flex justify-center">
             <button
               onClick={() => navigate("/enroll?course=" + encodeURIComponent("Backend Development"))}
-              className="inline-flex items-center gap-3 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-bold transition hover:scale-105 shadow-lg shadow-orange-500/30 text-base cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-orange-500 hover:bg-orange-600 text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold transition hover:scale-105 shadow-lg shadow-orange-500/30 text-base cursor-pointer"
             >
               Enroll Now
               <FaArrowRight />
@@ -106,48 +106,48 @@ const BackendCourse = () => {
         </div>
 
         {/* Hero */}
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           {/* Left Image */}
           <div className="relative">
             <img
               src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1000"
               alt="Backend Development"
-              className="rounded-[35px] shadow-2xl w-full object-cover h-[450px]"
+              className="rounded-[24px] sm:rounded-[35px] shadow-2xl w-full object-cover h-[280px] sm:h-[380px] lg:h-[450px]"
             />
 
-            <div className="absolute top-6 left-6 bg-white rounded-2xl shadow-xl px-6 py-4">
-              <h3 className="text-3xl font-bold text-orange-500">
+            <div className="absolute top-3 left-3 sm:top-6 sm:left-6 bg-white rounded-2xl shadow-xl px-4 py-2.5 sm:px-6 sm:py-4">
+              <h3 className="text-xl sm:text-3xl font-bold text-orange-500">
                 120 Days
               </h3>
-              <p className="text-gray-500">
+              <p className="text-xs sm:text-sm text-gray-500">
                 Intensive Program
               </p>
             </div>
 
-            <div className="absolute bottom-6 right-6 bg-orange-500 text-white rounded-2xl px-6 py-4 shadow-xl">
-              <h3 className="text-3xl font-bold">
+            <div className="absolute bottom-3 right-3 sm:bottom-6 sm:right-6 bg-orange-500 text-white rounded-2xl px-4 py-2.5 sm:px-6 sm:py-4 shadow-xl">
+              <h3 className="text-xl sm:text-3xl font-bold">
                 100%
               </h3>
-              <p>Placement Support</p>
+              <p className="text-xs sm:text-sm">Placement Support</p>
             </div>
           </div>
 
           {/* Right Skills Grid */}
           <div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-8">
+            <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8 text-center lg:text-left">
               Technologies You'll Master
             </h3>
 
-            <div className="grid grid-cols-2 gap-5">
+            <div className="grid grid-cols-2 gap-3 sm:gap-5">
               {technologies.map((item, index) => (
                 <div
                   key={index}
-                  className="bg-white rounded-2xl p-5 shadow hover:-translate-y-2 hover:shadow-xl transition"
+                  className="bg-white rounded-2xl p-4 sm:p-5 shadow hover:-translate-y-1 hover:shadow-xl transition"
                 >
-                  <div className={`text-3xl ${item.color} mb-4`}>
+                  <div className={`text-2xl sm:text-3xl ${item.color} mb-2 sm:mb-4`}>
                     {item.icon}
                   </div>
-                  <h4 className="font-bold text-lg">
+                  <h4 className="font-bold text-sm sm:text-lg text-gray-900">
                     {item.title}
                   </h4>
                 </div>
@@ -157,18 +157,18 @@ const BackendCourse = () => {
         </div>
 
         {/* Bottom Section */}
-        <div className="grid lg:grid-cols-2 gap-10 mt-20">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-10 mt-12 sm:mt-20">
           {/* Program Highlights */}
-          <div className="bg-white rounded-3xl shadow-lg p-10">
-            <h3 className="text-2xl font-bold mb-8">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg p-6 sm:p-10">
+            <h3 className="text-xl sm:text-2xl font-bold mb-6 sm:mb-8">
               Program Highlights
             </h3>
 
-            <div className="space-y-5">
+            <div className="space-y-4 sm:space-y-5">
               {highlights.map((item, index) => (
-                <div key={index} className="flex items-center gap-4">
-                  <FaCheckCircle className="text-orange-500 flex-shrink-0" />
-                  <span className="text-gray-700 font-medium">
+                <div key={index} className="flex items-center gap-3 sm:gap-4">
+                  <FaCheckCircle className="text-orange-500 flex-shrink-0 text-base sm:text-lg" />
+                  <span className="text-sm sm:text-base text-gray-700 font-medium">
                     {item}
                   </span>
                 </div>
@@ -177,13 +177,13 @@ const BackendCourse = () => {
           </div>
 
           {/* Course Details Card */}
-          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-3xl p-10 text-white shadow-xl flex flex-col justify-between">
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl sm:rounded-3xl p-6 sm:p-10 text-white shadow-xl flex flex-col justify-between">
             <div>
-              <h3 className="text-3xl font-bold mb-8">
+              <h3 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">
                 Course Details
               </h3>
 
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6 text-sm sm:text-base">
                 <div className="flex justify-between border-b border-white/20 pb-3">
                   <span>Duration</span>
                   <strong>120 Days</strong>
@@ -214,7 +214,7 @@ const BackendCourse = () => {
                   <strong>100% Assistance</strong>
                 </div>
 
-                <div className="flex justify-between text-3xl font-bold mt-8">
+                <div className="flex justify-between text-2xl sm:text-3xl font-bold mt-6 sm:mt-8">
                   <span>Fees</span>
                   <span>₹55,750</span>
                 </div>
@@ -223,7 +223,7 @@ const BackendCourse = () => {
 
             <button
               onClick={() => navigate("/enroll?course=" + encodeURIComponent("Backend Development"))}
-              className="mt-10 w-full bg-white text-orange-600 py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:scale-105 transition shadow-lg text-lg cursor-pointer"
+              className="mt-8 sm:mt-10 w-full bg-white text-orange-600 py-3.5 sm:py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:scale-105 transition shadow-lg text-base sm:text-lg cursor-pointer"
             >
               Enroll Now
               <FaArrowRight />
@@ -232,25 +232,25 @@ const BackendCourse = () => {
         </div>
 
         {/* Extra Features */}
-        <div className="grid md:grid-cols-4 gap-6 mt-20">
-          <div className="bg-white rounded-3xl shadow p-8 text-center hover:-translate-y-2 transition">
-            <FaServer className="text-5xl text-orange-500 mx-auto mb-4" />
-            <h4 className="font-bold text-lg">Backend Labs</h4>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-12 sm:mt-20">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow p-5 sm:p-8 text-center hover:-translate-y-1 transition">
+            <FaServer className="text-3xl sm:text-5xl text-orange-500 mx-auto mb-3 sm:mb-4" />
+            <h4 className="font-bold text-sm sm:text-lg text-gray-900">Backend Labs</h4>
           </div>
 
-          <div className="bg-white rounded-3xl shadow p-8 text-center hover:-translate-y-2 transition">
-            <FaProjectDiagram className="text-5xl text-orange-500 mx-auto mb-4" />
-            <h4 className="font-bold text-lg">Live Projects</h4>
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow p-5 sm:p-8 text-center hover:-translate-y-1 transition">
+            <FaProjectDiagram className="text-3xl sm:text-5xl text-orange-500 mx-auto mb-3 sm:mb-4" />
+            <h4 className="font-bold text-sm sm:text-lg text-gray-900">Live Projects</h4>
           </div>
 
-          <div className="bg-white rounded-3xl shadow p-8 text-center hover:-translate-y-2 transition">
-            <FaCertificate className="text-5xl text-orange-500 mx-auto mb-4" />
-            <h4 className="font-bold text-lg">Certification</h4>
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow p-5 sm:p-8 text-center hover:-translate-y-1 transition">
+            <FaCertificate className="text-3xl sm:text-5xl text-orange-500 mx-auto mb-3 sm:mb-4" />
+            <h4 className="font-bold text-sm sm:text-lg text-gray-900">Certification</h4>
           </div>
 
-          <div className="bg-white rounded-3xl shadow p-8 text-center hover:-translate-y-2 transition">
-            <FaBriefcase className="text-5xl text-orange-500 mx-auto mb-4" />
-            <h4 className="font-bold text-lg">Placement Support</h4>
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow p-5 sm:p-8 text-center hover:-translate-y-1 transition">
+            <FaBriefcase className="text-3xl sm:text-5xl text-orange-500 mx-auto mb-3 sm:mb-4" />
+            <h4 className="font-bold text-sm sm:text-lg text-gray-900">Placement Support</h4>
           </div>
         </div>
       </div>

@@ -337,7 +337,7 @@ const Enroll = () => {
 
             <form
               onSubmit={handleSubmit}
-              className="bg-white rounded-3xl shadow-xl p-8 md:p-10"
+              className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-5 sm:p-8 md:p-10"
             >
               {isLoggedIn ? (
                 <div className="bg-orange-50 border border-orange-200 rounded-2xl p-5 mb-8 flex items-center justify-between flex-wrap gap-4">
@@ -566,29 +566,19 @@ const Enroll = () => {
                 Course &amp; Batch Preference
               </h2>
 
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-bold text-gray-700">
-                      Selected Course
-                    </label>
-                    <span className="text-[11px] font-bold text-orange-600 bg-orange-50 border border-orange-200 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                      Fixed
-                    </span>
-                  </div>
-                  <div className="relative">
-                    <select
-                      name="course"
-                      value={formData.course}
-                      disabled
-                      className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-100 text-gray-900 font-bold cursor-not-allowed appearance-none shadow-sm"
-                    >
-                      <option value={formData.course}>{formData.course}</option>
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-xs text-gray-500 font-semibold">
-                      Locked
-                    </div>
-                  </div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                    Selected Course
+                  </label>
+                  <select
+                    name="course"
+                    value={formData.course}
+                    disabled
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-100 text-gray-900 font-semibold cursor-not-allowed shadow-sm"
+                  >
+                    <option value={formData.course}>{formData.course}</option>
+                  </select>
                 </div>
 
                 <div>
