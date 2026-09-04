@@ -186,16 +186,21 @@ const Enroll = () => {
               className="border rounded-xl px-4 py-3"
             />
 
-                        <input
-              type="date"
-              name="dob"
-              value={formData.dob}
-              onChange={handleChange}
-              required
-              className="w-full h-14 border border-gray-300 rounded-xl px-4 bg-white
-                        text-gray-700 focus:outline-none focus:ring-2
-                        focus:ring-orange-500"
-            />
+                                    <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">
+                Date of Birth
+              </label>
+              <input
+                type="date"
+                name="dob"
+                value={formData.dob}
+                onChange={handleChange}
+                required
+                className="w-full h-14 border border-gray-300 rounded-xl px-4 bg-white
+                          text-gray-700 focus:outline-none focus:ring-2
+                          focus:ring-orange-500"
+              />
+            </div>
             <select
               name="gender"
               value={formData.gender}

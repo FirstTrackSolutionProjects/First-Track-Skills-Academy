@@ -78,10 +78,10 @@ const Contact = () => {
             <FaMapMarkerAlt className="text-4xl text-orange-500 mx-auto mb-4" />
             <h3 className="font-bold text-xl mb-2">Address</h3>
             <p className="text-gray-600">
-              Bhubaneswar,
-              <br />
-              Odisha, India
-            </p>
+  Saheed Nagar,
+  <br />
+  Bhubaneswar, Odisha - 751007
+</p>
           </div>
 
           <div className="bg-white rounded-3xl shadow-lg p-8 text-center">
