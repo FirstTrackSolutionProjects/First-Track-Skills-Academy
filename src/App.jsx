@@ -20,6 +20,8 @@ import RefundCancel from "./pages/RefundCancel";
 import FAQ from "./pages/FAQ";
 import Enroll from "./pages/Enroll";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import CollegeOnboarding from "./pages/CollegeOnboarding";
 import PartnerJoin from "./pages/PartnerJoin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -66,6 +68,9 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/enroll" element={<Enroll />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/college-onboarding" element={<CollegeOnboarding />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/admin-onboarding" element={<Navigate to="/dashboard" replace />} />

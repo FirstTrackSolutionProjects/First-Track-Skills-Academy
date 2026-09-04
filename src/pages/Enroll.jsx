@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { FaPaperPlane, FaSpinner } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { COURSES_ENUM } from "../constants/enums";
@@ -8,20 +8,20 @@ import putObjectService from "@/services/putObjectService";
 import sendEnrollment from "@/services/courses/send_enrollment.courses.service";
 
 const INITIAL_FORM_STATE = Object.freeze({
-  fullName: "Test",
-  email: "test@gmail.com",
-  phone: "9123465569",
-  dob: "2004-04-29",
-  gender: "Male",
-  district: "Motihari",
-  state: "Bihar",
-  pin: "845401",
-  course: COURSES_ENUM.FRONTEND_DEVELOPMENT,
-  mode: "Online",
-  batch: "Evening",
-  qualification: "B.Tech",
-  college: "IIITBH",
-  message: "Message",
+  fullName: "",
+  email: "",
+  phone: "",
+  dob: "",
+  gender: "",
+  district: "",
+  state: "",
+  pin: "",
+  course: "",
+  mode: "",
+  batch: "",
+  qualification: "",
+  college: "",
+  message: "",
   files: {
     profileImage: "",
     resume: "",
@@ -117,18 +117,26 @@ const Enroll = () => {
   };
 
   return (
-    <section className="bg-[#FFF8F0] py-20">
+    <section className="bg-[#FFF8F0] px-4 pb-20 pt-28 sm:px-0 sm:py-28">
       <div className="max-w-6xl mx-auto px-5">
 
-        <div className="text-center mb-12">
+                <div className="text-center mb-12">
 
           <span className="bg-orange-100 text-orange-600 px-5 py-2 rounded-full font-semibold">
             Admission Form
           </span>
 
-          <h1 className="text-4xl md:text-5xl font-bold mt-5">
-            Enroll Now
-          </h1>
+                    <NavLink to="/" className="flex flex-col items-center gap-3 mt-5">
+            <img
+              src="/images/companylogo.jpg"
+              alt="First Track"
+              className="w-24 h-24 rounded-full border-2 border-orange-500 object-cover shadow-md"
+            />
+            <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900">
+              First Track
+              <span className="text-orange-500"> Skills Academy</span>
+            </h1>
+          </NavLink>
 
           <p className="text-gray-600 mt-4 max-w-2xl mx-auto">
             Begin your career journey by enrolling in one of our
@@ -178,24 +186,16 @@ const Enroll = () => {
               className="border rounded-xl px-4 py-3"
             />
 
-            <div className="relative">
-              <input
-                type="date"
-                name="dob"
-                value={formData.dob}
-                onChange={handleChange}
-                required
-                className="w-full h-14 border border-gray-300 rounded-xl px-4 bg-white
-                          text-gray-700 focus:outline-none focus:ring-2
-                          focus:ring-orange-500"
-              />
-              {!formData.dob && (
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                  Select Date of Birth
-                </span>
-              )}
-            </div>
-
+                        <input
+              type="date"
+              name="dob"
+              value={formData.dob}
+              onChange={handleChange}
+              required
+              className="w-full h-14 border border-gray-300 rounded-xl px-4 bg-white
+                        text-gray-700 focus:outline-none focus:ring-2
+                        focus:ring-orange-500"
+            />
             <select
               name="gender"
               value={formData.gender}
