@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import useStore from "../store/useStore";
 import {
   FaChalkboardTeacher,
   FaLaptopCode,
@@ -52,6 +53,7 @@ const stats = [
 
 const Features = () => {
   const navigate = useNavigate();
+  const { auth } = useStore();
 
   return (
     <section className="relative overflow-hidden bg-[#FFF8F0] py-16 md:py-24">
@@ -81,13 +83,31 @@ const Features = () => {
               and placement support.
             </p>
 
-            <button
-              onClick={() => navigate("/courses")}
-              className="mt-8 inline-flex items-center gap-3 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-semibold transition hover:scale-105 shadow-lg"
-            >
-              Explore Courses
-              <FaArrowRight />
-            </button>
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <button
+                onClick={() => navigate("/courses")}
+                className="inline-flex items-center gap-3 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-semibold transition hover:scale-105 shadow-lg"
+              >
+                Explore Courses
+                <FaArrowRight />
+              </button>
+              {auth ? (
+                <button
+                  onClick={() => navigate("/dashboard")}
+                  className="inline-flex items-center gap-3 border-2 border-orange-500 text-orange-600 hover:bg-orange-500 hover:text-white px-8 py-4 rounded-xl font-semibold transition hover:scale-105 shadow-lg"
+                >
+                  Go to Dashboard
+                  <FaArrowRight />
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate("/student-onboarding")}
+                  className="inline-flex items-center gap-3 border-2 border-orange-500 text-orange-600 hover:bg-orange-500 hover:text-white px-8 py-4 rounded-xl font-semibold transition hover:scale-105 shadow-lg"
+                >
+                  Register as Student
+                </button>
+              )}
+            </div>
 
           </div>
 

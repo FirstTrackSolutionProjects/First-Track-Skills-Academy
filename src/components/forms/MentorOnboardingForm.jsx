@@ -10,7 +10,6 @@ const MentorOnboardingForm = () => {
     password: '',
     confirm_password: '',
     subjects: [],
-    years_of_experience: 0,
   });
 
   const [currentSubject, setCurrentSubject] = useState('');
@@ -166,17 +165,6 @@ const MentorOnboardingForm = () => {
               </div>
             )}
           </div>
-
-          <FormInput
-            label="Years Of Experience"
-            type="number"
-            name="years_of_experience"
-            min="0"
-            value={form.years_of_experience}
-            onChange={handleChange}
-            required
-          />
-
           <div className="pt-4">
             <button
               type="submit"

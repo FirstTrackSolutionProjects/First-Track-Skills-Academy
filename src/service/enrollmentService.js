@@ -7,3 +7,8 @@ export const enrollCohort = async (payload) => {
   );
   return response.data.data;
 };
+
+export const getMyEnrolledCourses = async () => {
+  const response = await axiosEnrollmentInstance.get('/my-courses');
+  return response.data.data;
+};

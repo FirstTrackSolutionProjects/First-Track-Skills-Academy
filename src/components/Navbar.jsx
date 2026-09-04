@@ -22,49 +22,14 @@ const Navbar = () => {
     document.body.style.overflow = open ? "hidden" : "auto";
   }, [open]);
 
-  const guestMenu = [
+  const menu = [
     { name: "Home", path: "/" },
     { name: "Courses", path: "/courses" },
     { name: "About", path: "/about" },
     { name: "Career", path: "/career" },
     { name: "Program Details", path: "/program-details" },
-    { name: "Enroll", path: "/enroll" },
     { name: "Contact", path: "/contact" },
-    { name: "College Account", path: "/college-onboarding" },
-    { name: "Login", path: "/login" },
   ];
-
-  const roleMenu = {
-    STUDENT: [
-      { name: "Home", path: "/" },
-      { name: "Courses", path: "/courses" },
-      { name: "Dashboard", path: "/dashboard" },
-      { name: "Contact", path: "/contact" },
-    ],
-    MENTOR: [
-      { name: "Home", path: "/" },
-      { name: "Courses", path: "/courses" },
-      { name: "Dashboard", path: "/dashboard" },
-      { name: "Contact", path: "/contact" },
-    ],
-    COLLEGE: [
-      { name: "Home", path: "/" },
-      { name: "Dashboard", path: "/dashboard" },
-      { name: "Contact", path: "/contact" },
-    ],
-    ADMIN: [
-      { name: "Home", path: "/" },
-      { name: "Dashboard", path: "/dashboard" },
-      { name: "Contact", path: "/contact" },
-    ],
-    SUPERADMIN: [
-      { name: "Home", path: "/" },
-      { name: "Dashboard", path: "/dashboard" },
-      { name: "Contact", path: "/contact" },
-    ],
-  };
-
-  const menu = auth ? roleMenu[role] || roleMenu.STUDENT : guestMenu;
 
   return (
     <>
@@ -125,9 +90,9 @@ const Navbar = () => {
           </NavLink>
 
           {/* Desktop Menu */}
-          <nav className="hidden lg:flex max-w-[760px] items-center gap-1 overflow-x-auto bg-white/10 backdrop-blur-xl rounded-full border border-white/20 px-3 py-2">
+          <nav className="hidden lg:flex max-w-[760px] items-center gap-1 overflow-x-auto bg-white/10 backdrop-blur-xl rounded-full border border-white/20 px-3 py-2 no-scrollbar">
 
-            {menu.filter((item) => auth || !["Login", "College Account"].includes(item.name)).map((item) => (
+            {menu.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
@@ -148,13 +113,21 @@ const Navbar = () => {
 
           {/* Desktop CTA */}
           {auth ? (
-            <button
-              onClick={storeActions.clearAuth}
-              className="hidden lg:flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full font-semibold transition hover:scale-105"
-            >
-              Logout
-              <FaArrowRight size={14} />
-            </button>
+            <div className="hidden lg:flex items-center gap-3">
+              <NavLink
+                to="/dashboard"
+                className="flex items-center gap-2 rounded-full border border-orange-200 bg-white px-5 py-3 font-semibold text-orange-600 transition hover:bg-orange-50"
+              >
+                Dashboard
+              </NavLink>
+              <button
+                onClick={storeActions.clearAuth}
+                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full font-semibold transition hover:scale-105"
+              >
+                Logout
+                <FaArrowRight size={14} />
+              </button>
+            </div>
           ) : (
             <div className="hidden lg:flex items-center gap-3">
               <NavLink
@@ -241,7 +214,7 @@ const Navbar = () => {
           {/* Links */}
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-6">
 
-            {menu.filter((item) => auth || !["Login", "College Account"].includes(item.name)).map((item) => (
+            {menu.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
@@ -264,16 +237,25 @@ const Navbar = () => {
           <div className="shrink-0 border-t border-orange-100 bg-white p-6">
 
             {auth ? (
-              <button
-                onClick={() => {
-                  storeActions.clearAuth();
-                  setOpen(false);
-                }}
-                className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-2xl font-semibold transition"
-              >
-                Logout
-                <FaArrowRight />
-              </button>
+              <div className="grid gap-3">
+                <NavLink
+                  to="/dashboard"
+                  onClick={() => setOpen(false)}
+                  className="w-full flex items-center justify-center gap-2 bg-orange-50 border border-orange-300 text-orange-600 py-3.5 rounded-2xl font-bold transition hover:bg-orange-100"
+                >
+                  Go to Dashboard
+                </NavLink>
+                <button
+                  onClick={() => {
+                    storeActions.clearAuth();
+                    setOpen(false);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-3.5 rounded-2xl font-semibold transition"
+                >
+                  Logout
+                  <FaArrowRight />
+                </button>
+              </div>
             ) : (
               <div className="grid gap-3">
                 <NavLink
@@ -290,13 +272,6 @@ const Navbar = () => {
                   className="flex items-center justify-center gap-2 rounded-2xl border border-orange-300 bg-white py-3.5 font-bold text-orange-600 shadow-sm transition hover:bg-orange-50"
                 >
                   Create College Account
-                </NavLink>
-                <NavLink
-                  to="/enroll"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center justify-center gap-2 rounded-2xl border border-orange-200 bg-orange-50 py-3 font-semibold text-orange-600 transition hover:bg-orange-100"
-                >
-                  Enroll Now
                 </NavLink>
               </div>
             )}

@@ -1,4 +1,4 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 import { paginationQuerySchema } from "./genericSchema";
 
 export const UserRoleEnum = z.enum(
@@ -51,6 +51,18 @@ export const baseUserSchema = z.object({
   }),
 
   role: UserRoleEnum.default("STUDENT"),
+
+  gender: z.string().trim().optional(),
+  phone_number: z.string().trim().optional(),
+  dob: z.string().trim().optional(),
+  district: z.string().trim().optional(),
+  state: z.string().trim().optional(),
+  pin: z.string().trim().optional(),
+  qualification: z.string().trim().optional(),
+  college: z.string().trim().optional(),
+  profile_image: z.string().trim().optional(),
+  resume: z.string().trim().optional(),
+  agree: z.boolean().optional(),
 });
 
 export const userRegistrationSchema = baseUserSchema.refine(

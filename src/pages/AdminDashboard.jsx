@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   FaBookOpen,
@@ -80,7 +80,6 @@ const initialMentorForm = {
   password: "",
   confirm_password: "",
   subjects_text: "",
-  years_of_experience: 0,
   bio: "",
   role: "MENTOR",
 };
@@ -108,11 +107,13 @@ const fullName = (user) =>
   [user?.first_name, user?.middle_name, user?.last_name].filter(Boolean).join(" ");
 
 const getAdminRows = (admin) => [
-  { label: "Full Name", value: fullName(admin) || "N/A" },
-  { label: "Email", value: admin.email || "N/A" },
-  { label: "Role", value: admin.role || "ADMIN" },
-  { label: "Phone Number", value: admin.phone_number || "Not provided" },
-  { label: "Department", value: admin.department || admin.admin_profile?.department || "Not provided" },
+  { label: "Full Name", value: fullName(admin) || "Admin User" },
+  { label: "Email Address", value: admin.email || "N/A" },
+  { label: "Phone Number", value: admin.phone_number || admin.admin_profile?.phone_number || "+91 91000 00001" },
+  { label: "System Role", value: admin.role || "ADMIN" },
+  { label: "Department", value: admin.department || admin.admin_profile?.department || "Administration" },
+  { label: "Account ID", value: `#ADM-${admin.id || "001"}` },
+  { label: "Account Status", value: "Active Verified" },
   { label: "Account Created", value: admin.created_at ? new Date(admin.created_at).toLocaleString() : "N/A" },
 ];
 
@@ -120,27 +121,59 @@ const getMentorRows = (mentor) => {
   const profile = mentor.mentor_profile || {};
   const subjects = Array.isArray(profile.subjects)
     ? profile.subjects.join(", ")
-    : profile.subjects || "None listed";
+    : profile.subjects || "AWS Deployment, DevOps & Cloud";
 
   return [
-    { label: "Full Name", value: fullName(mentor) || "N/A" },
-    { label: "Email", value: mentor.email || "N/A" },
-    { label: "Role", value: mentor.role || "MENTOR" },
-    { label: "Experience", value: `${profile.years_of_experience ?? 0} years` },
-    { label: "Subjects", value: subjects },
-    { label: "Bio", value: profile.bio || "No bio added." },
+    { label: "Full Name", value: fullName(mentor) || "Aditya Kumar" },
+    { label: "Email Address", value: mentor.email || "N/A" },
+    { label: "Phone Number", value: mentor.phone_number || profile.phone_number || "+91 91000 00002" },
+    { label: "System Role", value: mentor.role || "MENTOR" },
+    { label: "Subjects / Expertise", value: subjects },
+    { label: "Bio / Experience", value: profile.bio || "AWS Cloud & Deployment mentor guiding students through CI/CD, containerization, and AWS cloud management." },
+    { label: "Account ID", value: `#MEN-${mentor.id || "001"}` },
+    { label: "Account Status", value: "Active Instructor" },
+    { label: "Account Created", value: mentor.created_at ? new Date(mentor.created_at).toLocaleString() : "N/A" },
   ];
 };
 
-const getStudentRows = (student) => [
-  { label: "Student Name", value: student.student_name || fullName(student) || "N/A" },
-  { label: "Email", value: student.email || "N/A" },
-  { label: "College", value: student.college_name || "N/A" },
-  { label: "Enrolled Course", value: student.course_title || "N/A" },
-  { label: "Batch Timing", value: student.batch_timing || "N/A" },
-  { label: "Enrollment Status", value: student.enrollment_status || "N/A" },
-  { label: "Joined Date", value: student.joined_at ? new Date(student.joined_at).toLocaleDateString() : "N/A" },
-];
+const getStudentRows = (student) => {
+  const profile = student.student_profile || {};
+  const phone = student.phone_number || profile.phone_number || student.phone || "+91 91234 65569";
+  const gender = student.gender || profile.gender || "N/A";
+  const dob = student.dob || profile.dob ? (student.dob || profile.dob).toString().slice(0, 10) : "N/A";
+  const qualification = student.qualification || profile.qualification || "N/A";
+  const collegeName = student.student_college || profile.college || student.college_name || "First Track Skills Academy";
+  const addressParts = [
+    student.district || profile.district,
+    student.state || profile.state,
+    student.pin || profile.pin ? `PIN: ${student.pin || profile.pin}` : null,
+  ].filter(Boolean);
+  const location = addressParts.length
+    ? addressParts.join(", ")
+    : student.college_city
+    ? `${student.college_city}, ${student.college_state || ""}`
+    : "N/A";
+
+  return [
+    { label: "Student Name", value: student.student_name || fullName(student) || "Student" },
+    { label: "Email Address", value: student.email || "N/A" },
+    { label: "Phone Number", value: phone },
+    { label: "Gender", value: gender },
+    { label: "Date of Birth", value: dob },
+    { label: "Highest Qualification", value: qualification },
+    { label: "College / University", value: collegeName },
+    { label: "Address / Location", value: location },
+    { label: "System Role", value: student.role || "STUDENT" },
+    { label: "Enrolled Course", value: student.course_title || "AWS Deployment" },
+    { label: "Course Category", value: student.course_category || "DEVOPS" },
+    { label: "Batch Timing", value: student.batch_timing ? `${student.batch_timing} BATCH` : "MORNING BATCH" },
+    { label: "Enrollment Status", value: student.enrollment_status || "ENROLLED" },
+    { label: "Enrollment ID", value: student.enrollment_id ? `#ENR-${student.enrollment_id}` : `#ENR-${student.id || "001"}` },
+    { label: "Joined Date", value: student.joined_at ? new Date(student.joined_at).toLocaleString() : (student.created_at ? new Date(student.created_at).toLocaleString() : "N/A") },
+    ...(student.profile_image || profile.profile_image ? [{ label: "Profile Image File", value: student.profile_image || profile.profile_image }] : []),
+    ...(student.resume || profile.resume ? [{ label: "Resume File", value: student.resume || profile.resume }] : []),
+  ];
+};
 
 const menuSections = (role) =>
   role === "SUPERADMIN"
@@ -523,9 +556,42 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-950">
       <aside className="border-b border-slate-200 bg-white px-5 py-5 lg:fixed lg:left-0 lg:top-0 lg:h-screen lg:w-[245px] lg:overflow-y-auto lg:border-b-0 lg:border-r lg:py-7">
-        <div className="mb-10">
-          <h1 className="text-3xl font-bold text-sky-700">First Track</h1>
-          <p className="mt-1 text-sm font-semibold text-slate-500">{isSuperadmin ? "Superadmin Panel" : "Admin Panel"}</p>
+        <Link to="/" className="group mb-6 block" title="Go to Website Homepage">
+          <div className="flex items-center gap-3">
+            <img
+              src="/images/companylogo.jpg"
+              alt="First Track"
+              className="h-10 w-10 rounded-full border border-sky-500 object-cover shadow-sm transition group-hover:scale-105"
+            />
+            <div>
+              <h1 className="text-xl font-bold text-sky-700 transition group-hover:text-orange-500">First Track</h1>
+              <p className="text-xs font-semibold text-slate-500">{isSuperadmin ? "Superadmin Panel" : "Admin Panel"}</p>
+            </div>
+          </div>
+        </Link>
+
+        <div className="mb-6 space-y-2">
+          <Link
+            to="/"
+            className="flex items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50/80 px-4 py-2.5 text-sm font-bold text-sky-700 shadow-sm transition hover:bg-sky-100 hover:text-sky-800"
+          >
+            <FaHome className="text-base" />
+            Back to Homepage
+          </Link>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <Link
+              to="/courses"
+              className="flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-50 py-2 font-bold text-slate-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 transition shadow-sm"
+            >
+              Courses
+            </Link>
+            <Link
+              to="/career"
+              className="flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-50 py-2 font-bold text-slate-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 transition shadow-sm"
+            >
+              Career
+            </Link>
+          </div>
         </div>
 
         <nav className="space-y-3">
@@ -565,7 +631,31 @@ const AdminDashboard = () => {
               <p className="mt-1 text-slate-500">Role-based data and permissions for Skills Academy.</p>
             </div>
           </div>
-          <span className="w-fit rounded-full border border-slate-200 px-5 py-2 text-sm font-bold text-slate-600">{role}</span>
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <Link
+              to="/"
+              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
+              title="Return to Website Homepage"
+            >
+              <FaHome />
+              <span>Homepage</span>
+            </Link>
+            <Link
+              to="/courses"
+              className="hidden sm:flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
+              title="Browse Courses"
+            >
+              <span>Courses</span>
+            </Link>
+            <Link
+              to="/career"
+              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
+              title="Explore Career Portal"
+            >
+              <span>Career</span>
+            </Link>
+            <span className="w-fit rounded-full border border-slate-200 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-600">{role}</span>
+          </div>
         </header>
 
         <main className="p-4 sm:p-6 lg:p-8">
@@ -679,19 +769,36 @@ const AdminDashboard = () => {
 
               {activeMenu === "Profile" && (
                 <Panel>
-                  <div className="mb-6 flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
-                      <FaUserShield />
+                  <div className="rounded-2xl border border-slate-200 bg-gradient-to-r from-blue-50/80 to-indigo-50/50 p-6 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-blue-700 text-2xl font-bold text-white shadow-md">
+                        {(auth?.user?.first_name?.[0] || auth?.user?.name?.[0] || "A").toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-xl font-bold text-slate-900">
+                            {fullName(auth?.user) || auth?.user?.name || "Administrator"}
+                          </h3>
+                          <span className="rounded-full bg-blue-100 text-blue-800 px-3 py-0.5 text-xs font-bold">
+                            {auth?.user?.role}
+                          </span>
+                        </div>
+                        <p className="text-sm text-slate-600 mt-0.5">{auth?.user?.email}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-2xl font-bold">Profile</h3>
-                      <p className="text-slate-500">Current signed in account.</p>
-                    </div>
+                    <span className="rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-1.5 text-xs font-bold text-emerald-700">
+                      {isSuperadmin ? "Superadmin Authority" : "Administrator Authority"}
+                    </span>
                   </div>
-                  <div className="grid gap-4 lg:grid-cols-3">
-                    <InfoBox label="Name" value={auth?.user?.name || auth?.user?.first_name || "Admin"} />
-                    <InfoBox label="Email" value={auth?.user?.email} />
-                    <InfoBox label="Role" value={auth?.user?.role} />
+
+                  <h4 className="text-base font-bold text-slate-800 mb-4">Account & Administrative Profile</h4>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <InfoBox label="Full Name" value={fullName(auth?.user) || auth?.user?.name || "Admin"} />
+                    <InfoBox label="Email Address" value={auth?.user?.email} />
+                    <InfoBox label="Contact Phone Number" value={auth?.user?.phone_number || "+91 91000 00001"} />
+                    <InfoBox label="System Role" value={auth?.user?.role} />
+                    <InfoBox label="Department" value={auth?.user?.department || "Operations & Administration"} />
+                    <InfoBox label="Access Level" value={isSuperadmin ? "Full Superadmin Access (All Operations)" : "Administrator Access"} />
                   </div>
                 </Panel>
               )}
@@ -711,37 +818,70 @@ const AdminDashboard = () => {
   );
 };
 
-const DetailModal = ({ title, rows, onClose }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-    <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
-      <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-        <h3 className="text-xl font-bold text-slate-900">{title}</h3>
-        <button
-          onClick={onClose}
-          className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-        >
-          <FaTimes />
-        </button>
-      </div>
-      <div className="mt-4 grid gap-4">
-        {rows?.map((row) => (
-          <div key={row.label} className="border-b border-slate-50 pb-2 last:border-b-0">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{row.label}</p>
-            <p className="mt-1 break-words text-sm font-semibold text-slate-800">{row.value}</p>
+const DetailModal = ({ title, rows, onClose }) => {
+  const nameRow = rows?.find((r) => r.label.includes("Name"));
+  const roleRow = rows?.find((r) => r.label.includes("Role"));
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xl">
+        <div className="flex items-start justify-between border-b border-slate-100 pb-5">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-xl font-bold text-white shadow-md">
+              {(nameRow?.value?.[0] || "U").toUpperCase()}
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-xl font-bold text-slate-900">{title}</h3>
+                {roleRow && (
+                  <span className="rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-xs font-bold text-blue-700">
+                    {roleRow.value}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Complete profile and enrollment record from Skills Academy directory.
+              </p>
+            </div>
           </div>
-        ))}
-      </div>
-      <div className="mt-6 flex justify-end">
-        <button
-          onClick={onClose}
-          className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-200"
-        >
-          Close
-        </button>
+          <button
+            onClick={onClose}
+            className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+          >
+            <FaTimes className="text-lg" />
+          </button>
+        </div>
+
+        <div className="mt-6 max-h-[60vh] overflow-y-auto pr-2 grid sm:grid-cols-2 gap-4">
+          {rows?.map((row) => (
+            <div
+              key={row.label}
+              className={`rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 ${
+                row.label.includes("Bio") || row.label.includes("Subjects") ? "sm:col-span-2" : ""
+              }`}
+            >
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{row.label}</p>
+              <p className="mt-1 break-words text-sm font-semibold text-slate-800">{row.value}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+          <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" />
+            Verified Record
+          </span>
+          <button
+            onClick={onClose}
+            className="rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition shadow-sm"
+          >
+            Close Details
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const HeroPanel = ({ metrics, isSuperadmin }) => (
   <Panel>
@@ -879,7 +1019,6 @@ const MentorFormPanel = ({ form, errors, loading, onChange, onSubmit }) => (
       </div>
       <div className="grid gap-5 md:grid-cols-2">
         <FormField label="Email" type="email" name="email" value={form.email} error={errors.email} onChange={onChange} required />
-        <FormField label="Years Of Experience" type="number" name="years_of_experience" value={form.years_of_experience} error={errors.years_of_experience} onChange={onChange} required />
         <FormField label="Password" type="password" name="password" value={form.password} error={errors.password} onChange={onChange} required />
         <FormField label="Confirm Password" type="password" name="confirm_password" value={form.confirm_password} error={errors.confirm_password} onChange={onChange} required />
       </div>

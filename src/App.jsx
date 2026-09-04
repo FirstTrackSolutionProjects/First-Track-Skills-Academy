@@ -12,6 +12,7 @@ import FrontendCourse from "./pages/FrontendCourse";
 import BackendCourse from "./pages/BackendCourse";
 import FullStackCourse from "./pages/FullStackCourse";
 import MarketingCourse from "./pages/MarketingCourse";
+import HRManagementCourse from "./pages/HRManagementCourse";
 import Career from "./pages/Career";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -21,6 +22,8 @@ import FAQ from "./pages/FAQ";
 import Enroll from "./pages/Enroll";
 import Login from "./pages/Login";
 import CollegeOnboarding from "./pages/CollegeOnboarding";
+import StudentOnboarding from "./pages/StudentOnboarding";
+import CourseClasses from "./pages/CourseClasses";
 import PartnerJoin from "./pages/PartnerJoin";
 import AdminDashboard from "./pages/AdminDashboard";
 import CollegeDashboard from "./pages/CollegeDashboard";
@@ -34,7 +37,8 @@ function App() {
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/college-dashboard") ||
     pathname.startsWith("/admin-dashboard") ||
-    pathname.startsWith("/admin/approvals");
+    pathname.startsWith("/admin/approvals") ||
+    pathname.startsWith("/course/");
 
   useEffect(() => {
     // Scroll to the top of the page when the route changes
@@ -58,6 +62,8 @@ function App() {
         <Route path="/backend-course" element={<BackendCourse />} />
         <Route path="/fullstack-course" element={<FullStackCourse />} />
         <Route path="/marketing-course" element={<MarketingCourse />} />
+        <Route path="/digital-marketing-course" element={<MarketingCourse />} />
+        <Route path="/hr-management-course" element={<HRManagementCourse />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-use" element={<TermsOfUse />} />
         <Route path="/refund-cancel" element={<RefundCancel />} />
@@ -67,12 +73,14 @@ function App() {
         <Route path="/enroll" element={<Enroll />} />
         <Route path="/login" element={<Login />} />
         <Route path="/college-onboarding" element={<CollegeOnboarding />} />
+        <Route path="/student-onboarding" element={<StudentOnboarding />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/admin-onboarding" element={<Navigate to="/dashboard" replace />} />
         <Route path="/mentor-onboarding" element={<Navigate to="/dashboard" replace />} />
         <Route path="/admin/approvals" element={<Navigate to="/admin-dashboard" replace />} />
         <Route path="/college-dashboard" element={<CollegeDashboard />} />
         <Route path="/dashboard" element={<RoleDashboard />} />
+        <Route path="/course/:courseId/classes" element={<CourseClasses />} />
         <Route path="/join/:partnerCode/enroll" element={<PartnerEnroll />} />
         <Route path="/join/:partnerCode" element={<PartnerJoin />} />
       </Routes>

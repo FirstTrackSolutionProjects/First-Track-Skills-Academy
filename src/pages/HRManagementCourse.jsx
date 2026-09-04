@@ -1,79 +1,81 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  FaHtml5,
-  FaCss3Alt,
-  FaReact,
-  FaFigma,
-  FaCode,
-  FaProjectDiagram,
-  FaCertificate,
+  FaUsers,
+  FaUserTie,
+  FaClipboardList,
+  FaHandshake,
   FaBriefcase,
+  FaCertificate,
   FaArrowRight,
   FaCheckCircle,
+  FaChartLine,
+  FaBalanceScale,
 } from "react-icons/fa";
-import {
-  SiJavascript,
-  SiTailwindcss,
-  SiVite,
-  SiGithub,
-} from "react-icons/si";
 
-const FrontendCourse = () => {
+const HRManagementCourse = () => {
   const navigate = useNavigate();
 
-  const technologies = [
+  const skills = [
     {
-      icon: <FaReact />,
-      title: "React.js",
-      color: "text-sky-500",
-    },
-    {
-      icon: <SiJavascript />,
-      title: "JavaScript ES6+",
-      color: "text-yellow-500",
-    },
-    {
-      icon: <SiTailwindcss />,
-      title: "Tailwind CSS",
-      color: "text-cyan-500",
-    },
-    {
-      icon: <FaHtml5 />,
-      title: "HTML5",
-      color: "text-orange-600",
-    },
-    {
-      icon: <FaCss3Alt />,
-      title: "CSS3",
+      icon: <FaUserTie />,
+      title: "Talent Acquisition",
       color: "text-blue-600",
+      desc: "Job posting, sourcing, ATS screening & end-to-end recruitment",
     },
     {
-      icon: <SiVite />,
-      title: "Vite",
-      color: "text-purple-500",
+      icon: <FaClipboardList />,
+      title: "Payroll & Compensation",
+      color: "text-emerald-600",
+      desc: "Salary structuring, PF, ESI, TDS, PT & statutory computations",
     },
     {
-      icon: <SiGithub />,
-      title: "GitHub",
-      color: "text-gray-800",
+      icon: <FaChartLine />,
+      title: "HR Analytics",
+      color: "text-purple-600",
+      desc: "Attrition metrics, workforce planning & data-driven HR reports",
     },
     {
-      icon: <FaFigma />,
-      title: "Figma UI",
-      color: "text-pink-500",
+      icon: <FaBalanceScale />,
+      title: "Labor Laws & POSH",
+      color: "text-amber-600",
+      desc: "Industrial relations, compliance, contracts & POSH regulations",
+    },
+    {
+      icon: <FaHandshake />,
+      title: "Employee Relations",
+      color: "text-orange-500",
+      desc: "Conflict resolution, retention strategies & corporate culture",
+    },
+    {
+      icon: <FaBriefcase />,
+      title: "Performance Mgmt",
+      color: "text-red-500",
+      desc: "Appraisals, KPI & OKR frameworks, and promotion policies",
+    },
+    {
+      icon: <FaUsers />,
+      title: "HRMS Software",
+      color: "text-cyan-600",
+      desc: "Hands-on experience with modern cloud HR and payroll platforms",
+    },
+    {
+      icon: <FaCertificate />,
+      title: "Onboarding & Offboarding",
+      color: "text-indigo-600",
+      desc: "Joining documentation, induction programs & full & final settlements",
     },
   ];
 
   const highlights = [
-    "Complete Modern HTML5, CSS3 & Responsive Design",
-    "Modern JavaScript (ES6+) Core to Advanced",
-    "React.js Components, State, Hooks & Routing",
-    "Tailwind CSS Framework & UI Building",
-    "REST API Integration & Async Programming",
-    "6+ Real-World Interactive Web Projects",
-    "Resume & Portfolio Website Building",
-    "100% Placement Assistance & Mock Interviews",
+    "Comprehensive HR Generalist + Specialist Training",
+    "Real-world Payroll Processing & Tax Deductions",
+    "Live Talent Sourcing on LinkedIn & Job Portals",
+    "Statutory Compliance (PF, ESIC, Gratuity, Bonus)",
+    "POSH Policy Drafting & Case Studies",
+    "HRMS Tools & Advanced Excel for HR",
+    "Mock HR Interviews & Executive Resume Building",
+    "100% Placement Support with Top Recruiters",
   ];
 
   return (
@@ -82,22 +84,22 @@ const FrontendCourse = () => {
         {/* Heading */}
         <div className="text-center mb-16">
           <span className="inline-block bg-orange-100 text-orange-600 px-5 py-2 rounded-full font-semibold">
-            PROGRAM 01
+            PROGRAM 05
           </span>
 
           <h2 className="text-5xl font-bold mt-5 text-gray-900">
-            Frontend Development
+            HR Management
           </h2>
 
           <p className="text-lg text-gray-600 max-w-3xl mx-auto mt-6 leading-8">
-            Become a professional Frontend Developer by mastering modern
-            frontend technologies including HTML5, CSS3, JavaScript ES6+, React.js,
-            and Tailwind CSS with real-world projects, APIs, and interview preparation.
+            Launch a rewarding career in Human Resource Leadership. Master recruitment,
+            statutory compliances, payroll automation, HR analytics, and talent operations
+            with practical industry projects.
           </p>
 
           <div className="mt-8 flex justify-center">
             <button
-              onClick={() => navigate("/enroll?course=" + encodeURIComponent("Frontend Development"))}
+              onClick={() => navigate("/enroll?course=" + encodeURIComponent("HR Management"))}
               className="inline-flex items-center gap-3 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-bold transition hover:scale-105 shadow-lg shadow-orange-500/30 text-base cursor-pointer"
             >
               Enroll Now
@@ -111,17 +113,17 @@ const FrontendCourse = () => {
           {/* Left Image */}
           <div className="relative">
             <img
-              src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1000"
-              alt="Frontend Development"
+              src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1000"
+              alt="HR Management Training"
               className="rounded-[35px] shadow-2xl w-full object-cover h-[450px]"
             />
 
             <div className="absolute top-6 left-6 bg-white rounded-2xl shadow-xl px-6 py-4">
               <h3 className="text-3xl font-bold text-orange-500">
-                60 Days
+                45 Days
               </h3>
               <p className="text-gray-500">
-                Intensive Program
+                Job-Ready Program
               </p>
             </div>
 
@@ -133,33 +135,36 @@ const FrontendCourse = () => {
             </div>
           </div>
 
-          {/* Right Skills Grid */}
+          {/* Right Skills */}
           <div>
             <h3 className="text-3xl font-bold text-gray-900 mb-8">
-              Technologies You'll Master
+              Key HR Domains You'll Master
             </h3>
 
             <div className="grid grid-cols-2 gap-5">
-              {technologies.map((item, index) => (
+              {skills.map((item, index) => (
                 <div
                   key={index}
                   className="bg-white rounded-2xl p-5 shadow hover:-translate-y-2 hover:shadow-xl transition"
                 >
-                  <div className={`text-3xl ${item.color} mb-4`}>
+                  <div className={`text-3xl ${item.color} mb-3`}>
                     {item.icon}
                   </div>
-                  <h4 className="font-bold text-lg">
+                  <h4 className="font-bold text-base text-gray-900">
                     {item.title}
                   </h4>
+                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                    {item.desc}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Bottom Section */}
+        {/* Highlights & Details */}
         <div className="grid lg:grid-cols-2 gap-10 mt-20">
-          {/* Program Highlights */}
+          {/* Highlights */}
           <div className="bg-white rounded-3xl shadow-lg p-10">
             <h3 className="text-2xl font-bold mb-8">
               Program Highlights
@@ -187,7 +192,7 @@ const FrontendCourse = () => {
               <div className="space-y-6">
                 <div className="flex justify-between border-b border-white/20 pb-3">
                   <span>Duration</span>
-                  <strong>60 Days</strong>
+                  <strong>45 Days</strong>
                 </div>
 
                 <div className="flex justify-between border-b border-white/20 pb-3">
@@ -197,7 +202,7 @@ const FrontendCourse = () => {
 
                 <div className="flex justify-between border-b border-white/20 pb-3">
                   <span>Projects</span>
-                  <strong>6+ Live Projects</strong>
+                  <strong>4 Live HR Projects</strong>
                 </div>
 
                 <div className="flex justify-between border-b border-white/20 pb-3">
@@ -217,13 +222,13 @@ const FrontendCourse = () => {
 
                 <div className="flex justify-between text-3xl font-bold mt-8">
                   <span>Fees</span>
-                  <span>₹25,750</span>
+                  <span>₹12,750</span>
                 </div>
               </div>
             </div>
 
             <button
-              onClick={() => navigate("/enroll?course=" + encodeURIComponent("Frontend Development"))}
+              onClick={() => navigate("/enroll?course=" + encodeURIComponent("HR Management"))}
               className="mt-10 w-full bg-white text-orange-600 py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:scale-105 transition shadow-lg text-lg cursor-pointer"
             >
               Enroll Now
@@ -235,23 +240,23 @@ const FrontendCourse = () => {
         {/* Extra Features */}
         <div className="grid md:grid-cols-4 gap-6 mt-20">
           <div className="bg-white rounded-3xl shadow p-8 text-center hover:-translate-y-2 transition">
-            <FaCode className="text-5xl text-orange-500 mx-auto mb-4" />
-            <h4 className="font-bold text-lg">Coding Practice</h4>
+            <FaUsers className="text-5xl text-orange-500 mx-auto mb-4" />
+            <h4 className="font-bold text-lg">Talent Sourcing</h4>
           </div>
 
           <div className="bg-white rounded-3xl shadow p-8 text-center hover:-translate-y-2 transition">
-            <FaProjectDiagram className="text-5xl text-orange-500 mx-auto mb-4" />
-            <h4 className="font-bold text-lg">Live Projects</h4>
+            <FaClipboardList className="text-5xl text-orange-500 mx-auto mb-4" />
+            <h4 className="font-bold text-lg">Payroll &amp; Labour Laws</h4>
           </div>
 
           <div className="bg-white rounded-3xl shadow p-8 text-center hover:-translate-y-2 transition">
             <FaCertificate className="text-5xl text-orange-500 mx-auto mb-4" />
-            <h4 className="font-bold text-lg">Certification</h4>
+            <h4 className="font-bold text-lg">Industry Certification</h4>
           </div>
 
           <div className="bg-white rounded-3xl shadow p-8 text-center hover:-translate-y-2 transition">
             <FaBriefcase className="text-5xl text-orange-500 mx-auto mb-4" />
-            <h4 className="font-bold text-lg">Placement Support</h4>
+            <h4 className="font-bold text-lg">100% Job Placement</h4>
           </div>
         </div>
       </div>
@@ -259,4 +264,4 @@ const FrontendCourse = () => {
   );
 };
 
-export default FrontendCourse;
+export default HRManagementCourse;

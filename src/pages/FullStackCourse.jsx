@@ -100,6 +100,16 @@ const FullStackCourse = () => {
             APIs, databases, deployment and interview preparation.
           </p>
 
+          <div className="mt-8 flex justify-center">
+            <button
+              onClick={() => navigate("/enroll?course=" + encodeURIComponent("Full Stack Development"))}
+              className="inline-flex items-center gap-3 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-bold transition hover:scale-105 shadow-lg shadow-orange-500/30 text-base cursor-pointer"
+            >
+              Enroll Now
+              <FaArrowRight />
+            </button>
+          </div>
+
         </div>
 
         {/* Hero */}
@@ -229,12 +239,12 @@ const FullStackCourse = () => {
 
               <div className="flex justify-between border-b border-white/20 pb-3">
                 <span>Mode</span>
-                <strong>Online / Offline</strong>
+                <strong>Online Live Classes</strong>
               </div>
 
               <div className="flex justify-between border-b border-white/20 pb-3">
                 <span>Projects</span>
-                <strong>2 Live Projects</strong>
+                <strong>12+ Live Projects</strong>
               </div>
 
               <div className="flex justify-between border-b border-white/20 pb-3">
@@ -260,8 +270,8 @@ const FullStackCourse = () => {
             </div>
 
             <button
-              onClick={() => navigate("/enroll")}
-              className="mt-10 w-full bg-white text-orange-600 py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:scale-105 transition">
+              onClick={() => navigate("/enroll?course=" + encodeURIComponent("Full Stack Development"))}
+              className="mt-10 w-full bg-white text-orange-600 py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:scale-105 transition shadow-lg text-lg cursor-pointer">
 
               Enroll Now
 

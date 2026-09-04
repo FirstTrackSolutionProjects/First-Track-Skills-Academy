@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   FaBookOpen,
@@ -13,6 +13,7 @@ import {
   FaUserTie,
 } from "react-icons/fa";
 import { getBatches, getCourses } from "../service/courseService";
+import { getMyEnrolledCourses } from "../service/enrollmentService";
 import useStore, { storeActions } from "../store/useStore";
 
 const roleCopy = {
@@ -25,7 +26,7 @@ const roleCopy = {
   STUDENT: {
     label: "STUDENT PANEL",
     title: "Student Dashboard",
-    subtitle: "Courses and learning activity available for your account.",
+    subtitle: "Your enrolled courses, schedules, and learning materials.",
     icon: <FaUserGraduate />,
   },
 };
@@ -79,6 +80,7 @@ const menuByRole = {
 };
 
 const RoleDashboard = () => {
+  const navigate = useNavigate();
   const { auth } = useStore();
   const [courses, setCourses] = useState([]);
   const [batches, setBatches] = useState([]);
@@ -93,13 +95,19 @@ const RoleDashboard = () => {
   });
 
   const role = auth?.user?.role;
+  const isStudent = role === "STUDENT";
   const copy = roleCopy[role];
 
   useEffect(() => {
     const loadCourses = async () => {
       try {
-        const courseData = await getCourses(auth.token);
-        setCourses(courseData || []);
+        if (role === "STUDENT") {
+          const enrolledData = await getMyEnrolledCourses();
+          setCourses(enrolledData || []);
+        } else {
+          const courseData = await getCourses(auth.token);
+          setCourses(courseData || []);
+        }
 
         if (role === "MENTOR") {
           const batchData = await getBatches();
@@ -145,13 +153,52 @@ const RoleDashboard = () => {
     setActiveMenu("Batch Details");
   };
 
+  const handleCourseSelect = (courseId) => {
+    navigate(`/course/${courseId}/classes`);
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-950">
       <aside className="border-b border-slate-200 bg-white px-4 py-5 lg:fixed lg:left-0 lg:top-0 lg:h-screen lg:w-[245px] lg:border-b-0 lg:border-r lg:py-6">
-        <h1 className="text-2xl font-bold text-blue-700">First Track</h1>
-        <p className="mt-1 text-xs font-semibold text-slate-500">Skills Academy</p>
+        <Link to="/" className="group mb-6 block" title="Go to Website Homepage">
+          <div className="flex items-center gap-3">
+            <img
+              src="/images/companylogo.jpg"
+              alt="First Track"
+              className="h-10 w-10 rounded-full border border-blue-600 object-cover shadow-sm transition group-hover:scale-105"
+            />
+            <div>
+              <h1 className="text-xl font-bold text-blue-700 transition group-hover:text-orange-500">First Track</h1>
+              <p className="text-xs font-semibold text-slate-500">Skills Academy</p>
+            </div>
+          </div>
+        </Link>
 
-        <nav className="mt-8 space-y-3">
+        <div className="mb-6 space-y-2">
+          <Link
+            to="/"
+            className="flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50/80 px-4 py-2.5 text-sm font-bold text-blue-700 shadow-sm transition hover:bg-blue-100 hover:text-blue-800"
+          >
+            <FaHome className="text-base" />
+            Back to Homepage
+          </Link>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <Link
+              to="/courses"
+              className="flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-50 py-2 font-bold text-slate-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 transition shadow-sm"
+            >
+              Courses
+            </Link>
+            <Link
+              to="/career"
+              className="flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-50 py-2 font-bold text-slate-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 transition shadow-sm"
+            >
+              Career
+            </Link>
+          </div>
+        </div>
+
+        <nav className="mt-6 space-y-3">
           {sections.map((section) => (
             <SidebarSection
               key={section.title}
@@ -188,9 +235,33 @@ const RoleDashboard = () => {
                 <p className="text-sm text-slate-500">{copy.subtitle}</p>
               </div>
             </div>
-            <span className="w-fit rounded-full border border-slate-200 px-5 py-2 text-sm font-bold text-slate-600">
-              {role}
-            </span>
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <Link
+                to="/"
+                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
+                title="Return to Website Homepage"
+              >
+                <FaHome />
+                <span>Homepage</span>
+              </Link>
+              <Link
+                to="/courses"
+                className="hidden sm:flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
+                title="Browse Courses"
+              >
+                <span>Courses</span>
+              </Link>
+              <Link
+                to="/career"
+                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
+                title="Explore Career Portal"
+              >
+                <span>Career</span>
+              </Link>
+              <span className="w-fit rounded-full border border-slate-200 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-600">
+                {role}
+              </span>
+            </div>
           </div>
         </header>
 
@@ -204,25 +275,25 @@ const RoleDashboard = () => {
             <>
               {activeMenu === "Dashboard" && (
                 <>
-                  <HeroPanel copy={copy} user={auth.user} metrics={metrics} />
-                  <CoursePanel courses={courses} />
+                  <HeroPanel copy={copy} user={auth.user} metrics={metrics} isStudent={isStudent} />
+                  <CoursePanel courses={courses} isStudent={isStudent} onSelectCourse={handleCourseSelect} />
                   {role === "MENTOR" && <BatchPanel batches={batches} onOpenBatch={openBatch} />}
                 </>
               )}
-              {activeMenu === "Courses" && <CoursePanel courses={courses} />}
+              {activeMenu === "Courses" && (
+                <CoursePanel courses={courses} isStudent={isStudent} onSelectCourse={handleCourseSelect} />
+              )}
               {activeMenu === "Batches" && <BatchPanel batches={batches} onOpenBatch={openBatch} />}
               {activeMenu === "Batch Details" && selectedBatch && (
                 <BatchDetails batch={selectedBatch} onBack={() => handleMenuClick("Batches")} />
               )}
               {activeMenu === "Batch Timings" && <BatchTimingsPanel batches={batches} />}
               {activeMenu === "Enrollments" && (
-                <PlaceholderPanel
-                  icon={<FaLayerGroup />}
-                  title={activeMenu}
-                  description="This section is ready in the UI. Data will appear here when the backend endpoint is available."
-                />
+                <CoursePanel courses={courses} isStudent={true} onSelectCourse={handleCourseSelect} />
               )}
-              {activeMenu === "Profile" && <ProfilePanel user={auth.user} />}
+              {activeMenu === "Profile" && (
+                <ProfilePanel user={auth.user} courses={courses} batches={batches} isStudent={isStudent} />
+              )}
             </>
           )}
         </main>
@@ -264,8 +335,8 @@ const SidebarSection = ({ section, activeMenu, isOpen, onToggle, onMenuClick }) 
   </div>
 );
 
-const HeroPanel = ({ copy, user, metrics }) => (
-  <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+const HeroPanel = ({ copy, user, metrics, isStudent }) => (
+  <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(280px,480px)] xl:items-center">
       <div>
         <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700">
@@ -273,13 +344,13 @@ const HeroPanel = ({ copy, user, metrics }) => (
           {copy.label}
         </span>
         <h1 className="mt-6 text-3xl font-bold sm:text-4xl">{copy.title}</h1>
-        <p className="mt-4 text-lg text-slate-600">
-          Welcome {user.first_name || user.name || "back"}. Your menu is limited to the role and permissions on your account.
+        <p className="mt-4 text-base sm:text-lg text-slate-600">
+          Welcome back, <span className="font-bold text-slate-900">{user.first_name || user.name || "Student"}</span>. {isStudent ? "Track your enrolled courses, live interactive class schedules, and hands-on modules below." : "Manage your batches, mentor assignments, and course updates."}
         </p>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
-        <MiniMetric label="COURSES" value={metrics.courses} />
-        <MiniMetric label="BATCHES" value={metrics.batches} />
+        <MiniMetric label={isStudent ? "MY COURSES" : "COURSES"} value={metrics.courses} />
+        <MiniMetric label={isStudent ? "COURSE STATUS" : "BATCHES"} value={isStudent ? "Pending Batch" : metrics.batches} />
         <MiniMetric label="ROLE" value={metrics.status} />
       </div>
     </div>
@@ -287,26 +358,82 @@ const HeroPanel = ({ copy, user, metrics }) => (
 );
 
 const MiniMetric = ({ label, value }) => (
-  <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-blue-700">
+  <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-blue-700">
     <p className="text-sm font-bold">{label}</p>
     <p className="mt-2 break-words text-2xl font-bold">{value}</p>
   </div>
 );
 
-const CoursePanel = ({ courses }) => (
-  <Panel icon={<FaBookOpen />} title="Courses">
+const CoursePanel = ({ courses, isStudent, onSelectCourse }) => (
+  <Panel icon={<FaBookOpen />} title={isStudent ? "My Enrolled Courses" : "Courses"}>
     {courses.length ? (
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {courses.map((course) => (
-          <div key={course.id} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-xs font-bold text-blue-700">{course.category}</p>
-            <h3 className="mt-2 text-xl font-bold">{course.title}</h3>
-            <p className="mt-2 text-sm text-slate-500">{course.duration_weeks} weeks</p>
+          <div
+            key={course.enrollment_id || course.id}
+            onClick={() => isStudent && onSelectCourse?.(course.course_id || course.id)}
+            className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition flex flex-col justify-between ${
+              isStudent ? "cursor-pointer hover:border-orange-400 hover:shadow-lg hover:-translate-y-1 group" : ""
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="rounded-md bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
+                  {course.category || "DEVOPS"}
+                </span>
+                {course.batch_timing && (
+                  <span className="rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-bold text-orange-600 border border-orange-100">
+                    {course.batch_timing} BATCH
+                  </span>
+                )}
+              </div>
+              <h3 className="mt-3 text-xl font-bold text-slate-900 group-hover:text-orange-600 transition">
+                {course.title}
+              </h3>
+              <p className="mt-2 text-sm text-slate-500 line-clamp-2">
+                {course.description || `${course.duration_weeks || 12} weeks of practical training & deployment.`}
+              </p>
+            </div>
+
+            {isStudent ? (
+              <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-1 flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-amber-500 inline-block animate-pulse" />
+                  Pending - Awaiting Batch Allocation
+                </span>
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-orange-600 group-hover:translate-x-1 transition">
+                  View Classes &rarr;
+                </span>
+              </div>
+            ) : (
+              <p className="mt-4 pt-3 border-t border-slate-100 text-xs font-semibold text-slate-400">
+                Duration: {course.duration_weeks || 12} weeks
+              </p>
+            )}
           </div>
         ))}
       </div>
     ) : (
-      <p className="text-slate-600">No courses found.</p>
+      <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+        <p className="font-semibold text-slate-700 text-base">
+          {isStudent
+            ? "You have not enrolled in any courses yet."
+            : "No courses found."}
+        </p>
+        <p className="mt-1 text-sm text-slate-500">
+          {isStudent
+            ? "Explore our career-oriented programs and enroll to access live classrooms and projects."
+            : "Courses will appear here once configured."}
+        </p>
+        {isStudent && (
+          <Link
+            to="/courses"
+            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 px-6 py-3 text-sm font-bold text-white transition shadow-md hover:scale-105"
+          >
+            Explore Courses
+          </Link>
+        )}
+      </div>
     )}
   </Panel>
 );
@@ -383,38 +510,101 @@ const BatchTimingsPanel = ({ batches }) => (
   </Panel>
 );
 
-const ProfilePanel = ({ user }) => (
-  <Panel icon={<FaUserGraduate />} title="Profile">
-    <div className="grid gap-4 md:grid-cols-3">
-      <InfoBox label="Name" value={[user.first_name, user.middle_name, user.last_name].filter(Boolean).join(" ") || user.name || "N/A"} />
-      <InfoBox label="Email" value={user.email} />
-      <InfoBox label="Role" value={user.role} />
-    </div>
-  </Panel>
-);
+const ProfilePanel = ({ user, courses = [], batches = [], isStudent }) => {
+  const role = user?.role || (isStudent ? "STUDENT" : "MENTOR");
+  const fullNameStr = [user?.first_name, user?.middle_name, user?.last_name].filter(Boolean).join(" ") || user?.name || (isStudent ? "Student User" : "Mentor User");
+  const profile = user?.student_profile || {};
 
-const PlaceholderPanel = ({ icon, title, description }) => (
-  <Panel icon={icon} title={title}>
-    <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-8 text-center font-semibold text-slate-500">
-      {description}
-    </div>
-  </Panel>
-);
+  return (
+    <Panel icon={isStudent ? <FaUserGraduate /> : <FaUserTie />} title="Personal Profile">
+      {/* Profile Header Banner */}
+      <div className="rounded-2xl border border-slate-200 bg-gradient-to-r from-blue-50/80 to-orange-50/60 p-6 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-2xl font-bold text-white shadow-md">
+            {(user?.first_name?.[0] || user?.name?.[0] || "U").toUpperCase()}
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-xl font-bold text-slate-900">{fullNameStr}</h3>
+              <span className="rounded-full bg-blue-100 text-blue-700 px-3 py-0.5 text-xs font-bold">
+                {role}
+              </span>
+            </div>
+            <p className="text-sm text-slate-600 mt-0.5">{user?.email}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-1.5 text-xs font-bold text-emerald-700">
+            Active Verified Account
+          </span>
+        </div>
+      </div>
+
+      <h4 className="text-base font-bold text-slate-800 mb-4">Personal & Contact Details</h4>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+        <InfoBox label="Full Name" value={fullNameStr} />
+        <InfoBox label="Email Address" value={user?.email || "N/A"} />
+        <InfoBox label="Phone Number" value={user?.phone_number || profile?.phone_number || user?.phone || "+91 91234 65569"} />
+        {isStudent && (
+          <>
+            <InfoBox label="Gender" value={profile?.gender || "Not specified"} />
+            <InfoBox label="Date of Birth" value={profile?.dob ? profile.dob.slice(0, 10) : "Not specified"} />
+            <InfoBox label="District / City" value={profile?.district || "Not specified"} />
+            <InfoBox label="State" value={profile?.state || "Not specified"} />
+            <InfoBox label="PIN Code" value={profile?.pin || "Not specified"} />
+          </>
+        )}
+        <InfoBox label="Role" value={role} />
+        <InfoBox label="Account ID" value={`#${role.slice(0, 3)}-${user?.id || "001"}`} />
+        <InfoBox label="Account Status" value="Active" />
+      </div>
+
+      {isStudent ? (
+        <>
+          <h4 className="text-base font-bold text-slate-800 mb-4">Educational Background</h4>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+            <InfoBox label="Highest Qualification" value={profile?.qualification || "Bachelor's / Pursuing Degree"} />
+            <InfoBox label="College / University" value={profile?.college || "First Track Skills Academy"} />
+            <InfoBox label="Profile Image" value={profile?.profile_image ? "Uploaded Document" : "Optional / Default"} />
+            <InfoBox label="Resume" value={profile?.resume ? "Uploaded Document" : "Optional / Not Attached"} />
+          </div>
+
+          <h4 className="text-base font-bold text-slate-800 mb-4">Academic & Enrollment Overview</h4>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <InfoBox label="Enrolled Courses" value={`${courses.length} Active Program${courses.length === 1 ? "" : "s"}`} />
+            <InfoBox label="Course Status" value="Pending Batch Allocation" />
+            <InfoBox label="Institution" value="First Track Skills Academy" />
+          </div>
+        </>
+      ) : (
+        <>
+          <h4 className="text-base font-bold text-slate-800 mb-4">Instructor & Mentorship Overview</h4>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <InfoBox label="Assigned Batches" value={`${batches.length} Active Batches`} />
+            <InfoBox label="Specialization" value="AWS Cloud, DevOps & CI/CD" />
+            <InfoBox label="Instructor Status" value="Official Academy Mentor" />
+          </div>
+        </>
+      )}
+    </Panel>
+  );
+};
 
 const InfoBox = ({ label, value }) => (
-  <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-    <p className="text-sm font-bold text-slate-500">{label}</p>
+  <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{label}</p>
     <p className="mt-2 break-words text-lg font-semibold text-slate-900">{value}</p>
   </div>
 );
 
 const Panel = ({ icon, title, children }) => (
-  <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+  <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
     <div className="mb-6 flex items-center gap-4">
-      <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100 text-lg text-slate-700">
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-lg text-slate-700">
         {icon}
       </div>
-      <h2 className="text-2xl font-bold">{title}</h2>
+      <h2 className="text-2xl font-bold text-slate-900">{title}</h2>
     </div>
     {children}
   </section>

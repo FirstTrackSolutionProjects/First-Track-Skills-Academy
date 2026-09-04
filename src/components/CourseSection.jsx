@@ -7,6 +7,8 @@ import {
   FaRobot,
   FaCloud,
   FaArrowRight,
+  FaBullhorn,
+  FaUsers,
 } from "react-icons/fa";
 import { getCourses } from "../service/courseService";
 
@@ -28,14 +30,53 @@ const coursePresentation = {
   },
   DEVOPS: {
     icon: <FaCloud />,
-    link: "/program-details",
-    color: "from-slate-700 to-blue-700",
+    link: "/hr-management-course",
+    color: "from-amber-500 to-orange-600",
   },
   AI_ML: {
-    icon: <FaRobot />,
-    link: "/program-details",
-    color: "from-purple-500 to-pink-500",
+    icon: <FaBullhorn />,
+    link: "/marketing-course",
+    color: "from-pink-500 to-rose-600",
   },
+};
+
+const getPresentation = (course) => {
+  if (course.slug === "digital-marketing") {
+    return {
+      icon: <FaBullhorn />,
+      link: "/marketing-course",
+      color: "from-pink-500 to-rose-600",
+    };
+  }
+  if (course.slug === "hr-management") {
+    return {
+      icon: <FaUsers />,
+      link: "/hr-management-course",
+      color: "from-amber-500 to-orange-600",
+    };
+  }
+  if (course.slug === "frontend-development") {
+    return {
+      icon: <FaLaptopCode />,
+      link: "/frontend-course",
+      color: "from-blue-500 to-cyan-500",
+    };
+  }
+  if (course.slug === "backend-development") {
+    return {
+      icon: <FaServer />,
+      link: "/backend-course",
+      color: "from-green-500 to-emerald-600",
+    };
+  }
+  if (course.slug === "full-stack-development") {
+    return {
+      icon: <FaCode />,
+      link: "/fullstack-course",
+      color: "from-orange-500 to-red-500",
+    };
+  }
+  return coursePresentation[course.category] || coursePresentation.FULLSTACK;
 };
 
 const formatDuration = (weeks) => {
@@ -93,7 +134,7 @@ const CourseSection = () => {
               Loading courses...
             </div>
           ) : courses.length ? courses.map((course) => {
-            const presentation = coursePresentation[course.category] || coursePresentation.FULLSTACK;
+            const presentation = getPresentation(course);
 
             return (
             <div

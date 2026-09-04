@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   FaBookOpen,
@@ -95,11 +95,27 @@ const CollegeDashboard = () => {
   if (profile?.status !== "APPROVED") {
     return (
       <div className="min-h-screen bg-[#f3f6fa] flex items-center justify-center p-5">
-        <div className="max-w-2xl bg-white border border-slate-200 rounded-lg shadow p-8 text-center">
+        <div className="max-w-2xl bg-white border border-slate-200 rounded-2xl shadow-xl p-8 sm:p-10 text-center">
           <p className="text-blue-700 font-bold tracking-[0.3em] text-sm">COLLEGE PANEL</p>
           <h1 className="text-4xl font-bold mt-3">Awaiting Approval</h1>
-          <p className="text-slate-600 mt-4">Your college account has been created. An admin will review it.</p>
-          <p className="text-2xl font-bold text-blue-700 mt-8">{profile?.status || "PENDING"}</p>
+          <p className="text-slate-600 mt-4">Your college account has been created. An admin will review it shortly.</p>
+          <p className="text-2xl font-bold text-blue-700 mt-6">{profile?.status || "PENDING"}</p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 px-6 py-3 font-semibold text-white transition shadow-sm"
+            >
+              <FaHome />
+              Back to Homepage
+            </Link>
+            <button
+              onClick={storeActions.clearAuth}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 px-6 py-3 font-semibold text-slate-700 transition shadow-sm"
+            >
+              <FaSignOutAlt />
+              Logout
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -122,10 +138,45 @@ const CollegeDashboard = () => {
   return (
     <div className="min-h-screen bg-[#f3f6fa] text-slate-950">
       <aside className="border-b border-slate-200 bg-white px-4 py-5 lg:fixed lg:left-0 lg:top-0 lg:h-screen lg:w-[245px] lg:border-b-0 lg:border-r lg:py-6">
-        <h1 className="text-2xl font-bold text-[#26749d]">First Track</h1>
-        <p className="mt-1 text-xs font-semibold text-slate-500">Skills Academy</p>
+        <Link to="/" className="group mb-6 block" title="Go to Website Homepage">
+          <div className="flex items-center gap-3">
+            <img
+              src="/images/companylogo.jpg"
+              alt="First Track"
+              className="h-10 w-10 rounded-full border border-[#26749d] object-cover shadow-sm transition group-hover:scale-105"
+            />
+            <div>
+              <h1 className="text-xl font-bold text-[#26749d] transition group-hover:text-orange-500">First Track</h1>
+              <p className="text-xs font-semibold text-slate-500">Skills Academy</p>
+            </div>
+          </div>
+        </Link>
 
-        <nav className="mt-8 space-y-3">
+        <div className="mb-6 space-y-2">
+          <Link
+            to="/"
+            className="flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50/80 px-4 py-2.5 text-sm font-bold text-[#26749d] shadow-sm transition hover:bg-blue-100 hover:text-blue-800"
+          >
+            <FaHome className="text-base" />
+            Back to Homepage
+          </Link>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <Link
+              to="/courses"
+              className="flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-50 py-2 font-bold text-slate-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 transition shadow-sm"
+            >
+              Courses
+            </Link>
+            <Link
+              to="/career"
+              className="flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-50 py-2 font-bold text-slate-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 transition shadow-sm"
+            >
+              Career
+            </Link>
+          </div>
+        </div>
+
+        <nav className="mt-6 space-y-3">
           {menuSections.map((section) => (
             <SidebarSection
               key={section.title}
@@ -163,8 +214,32 @@ const CollegeDashboard = () => {
               </div>
             </div>
 
-            <div className="w-fit rounded-full border border-slate-200 px-5 py-2 text-sm font-bold text-slate-600">
-              {auth.user.role}
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <Link
+                to="/"
+                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
+                title="Return to Website Homepage"
+              >
+                <FaHome />
+                <span>Homepage</span>
+              </Link>
+              <Link
+                to="/courses"
+                className="hidden sm:flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
+                title="Browse Courses"
+              >
+                <span>Courses</span>
+              </Link>
+              <Link
+                to="/career"
+                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
+                title="Explore Career Portal"
+              >
+                <span>Career</span>
+              </Link>
+              <div className="w-fit rounded-full border border-slate-200 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-600">
+                {auth.user.role}
+              </div>
             </div>
           </div>
         </header>
