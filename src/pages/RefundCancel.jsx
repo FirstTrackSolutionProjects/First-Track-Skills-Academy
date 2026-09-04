@@ -208,7 +208,7 @@ const RefundCancel = () => {
 
 
 
-              <div className="mt-8 space-y-4">
+                            <div className="mt-8 space-y-4">
 
 
                 <div className="flex gap-3 items-center">
@@ -216,7 +216,7 @@ const RefundCancel = () => {
                   <FaEnvelope />
 
                   <span>
-                    info@firsttrackskills.com
+                    admin@firsttrackskillsacademy.in
                   </span>
 
                 </div>
@@ -226,7 +226,7 @@ const RefundCancel = () => {
                 <div className="flex gap-3 items-center">
 
                   <span>
-                    📞 +91 9876543210
+                    📞 +91 9040170727
                   </span>
 
                 </div>
@@ -236,14 +236,13 @@ const RefundCancel = () => {
                 <div className="flex gap-3 items-center">
 
                   <span>
-                    📍 Bhubaneswar, Odisha
+                    📍 Saheed Nagar, Bhubaneswar, Odisha - 751007
                   </span>
 
                 </div>
 
 
               </div>
-
 
 
               <button

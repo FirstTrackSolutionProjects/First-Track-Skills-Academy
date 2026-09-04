@@ -13,3 +13,13 @@ html, body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+input[type="date"]::-webkit-datetime-edit {
+  color: #374151;
+}
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+  color: #374151;
+}

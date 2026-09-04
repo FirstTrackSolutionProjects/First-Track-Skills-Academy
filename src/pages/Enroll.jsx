@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { Link, NavLink, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { FaArrowRight, FaClock, FaHome, FaPaperPlane, FaSpinner } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { COURSES_ENUM } from "../constants/enums";
@@ -296,14 +296,14 @@ const Enroll = () => {
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <button
                 onClick={() => navigate("/dashboard")}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-3.5 rounded-xl font-bold transition shadow-md hover:scale-105"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-3.5 rounded-xl font-bold transition shadow-md hover:scale-105 cursor-pointer"
               >
                 Go to Dashboard
                 <FaArrowRight />
               </button>
               <button
                 onClick={() => navigate("/")}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-3.5 rounded-xl font-bold transition"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-3.5 rounded-xl font-bold transition cursor-pointer"
               >
                 <FaHome />
                 Back to Homepage
@@ -317,9 +317,17 @@ const Enroll = () => {
                 Admission Form
               </span>
 
-              <h1 className="text-4xl md:text-5xl font-bold mt-5">
-                Enroll Now
-              </h1>
+              <NavLink to="/" className="flex flex-col items-center gap-3 mt-5">
+                <img
+                  src="/images/companylogo.jpg"
+                  alt="First Track"
+                  className="w-24 h-24 rounded-full border-2 border-orange-500 object-cover shadow-md"
+                />
+                <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900">
+                  First Track
+                  <span className="text-orange-500"> Skills Academy</span>
+                </h1>
+              </NavLink>
 
               <p className="text-gray-600 mt-4 max-w-2xl mx-auto">
                 Begin your career journey by enrolling in one of our
@@ -623,7 +631,7 @@ const Enroll = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="mt-8 w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white py-4 rounded-xl text-lg font-semibold flex items-center justify-center gap-3 transition shadow-md"
+                className="mt-8 w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white py-4 rounded-xl text-lg font-semibold flex items-center justify-center gap-3 transition shadow-md cursor-pointer"
               >
                 {loading ? "Submitting..." : "Enroll Now"}
                 {loading ? (

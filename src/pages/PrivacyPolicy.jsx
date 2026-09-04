@@ -164,18 +164,18 @@ const PrivacyPolicy = () => {
                 how we handle your information, feel free to contact us.
               </p>
 
-              <div className="mt-8 space-y-3">
+                            <div className="mt-8 space-y-3">
 
                 <p>
-                  📧 info@firsttrackskills.com
+                  📧 admin@firsttrackskillsacademy.in
                 </p>
 
                 <p>
-                  📞 +91 9876543210
+                  📞 +91 9040170727
                 </p>
 
                 <p>
-                  📍 Bhubaneswar, Odisha
+                  📍 Saheed Nagar, Bhubaneswar, Odisha - 751007
                 </p>
 
               </div>

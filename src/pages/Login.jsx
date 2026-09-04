@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FaSpinner, FaSignInAlt } from "react-icons/fa";
+import { FaSpinner, FaSignInAlt, FaEye, FaEyeSlash } from "react-icons/fa";
 import AuthFormShell from "../components/forms/AuthFormShell";
 import FormInput from "../components/forms/FormInput";
 import { login } from "../service/authService";
@@ -14,6 +14,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
   const [fieldErrors, setFieldErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -66,16 +67,35 @@ const Login = () => {
           required
         />
         {fieldErrors.email && <p className="-mt-4 text-sm font-medium text-red-500">{fieldErrors.email}</p>}
-        <FormInput
-          label="Password"
-          type="password"
-          name="password"
-          value={form.password}
-          onChange={handleChange}
-          className={fieldErrors.password ? "border-red-400 focus:ring-red-300" : ""}
-          required
-        />
+
+        <div className="relative">
+          <FormInput
+            label="Password"
+            type={showPassword ? "text" : "password"}
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+            className={`pr-12 ${fieldErrors.password ? "border-red-400 focus:ring-red-300" : ""}`}
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute right-4 top-[46px] text-gray-500 hover:text-gray-700"
+            tabIndex={-1}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? <FaEyeSlash /> : <FaEye />}
+          </button>
+        </div>
         {fieldErrors.password && <p className="-mt-4 text-sm font-medium text-red-500">{fieldErrors.password}</p>}
+
+        <div className="-mt-2 text-right">
+          <Link to="/forgot-password" className="text-sm font-medium text-orange-500 hover:text-orange-600">
+            Forgot Password?
+          </Link>
+        </div>
+
         <button
           type="submit"
           disabled={loading}
