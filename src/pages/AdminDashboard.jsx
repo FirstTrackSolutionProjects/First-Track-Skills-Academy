@@ -561,10 +561,12 @@ const AdminDashboard = () => {
             <img
               src="/images/companylogo.jpg"
               alt="First Track"
-              className="h-10 w-10 rounded-full border border-sky-500 object-cover shadow-sm transition group-hover:scale-105"
+              className="h-10 w-10 rounded-full border-2 border-orange-500 object-cover shadow-sm transition group-hover:scale-105"
             />
             <div>
-              <h1 className="text-xl font-bold text-sky-700 transition group-hover:text-orange-500">First Track</h1>
+              <h1 className="text-lg font-extrabold text-gray-900 transition group-hover:text-orange-500 leading-tight">
+                First Track <span className="text-orange-500">Skills</span>
+              </h1>
               <p className="text-xs font-semibold text-slate-500">{isSuperadmin ? "Superadmin Panel" : "Admin Panel"}</p>
             </div>
           </div>
@@ -573,9 +575,9 @@ const AdminDashboard = () => {
         <div className="mb-6 space-y-2">
           <Link
             to="/"
-            className="flex items-center justify-center gap-2 rounded-xl border border-sky-200 bg-sky-50/80 px-4 py-2.5 text-sm font-bold text-sky-700 shadow-sm transition hover:bg-sky-100 hover:text-sky-800"
+            className="flex items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-sm font-bold text-orange-700 shadow-sm transition hover:bg-orange-100 hover:text-orange-800"
           >
-            <FaHome className="text-base" />
+            <FaHome className="text-base text-orange-500" />
             Back to Homepage
           </Link>
           <div className="grid grid-cols-2 gap-2 text-xs">
@@ -620,41 +622,68 @@ const AdminDashboard = () => {
       </aside>
 
       <section className="min-h-screen lg:ml-[245px]">
-        <header className="sticky top-0 z-10 flex min-h-[92px] flex-col gap-4 border-b border-slate-200 bg-white px-5 py-5 shadow-sm sm:flex-row sm:items-center sm:justify-between lg:px-9">
-          <div className="flex min-w-0 items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-xl text-blue-700 sm:h-14 sm:w-14">
-              <FaUserShield />
+        <header className="sticky top-0 z-20 border-b border-orange-100 bg-white/95 backdrop-blur-md px-4 py-3.5 shadow-sm sm:px-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
+            <div className="flex min-w-0 items-center gap-3.5 sm:gap-5">
+              {/* Attached Brand Logo on Upper Bar */}
+              <Link to="/" className="group flex shrink-0 items-center gap-3" title="First Track Skills Academy">
+                <img
+                  src="/images/companylogo.jpg"
+                  alt="First Track"
+                  className="h-11 w-11 sm:h-12 sm:w-12 rounded-full border-2 border-orange-500 object-cover shadow-md transition group-hover:scale-105"
+                />
+                <div className="leading-tight">
+                  <h1 className="text-base sm:text-lg font-extrabold text-gray-900 leading-tight">
+                    First Track <span className="text-orange-500">Skills Academy</span>
+                  </h1>
+                  <p className="text-[11px] font-semibold text-gray-500 hidden sm:block">
+                    Learn • Grow • Succeed
+                  </p>
+                </div>
+              </Link>
+
+              {/* Vertical divider */}
+              <div className="hidden md:block h-10 w-px bg-orange-200"></div>
+
+              {/* Active Menu & Panel Info */}
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="hidden lg:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-xl text-orange-600 shadow-sm">
+                  <FaUserShield />
+                </div>
+                <div className="min-w-0">
+                  <span className="inline-block bg-orange-100 text-orange-700 border border-orange-200 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase">
+                    {isSuperadmin ? "Superadmin Panel" : "Admin Panel"}
+                  </span>
+                  <h2 className="break-words text-xl sm:text-2xl font-bold text-gray-900 leading-tight mt-0.5">{activeMenu}</h2>
+                </div>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-xs font-bold tracking-[0.2em] text-blue-700 sm:text-sm sm:tracking-[0.35em]">{isSuperadmin ? "SUPERADMIN" : "ADMIN"} PANEL</p>
-              <h2 className="break-words text-2xl font-bold sm:text-3xl">{activeMenu}</h2>
-              <p className="mt-1 text-slate-500">Role-based data and permissions for Skills Academy.</p>
+
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <Link
+                to="/"
+                className="flex items-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-orange-700 shadow-sm transition hover:bg-orange-100 hover:text-orange-800"
+                title="Return to Website Homepage"
+              >
+                <FaHome className="text-orange-500" />
+                <span>Homepage</span>
+              </Link>
+              <Link
+                to="/courses"
+                className="hidden sm:flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
+                title="Browse Courses"
+              >
+                <span>Courses</span>
+              </Link>
+              <Link
+                to="/career"
+                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
+                title="Explore Career Portal"
+              >
+                <span>Career</span>
+              </Link>
+              <span className="w-fit rounded-full border border-orange-200 bg-orange-50/50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-orange-700">{role}</span>
             </div>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-            <Link
-              to="/"
-              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
-              title="Return to Website Homepage"
-            >
-              <FaHome />
-              <span>Homepage</span>
-            </Link>
-            <Link
-              to="/courses"
-              className="hidden sm:flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
-              title="Browse Courses"
-            >
-              <span>Courses</span>
-            </Link>
-            <Link
-              to="/career"
-              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
-              title="Explore Career Portal"
-            >
-              <span>Career</span>
-            </Link>
-            <span className="w-fit rounded-full border border-slate-200 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-600">{role}</span>
           </div>
         </header>
 
@@ -1401,7 +1430,7 @@ const SidebarSection = ({ section, activeMenu, isOpen, onToggle, openSections, o
                       key={child.name}
                       onClick={() => onMenuClick(child.name)}
                       className={`flex h-10 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-semibold transition ${
-                        activeMenu === child.name ? "bg-sky-100 text-blue-700" : "text-slate-700 hover:bg-slate-100"
+                        activeMenu === child.name ? "bg-orange-50 text-orange-600 font-bold border-r-4 border-orange-500" : "text-slate-700 hover:bg-slate-100"
                       }`}
                     >
                       <span className="w-5 text-base">{child.icon}</span>
@@ -1416,7 +1445,7 @@ const SidebarSection = ({ section, activeMenu, isOpen, onToggle, openSections, o
               key={item.name}
               onClick={() => onMenuClick(item.name)}
               className={`flex h-11 w-full items-center gap-3 rounded-lg px-4 text-left text-sm font-semibold transition ${
-                activeMenu === item.name ? "bg-sky-100 text-blue-700" : "text-slate-800 hover:bg-slate-100"
+                activeMenu === item.name ? "bg-orange-50 text-orange-600 font-bold border-r-4 border-orange-500" : "text-slate-800 hover:bg-slate-100"
               }`}
             >
               <span className="w-5 text-base">{item.icon}</span>
@@ -1429,9 +1458,10 @@ const SidebarSection = ({ section, activeMenu, isOpen, onToggle, openSections, o
   </div>
 );
 
-const MiniMetric = ({ label, value, tone = "blue" }) => {
+const MiniMetric = ({ label, value, tone = "orange" }) => {
   const tones = {
-    blue: "border-blue-100 bg-blue-50 text-blue-700",
+    orange: "border-orange-200 bg-orange-50 text-orange-700",
+    blue: "border-orange-200 bg-orange-50 text-orange-700",
     green: "border-emerald-100 bg-emerald-50 text-emerald-700",
     amber: "border-amber-100 bg-amber-50 text-amber-700",
     rose: "border-rose-100 bg-rose-50 text-rose-700",
@@ -1444,9 +1474,10 @@ const MiniMetric = ({ label, value, tone = "blue" }) => {
   );
 };
 
-const MetricCard = ({ label, value, icon, tone = "blue" }) => {
+const MetricCard = ({ label, value, icon, tone = "orange" }) => {
   const tones = {
-    blue: "bg-blue-50 text-blue-700 border-blue-100",
+    orange: "bg-orange-50 text-orange-700 border-orange-200",
+    blue: "bg-orange-50 text-orange-700 border-orange-200",
     green: "bg-emerald-50 text-emerald-700 border-emerald-100",
     amber: "bg-amber-50 text-amber-700 border-amber-100",
     rose: "bg-rose-50 text-rose-700 border-rose-100",

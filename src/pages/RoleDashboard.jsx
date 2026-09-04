@@ -165,11 +165,13 @@ const RoleDashboard = () => {
             <img
               src="/images/companylogo.jpg"
               alt="First Track"
-              className="h-10 w-10 rounded-full border border-blue-600 object-cover shadow-sm transition group-hover:scale-105"
+              className="h-11 w-11 rounded-full border-2 border-orange-500 object-cover shadow-sm transition group-hover:scale-105"
             />
             <div>
-              <h1 className="text-xl font-bold text-blue-700 transition group-hover:text-orange-500">First Track</h1>
-              <p className="text-xs font-semibold text-slate-500">Skills Academy</p>
+              <h1 className="text-lg font-extrabold text-gray-900 transition group-hover:text-orange-500 leading-tight">
+                First Track <span className="text-orange-500">Skills</span>
+              </h1>
+              <p className="text-xs font-semibold text-slate-500">Academy Portal</p>
             </div>
           </div>
         </Link>
@@ -177,9 +179,9 @@ const RoleDashboard = () => {
         <div className="mb-6 space-y-2">
           <Link
             to="/"
-            className="flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50/80 px-4 py-2.5 text-sm font-bold text-blue-700 shadow-sm transition hover:bg-blue-100 hover:text-blue-800"
+            className="flex items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-sm font-bold text-orange-700 shadow-sm transition hover:bg-orange-100 hover:text-orange-800"
           >
-            <FaHome className="text-base" />
+            <FaHome className="text-base text-orange-500" />
             Back to Homepage
           </Link>
           <div className="grid grid-cols-2 gap-2 text-xs">
@@ -223,25 +225,50 @@ const RoleDashboard = () => {
       </aside>
 
       <section className="min-h-screen lg:ml-[245px]">
-        <header className="sticky top-0 z-20 border-b border-slate-200 bg-white px-4 py-4 shadow-sm sm:px-6">
+        <header className="sticky top-0 z-20 border-b border-orange-100 bg-white/95 backdrop-blur-md px-4 py-3.5 shadow-sm sm:px-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
-            <div className="flex min-w-0 items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-xl text-blue-700">
-                {copy.icon}
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-bold tracking-[0.2em] text-blue-700 sm:tracking-[0.28em]">{copy.label}</p>
-                <h2 className="break-words text-2xl font-bold leading-tight">{activeMenu}</h2>
-                <p className="text-sm text-slate-500">{copy.subtitle}</p>
+            <div className="flex min-w-0 items-center gap-3.5 sm:gap-5">
+              {/* Attached Brand Logo on Upper Bar */}
+              <Link to="/" className="group flex shrink-0 items-center gap-3" title="First Track Skills Academy">
+                <img
+                  src="/images/companylogo.jpg"
+                  alt="First Track"
+                  className="h-11 w-11 sm:h-12 sm:w-12 rounded-full border-2 border-orange-500 object-cover shadow-md transition group-hover:scale-105"
+                />
+                <div className="leading-tight">
+                  <h1 className="text-base sm:text-lg font-extrabold text-gray-900 leading-tight">
+                    First Track <span className="text-orange-500">Skills Academy</span>
+                  </h1>
+                  <p className="text-[11px] font-semibold text-gray-500 hidden sm:block">
+                    Learn • Grow • Succeed
+                  </p>
+                </div>
+              </Link>
+
+              {/* Vertical divider */}
+              <div className="hidden md:block h-10 w-px bg-orange-200"></div>
+
+              {/* Active Menu & Panel Info */}
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="hidden lg:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-xl text-orange-600 shadow-sm">
+                  {copy.icon}
+                </div>
+                <div className="min-w-0">
+                  <span className="inline-block bg-orange-100 text-orange-700 border border-orange-200 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase">
+                    {copy.label}
+                  </span>
+                  <h2 className="break-words text-xl sm:text-2xl font-bold text-gray-900 leading-tight mt-0.5">{activeMenu}</h2>
+                </div>
               </div>
             </div>
+
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
               <Link
                 to="/"
-                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
+                className="flex items-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-orange-700 shadow-sm transition hover:bg-orange-100 hover:text-orange-800"
                 title="Return to Website Homepage"
               >
-                <FaHome />
+                <FaHome className="text-orange-500" />
                 <span>Homepage</span>
               </Link>
               <Link
@@ -258,7 +285,7 @@ const RoleDashboard = () => {
               >
                 <span>Career</span>
               </Link>
-              <span className="w-fit rounded-full border border-slate-200 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-600">
+              <span className="w-fit rounded-full border border-orange-200 bg-orange-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-orange-700">
                 {role}
               </span>
             </div>
@@ -322,8 +349,8 @@ const SidebarSection = ({ section, activeMenu, isOpen, onToggle, onMenuClick }) 
             onClick={() => onMenuClick(item.name)}
             className={`flex items-center gap-3 rounded-md px-4 py-3 text-left text-sm font-semibold transition ${
               activeMenu === item.name
-                ? "bg-blue-50 text-blue-800"
-                : "text-slate-800 hover:bg-slate-100"
+                ? "bg-orange-50 text-orange-600 font-bold"
+                : "text-slate-800 hover:bg-orange-50/50"
             }`}
           >
             <span className="text-base">{item.icon}</span>
@@ -339,7 +366,7 @@ const HeroPanel = ({ copy, user, metrics, isStudent }) => (
   <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(280px,480px)] xl:items-center">
       <div>
-        <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700">
+        <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-bold text-orange-700">
           {copy.icon}
           {copy.label}
         </span>
@@ -358,7 +385,7 @@ const HeroPanel = ({ copy, user, metrics, isStudent }) => (
 );
 
 const MiniMetric = ({ label, value }) => (
-  <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-blue-700">
+  <div className="rounded-xl border border-orange-100 bg-orange-50/70 p-4 text-orange-700">
     <p className="text-sm font-bold">{label}</p>
     <p className="mt-2 break-words text-2xl font-bold">{value}</p>
   </div>
@@ -378,7 +405,7 @@ const CoursePanel = ({ courses, isStudent, onSelectCourse }) => (
           >
             <div>
               <div className="flex items-center justify-between">
-                <span className="rounded-md bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
+                <span className="rounded-md bg-orange-50 border border-orange-100 px-2.5 py-1 text-xs font-bold text-orange-700">
                   {course.category || "DEVOPS"}
                 </span>
                 {course.batch_timing && (
@@ -518,15 +545,15 @@ const ProfilePanel = ({ user, courses = [], batches = [], isStudent }) => {
   return (
     <Panel icon={isStudent ? <FaUserGraduate /> : <FaUserTie />} title="Personal Profile">
       {/* Profile Header Banner */}
-      <div className="rounded-2xl border border-slate-200 bg-gradient-to-r from-blue-50/80 to-orange-50/60 p-6 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="rounded-2xl border border-orange-200 bg-gradient-to-r from-orange-50/90 to-amber-50/70 p-6 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-2xl font-bold text-white shadow-md">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-orange-500 text-2xl font-bold text-white shadow-md">
             {(user?.first_name?.[0] || user?.name?.[0] || "U").toUpperCase()}
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-xl font-bold text-slate-900">{fullNameStr}</h3>
-              <span className="rounded-full bg-blue-100 text-blue-700 px-3 py-0.5 text-xs font-bold">
+              <span className="rounded-full bg-orange-100 text-orange-700 border border-orange-200 px-3 py-0.5 text-xs font-bold">
                 {role}
               </span>
             </div>
