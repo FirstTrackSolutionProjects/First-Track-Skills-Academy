@@ -56,7 +56,7 @@ const Features = () => {
   const { auth } = useStore();
 
   return (
-    <section className="relative overflow-hidden bg-[#FFF8F0] py-16 md:py-24">
+    <section className="relative overflow-hidden bg-[#FFF8F0] pt-24 pb-16 md:py-24">
 
       <div className="absolute top-24 left-24 w-72 h-72 bg-orange-100 rounded-full blur-3xl opacity-40"></div>
       <div className="absolute bottom-0 right-0 w-80 h-80 bg-orange-200 rounded-full blur-3xl opacity-30"></div>
