@@ -40,13 +40,21 @@ const Enroll = () => {
 
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
   const [files, setFiles] = useState({ profileImage: null, resume: null });
-  const [courseList, setCourseList] = useState([]);
+  const [courseList, setCourseList] = useState(
+    Object.values(COURSES_ENUM).map((title) => ({ id: title, title }))
+  );
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submittedData, setSubmittedData] = useState(null);
 
   const profileRef = useRef(null);
   const resumeRef = useRef(null);
+
+  const paramCourse =
+    searchParams.get("course") ||
+    location.state?.course ||
+    location.state?.courseTitle;
+  const isLockedFromInfo = Boolean(paramCourse);
 
   // Fetch available courses to populate dynamic course titles
   useEffect(() => {
@@ -79,17 +87,12 @@ const Enroll = () => {
 
   // Set default / preselected course by course.title from URL or state
   useEffect(() => {
-    const paramCourse =
-      searchParams.get("course") ||
-      location.state?.course ||
-      location.state?.courseTitle;
-
     if (paramCourse) {
       setFormData((prev) => ({ ...prev, course: paramCourse }));
     } else if (courseList.length > 0 && !formData.course) {
       setFormData((prev) => ({ ...prev, course: courseList[0].title }));
     }
-  }, [searchParams, location.state, courseList]);
+  }, [paramCourse, courseList]);
 
   const handleChange = (e) => {
     const { name, value, type, checked, files: inputFiles } = e.target;
@@ -569,16 +572,35 @@ const Enroll = () => {
               <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">
-                    Selected Course
+                    Selected Course *
                   </label>
-                  <select
-                    name="course"
-                    value={formData.course}
-                    disabled
-                    className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-100 text-gray-900 font-semibold cursor-not-allowed shadow-sm"
-                  >
-                    <option value={formData.course}>{formData.course}</option>
-                  </select>
+                  {isLockedFromInfo ? (
+                    <select
+                      name="course"
+                      value={formData.course}
+                      disabled
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-gray-100 text-gray-900 font-semibold cursor-not-allowed shadow-sm"
+                    >
+                      <option value={formData.course}>{formData.course}</option>
+                    </select>
+                  ) : (
+                    <select
+                      name="course"
+                      value={formData.course}
+                      onChange={handleChange}
+                      required
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
+                    >
+                      {courseList.map((c) => {
+                        const courseTitle = c.title || c;
+                        return (
+                          <option key={c.id || courseTitle} value={courseTitle}>
+                            {courseTitle}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  )}
                 </div>
 
                 <div>
