@@ -52,52 +52,67 @@ const Navbar = () => {
       >
         <div className="max-w-7xl mx-auto px-5 lg:px-8 flex items-center justify-between">
 
-          {/* Logo Branding */}
-          <NavLink
-            to="/"
-            className="flex items-center gap-3 flex-shrink-0 group"
-          >
-            <img
-              src="/images/companylogo.jpg"
-              alt="First Track"
-              className="w-12 h-12 lg:w-14 lg:h-14 rounded-full border-2 border-orange-500 object-cover shadow-md transition group-hover:scale-105"
-            />
+          {/* Left: Burger Button on mobile & Logo Branding */}
+          <div className="flex items-center gap-3">
+            {/* Mobile Collapsible Burger Button (on the left) */}
+            <button
+              onClick={() => setOpen(!open)}
+              aria-label={open ? "Close Navigation Menu" : "Open Navigation Menu"}
+              aria-expanded={open}
+              className={`lg:hidden flex items-center justify-center p-1.5 rounded-xl text-3xl transition ${
+                scroll ? "text-gray-900" : "text-black"
+              }`}
+            >
+              {open ? <HiX /> : <HiMenuAlt3 />}
+            </button>
 
-            {/* Desktop Brand Text */}
-            <div className="hidden md:block">
-              <h2
-                className={`font-extrabold leading-tight transition ${
-                  scroll ? "text-gray-900" : "text-black"
-                }`}
-              >
-                First Track
-                <span className="text-orange-500"> Skills Academy</span>
-              </h2>
+            {/* Logo Branding */}
+            <NavLink
+              to="/"
+              className="flex items-center gap-3 flex-shrink-0 group"
+            >
+              <img
+                src="/images/companylogo.jpg"
+                alt="First Track"
+                className="w-12 h-12 lg:w-14 lg:h-14 rounded-full border-2 border-orange-500 object-cover shadow-md transition group-hover:scale-105"
+              />
 
-              <p
-                className={`text-xs ${
-                  scroll ? "text-gray-700" : "text-gray-800"
-                }`}
-              >
-                Learn • Grow • Succeed
-              </p>
-            </div>
+              {/* Desktop Brand Text */}
+              <div className="hidden md:block">
+                <h2
+                  className={`font-extrabold leading-tight transition ${
+                    scroll ? "text-gray-900" : "text-black"
+                  }`}
+                >
+                  First Track
+                  <span className="text-orange-500"> Skills Academy</span>
+                </h2>
 
-            {/* Mobile Brand Text */}
-            <div className="md:hidden leading-tight">
-              <h2
-                className={`text-base font-extrabold ${
-                  scroll ? "text-gray-900" : "text-black"
-                }`}
-              >
-                First Track
-              </h2>
+                <p
+                  className={`text-xs ${
+                    scroll ? "text-gray-700" : "text-gray-800"
+                  }`}
+                >
+                  Learn • Grow • Succeed
+                </p>
+              </div>
 
-              <p className="text-orange-500 text-xs font-semibold">
-                Skills Academy
-              </p>
-            </div>
-          </NavLink>
+              {/* Mobile Brand Text */}
+              <div className="md:hidden leading-tight">
+                <h2
+                  className={`text-base font-extrabold ${
+                    scroll ? "text-gray-900" : "text-black"
+                  }`}
+                >
+                  First Track
+                </h2>
+
+                <p className="text-orange-500 text-xs font-semibold">
+                  Skills Academy
+                </p>
+              </div>
+            </NavLink>
+          </div>
 
           {/* Desktop Menu */}
           <nav className="hidden lg:flex max-w-[820px] items-center gap-1 overflow-x-auto bg-white/10 backdrop-blur-xl rounded-full border border-white/20 px-3 py-2 no-scrollbar">
@@ -155,22 +170,29 @@ const Navbar = () => {
             </div>
           )}
 
-          {/* Mobile Collapsible Burger Button */}
-          <button
-            onClick={() => setOpen(!open)}
-            aria-label={open ? "Close Navigation Menu" : "Open Navigation Menu"}
-            aria-expanded={open}
-            className={`lg:hidden flex items-center justify-center text-3xl transition ${
-              scroll ? "text-gray-900" : "text-black"
-            }`}
-          >
-            {open ? <HiX /> : <HiMenuAlt3 />}
-          </button>
+          {/* Mobile Right CTA button */}
+          <div className="lg:hidden flex items-center gap-2">
+            {auth ? (
+              <NavLink
+                to="/dashboard"
+                className="rounded-full bg-orange-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-orange-600 transition"
+              >
+                Dashboard
+              </NavLink>
+            ) : (
+              <NavLink
+                to="/enroll"
+                className="rounded-full bg-orange-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-orange-600 transition"
+              >
+                Enroll
+              </NavLink>
+            )}
+          </div>
 
         </div>
       </header>
 
-      {/* Mobile Collapsible Burger Menu Drawer */}
+      {/* Mobile Collapsible Burger Menu Drawer (from the LEFT) */}
       <div
         className={`fixed inset-0 z-[999] transition-all duration-300 ${
           open ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
@@ -182,10 +204,10 @@ const Navbar = () => {
           onClick={() => setOpen(false)}
         />
 
-        {/* Collapsible Panel */}
+        {/* Collapsible Panel on the LEFT */}
         <div
-          className={`absolute right-0 top-0 flex h-full w-[90%] max-w-sm flex-col bg-white transition-transform duration-300 ease-in-out ${
-            open ? "translate-x-0" : "translate-x-full"
+          className={`absolute left-0 top-0 flex h-full w-[85%] max-w-sm flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
+            open ? "translate-x-0" : "-translate-x-full"
           }`}
         >
           {/* Top Header */}

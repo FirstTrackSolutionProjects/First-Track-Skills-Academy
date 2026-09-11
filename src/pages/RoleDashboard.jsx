@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
+  FaBars,
   FaBookOpen,
   FaChevronDown,
   FaClock,
@@ -9,6 +10,7 @@ import {
   FaLayerGroup,
   FaSignOutAlt,
   FaSpinner,
+  FaTimes,
   FaUserGraduate,
   FaUserTie,
 } from "react-icons/fa";
@@ -87,6 +89,7 @@ const RoleDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const [selectedBatch, setSelectedBatch] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openSections, setOpenSections] = useState({
     Overview: true,
     Batches: false,
@@ -146,6 +149,7 @@ const RoleDashboard = () => {
     if (name !== "Batch Details") {
       setSelectedBatch(null);
     }
+    setMobileMenuOpen(false);
   };
 
   const openBatch = (batch) => {
@@ -159,26 +163,57 @@ const RoleDashboard = () => {
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-950">
-      <aside className="border-b border-slate-200 bg-white px-4 py-5 lg:fixed lg:left-0 lg:top-0 lg:h-screen lg:w-[245px] lg:border-b-0 lg:border-r lg:py-6">
-        <Link to="/" className="group mb-6 block" title="Go to Website Homepage">
-          <div className="flex items-center gap-3">
-            <img
-              src="/images/companylogo.jpg"
-              alt="First Track"
-              className="h-11 w-11 rounded-full border-2 border-orange-500 object-cover shadow-sm transition group-hover:scale-105"
-            />
-            <div>
-              <h1 className="text-lg font-extrabold text-gray-900 transition group-hover:text-orange-500 leading-tight">
-                First Track <span className="text-orange-500">Skills</span>
-              </h1>
-              <p className="text-xs font-semibold text-slate-500">Academy Portal</p>
+      {/* Mobile Drawer Backdrop */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-xs lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar Drawer on Mobile / Fixed Sidebar on Desktop */}
+      <aside
+        className={`fixed top-0 left-0 z-50 h-screen w-[265px] overflow-y-auto bg-white border-r border-slate-200 px-4 py-6 shadow-2xl transition-transform duration-300 ease-in-out lg:z-30 lg:w-[245px] lg:translate-x-0 lg:shadow-none lg:border-b-0 lg:py-6 ${
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <Link
+            to="/"
+            onClick={() => setMobileMenuOpen(false)}
+            className="group block"
+            title="Go to Website Homepage"
+          >
+            <div className="flex items-center gap-3">
+              <img
+                src="/images/companylogo.jpg"
+                alt="First Track"
+                className="h-11 w-11 rounded-full border-2 border-orange-500 object-cover shadow-sm transition group-hover:scale-105"
+              />
+              <div>
+                <h1 className="text-lg font-extrabold text-gray-900 transition group-hover:text-orange-500 leading-tight">
+                  First Track <span className="text-orange-500">Skills</span>
+                </h1>
+                <p className="text-xs font-semibold text-slate-500">Academy Portal</p>
+              </div>
             </div>
-          </div>
-        </Link>
+          </Link>
+
+          {/* Mobile close button */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(false)}
+            className="lg:hidden rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition"
+            aria-label="Close menu"
+          >
+            <FaTimes className="text-lg" />
+          </button>
+        </div>
 
         <div className="mb-6 space-y-2">
           <Link
             to="/"
+            onClick={() => setMobileMenuOpen(false)}
             className="flex items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-sm font-bold text-orange-700 shadow-sm transition hover:bg-orange-100 hover:text-orange-800"
           >
             <FaHome className="text-base text-orange-500" />
@@ -187,12 +222,14 @@ const RoleDashboard = () => {
           <div className="grid grid-cols-2 gap-2 text-xs">
             <Link
               to="/courses"
+              onClick={() => setMobileMenuOpen(false)}
               className="flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-50 py-2 font-bold text-slate-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 transition shadow-sm"
             >
               Courses
             </Link>
             <Link
               to="/career"
+              onClick={() => setMobileMenuOpen(false)}
               className="flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-50 py-2 font-bold text-slate-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 transition shadow-sm"
             >
               Career
@@ -213,9 +250,12 @@ const RoleDashboard = () => {
           ))}
         </nav>
 
-        <div className="mt-8 border-t border-slate-200 pt-5 lg:absolute lg:bottom-6 lg:left-4 lg:right-4 lg:mt-0">
+        <div className="mt-8 border-t border-slate-200 pt-5">
           <button
-            onClick={storeActions.clearAuth}
+            onClick={() => {
+              setMobileMenuOpen(false);
+              storeActions.clearAuth();
+            }}
             className="flex w-full items-center gap-3 rounded-md px-4 py-3 text-base font-semibold text-red-600 hover:bg-red-50"
           >
             <FaSignOutAlt />
@@ -228,6 +268,16 @@ const RoleDashboard = () => {
         <header className="sticky top-0 z-20 border-b border-orange-100 bg-white/95 backdrop-blur-md px-4 py-3.5 shadow-sm sm:px-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
             <div className="flex min-w-0 items-center gap-3.5 sm:gap-5">
+              {/* Mobile Burger Menu Button on the LEFT */}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(true)}
+                aria-label="Open Navigation Menu"
+                className="lg:hidden flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 hover:text-orange-800 transition shadow-xs"
+              >
+                <FaBars className="text-lg" />
+              </button>
+
               {/* Attached Brand Logo on Upper Bar */}
               <Link to="/" className="group flex shrink-0 items-center gap-3" title="First Track Skills Academy">
                 <img
