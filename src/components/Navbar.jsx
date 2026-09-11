@@ -140,32 +140,38 @@ const Navbar = () => {
             <div className="hidden lg:flex items-center gap-3">
               <NavLink
                 to="/dashboard"
-                className="flex items-center gap-2 rounded-full border border-orange-200 bg-white px-5 py-3 font-semibold text-orange-600 transition hover:bg-orange-50"
+                className="flex items-center gap-2 rounded-full border border-orange-200 bg-white px-5 py-2.5 font-semibold text-orange-600 transition hover:bg-orange-50"
               >
                 Dashboard
               </NavLink>
               <button
                 onClick={storeActions.clearAuth}
-                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full font-semibold transition hover:scale-105"
+                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-full font-semibold transition hover:scale-105"
               >
                 Logout
                 <FaArrowRight size={14} />
               </button>
             </div>
           ) : (
-            <div className="hidden lg:flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-2 xl:gap-2.5">
+              <NavLink
+                to="/student-onboarding"
+                className="flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-3.5 py-2 text-xs xl:text-sm font-bold text-orange-700 transition hover:bg-orange-100 hover:text-orange-800 whitespace-nowrap shadow-xs"
+              >
+                Register as Student
+              </NavLink>
               <NavLink
                 to="/college-onboarding"
-                className="flex items-center gap-2 rounded-full border border-orange-200 bg-white px-5 py-3 font-semibold text-orange-600 transition hover:bg-orange-50"
+                className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-xs xl:text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 whitespace-nowrap shadow-xs"
               >
                 College Account
               </NavLink>
               <NavLink
                 to="/login"
-                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full font-semibold transition hover:scale-105"
+                className="flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 text-xs xl:text-sm font-semibold rounded-full transition hover:scale-105 whitespace-nowrap shadow-sm"
               >
                 Login
-                <FaArrowRight size={14} />
+                <FaArrowRight size={12} />
               </NavLink>
             </div>
           )}
@@ -181,10 +187,10 @@ const Navbar = () => {
               </NavLink>
             ) : (
               <NavLink
-                to="/enroll"
+                to="/student-onboarding"
                 className="rounded-full bg-orange-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-orange-600 transition"
               >
-                Enroll
+                Register
               </NavLink>
             )}
           </div>
@@ -276,22 +282,31 @@ const Navbar = () => {
                 </button>
               </div>
             ) : (
-              <div className="grid gap-3">
+              <div className="grid gap-2.5">
                 <NavLink
-                  to="/login"
+                  to="/student-onboarding"
                   onClick={() => setOpen(false)}
-                  className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-2xl text-lg font-bold shadow-lg shadow-orange-200 transition hover:scale-105"
+                  className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-3.5 rounded-2xl text-base font-bold shadow-md shadow-orange-200 transition hover:scale-105"
                 >
-                  Login
+                  Register as Student
                   <FaArrowRight />
                 </NavLink>
-                <NavLink
-                  to="/college-onboarding"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center justify-center gap-2 rounded-2xl border border-orange-300 bg-white py-3.5 font-bold text-orange-600 shadow-sm transition hover:bg-orange-50"
-                >
-                  Create College Account
-                </NavLink>
+                <div className="grid grid-cols-2 gap-2">
+                  <NavLink
+                    to="/login"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center justify-center gap-1.5 rounded-2xl border border-gray-300 bg-white py-2.5 text-xs font-bold text-gray-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
+                  >
+                    <span>Login</span>
+                  </NavLink>
+                  <NavLink
+                    to="/college-onboarding"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center justify-center gap-1.5 rounded-2xl border border-orange-200 bg-white py-2.5 text-xs font-bold text-orange-600 shadow-sm transition hover:bg-orange-50"
+                  >
+                    <span>College Account</span>
+                  </NavLink>
+                </div>
               </div>
             )}
           </div>
