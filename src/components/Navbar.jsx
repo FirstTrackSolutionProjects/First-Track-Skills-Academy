@@ -52,14 +52,14 @@ const Navbar = () => {
       >
         <div className="max-w-7xl mx-auto px-5 lg:px-8 flex items-center justify-between">
 
-          {/* Left: Burger Button on mobile & Logo Branding */}
-          <div className="flex items-center gap-3">
-            {/* Mobile Collapsible Burger Button (on the left) */}
+          {/* Left: Burger Button on mobile/tablet & Logo Branding */}
+          <div className="flex items-center gap-3 shrink-0">
+            {/* Mobile & Tablet Collapsible Burger Button (on the left) */}
             <button
               onClick={() => setOpen(!open)}
               aria-label={open ? "Close Navigation Menu" : "Open Navigation Menu"}
               aria-expanded={open}
-              className={`lg:hidden flex items-center justify-center p-1.5 rounded-xl text-3xl transition ${
+              className={`xl:hidden flex items-center justify-center p-1.5 rounded-xl text-3xl transition ${
                 scroll ? "text-gray-900" : "text-black"
               }`}
             >
@@ -69,16 +69,16 @@ const Navbar = () => {
             {/* Logo Branding */}
             <NavLink
               to="/"
-              className="flex items-center gap-3 flex-shrink-0 group"
+              className="flex items-center gap-3 shrink-0 group"
             >
               <img
                 src="/images/companylogo.jpg"
                 alt="First Track"
-                className="w-12 h-12 lg:w-14 lg:h-14 rounded-full border-2 border-orange-500 object-cover shadow-md transition group-hover:scale-105"
+                className="w-12 h-12 lg:w-14 lg:h-14 rounded-full border-2 border-orange-500 object-cover shadow-md transition group-hover:scale-105 shrink-0"
               />
 
               {/* Desktop Brand Text */}
-              <div className="hidden md:block">
+              <div className="hidden md:block shrink-0">
                 <h2
                   className={`font-extrabold leading-tight transition ${
                     scroll ? "text-gray-900" : "text-black"
@@ -115,13 +115,13 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Menu */}
-          <nav className="hidden lg:flex max-w-[820px] items-center gap-1 overflow-x-auto bg-white/10 backdrop-blur-xl rounded-full border border-white/20 px-3 py-2 no-scrollbar">
+          <nav className="hidden xl:flex items-center gap-1 bg-white/10 backdrop-blur-xl rounded-full border border-white/20 px-3 py-2 shrink-0">
             {menu.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `whitespace-nowrap px-4 py-2 rounded-full font-medium transition ${
+                  `whitespace-nowrap px-3.5 py-2 rounded-full font-medium transition ${
                     isActive
                       ? "bg-orange-500 text-white"
                       : scroll
@@ -137,61 +137,69 @@ const Navbar = () => {
 
           {/* Desktop CTA */}
           {auth ? (
-            <div className="hidden lg:flex items-center gap-3">
+            <div className="hidden xl:flex items-center gap-3 shrink-0">
               <NavLink
                 to="/dashboard"
-                className="flex items-center gap-2 rounded-full border border-orange-200 bg-white px-5 py-2.5 font-semibold text-orange-600 transition hover:bg-orange-50"
+                className="flex items-center gap-2 rounded-full border border-orange-200 bg-white px-5 py-2.5 font-semibold text-orange-600 transition hover:bg-orange-50 whitespace-nowrap"
               >
                 Dashboard
               </NavLink>
               <button
                 onClick={storeActions.clearAuth}
-                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-full font-semibold transition hover:scale-105"
+                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-full font-semibold transition hover:scale-105 whitespace-nowrap"
               >
                 Logout
                 <FaArrowRight size={14} />
               </button>
             </div>
           ) : (
-            <div className="hidden lg:flex items-center gap-2 xl:gap-2.5">
+            <div className="hidden xl:flex items-center gap-2.5 shrink-0">
               <NavLink
                 to="/student-onboarding"
-                className="flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-3.5 py-2 text-xs xl:text-sm font-bold text-orange-700 transition hover:bg-orange-100 hover:text-orange-800 whitespace-nowrap shadow-xs"
+                className="flex items-center gap-1.5 rounded-full border border-orange-200 bg-white px-4 py-2.5 font-semibold text-orange-600 transition hover:bg-orange-50 hover:border-orange-300 whitespace-nowrap shadow-xs"
               >
                 Register as Student
               </NavLink>
               <NavLink
                 to="/college-onboarding"
-                className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-xs xl:text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 whitespace-nowrap shadow-xs"
+                className="flex items-center gap-1.5 rounded-full border border-orange-200 bg-white px-4 py-2.5 font-semibold text-orange-600 transition hover:bg-orange-50 hover:border-orange-300 whitespace-nowrap shadow-xs"
               >
                 College Account
               </NavLink>
               <NavLink
                 to="/login"
-                className="flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 text-xs xl:text-sm font-semibold rounded-full transition hover:scale-105 whitespace-nowrap shadow-sm"
+                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 font-semibold rounded-full transition hover:scale-105 whitespace-nowrap shadow-sm"
               >
                 Login
-                <FaArrowRight size={12} />
+                <FaArrowRight size={13} />
               </NavLink>
             </div>
           )}
 
-          {/* Mobile Right CTA button */}
-          <div className="lg:hidden flex items-center gap-2">
+          {/* Mobile & Tablet Right CTA buttons */}
+          <div className="xl:hidden flex items-center gap-2 shrink-0">
             {auth ? (
               <NavLink
                 to="/dashboard"
-                className="rounded-full bg-orange-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-orange-600 transition"
+                className="rounded-full bg-orange-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-orange-600 transition whitespace-nowrap"
               >
                 Dashboard
               </NavLink>
             ) : (
-              <NavLink
-                to="/student-onboarding"
-                className="rounded-full bg-orange-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-orange-600 transition"
-              >
-                Register
-              </NavLink>
+              <>
+                <NavLink
+                  to="/student-onboarding"
+                  className="rounded-full border border-orange-200 bg-white px-3 py-1.5 text-xs font-semibold text-orange-600 shadow-xs hover:bg-orange-50 transition whitespace-nowrap"
+                >
+                  Register
+                </NavLink>
+                <NavLink
+                  to="/login"
+                  className="rounded-full bg-orange-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-orange-600 transition whitespace-nowrap"
+                >
+                  Login
+                </NavLink>
+              </>
             )}
           </div>
 
