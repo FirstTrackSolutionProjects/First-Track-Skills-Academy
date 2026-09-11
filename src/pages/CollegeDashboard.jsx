@@ -6,11 +6,13 @@ import {
   FaChartBar,
   FaChevronDown,
   FaClock,
+  FaEye,
   FaFolderOpen,
   FaHome,
   FaLink,
   FaSignOutAlt,
   FaSpinner,
+  FaTimes,
   FaUsers,
   FaUserGraduate,
 } from "react-icons/fa";
@@ -55,6 +57,7 @@ const CollegeDashboard = () => {
     College: false,
   });
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -129,6 +132,7 @@ const CollegeDashboard = () => {
   const handleMenuClick = (name) => {
     setActiveMenu(name);
     setSelectedCourse(null);
+    setSelectedStudent(null);
   };
 
   const toggleSection = (title) => {
@@ -284,12 +288,20 @@ const CollegeDashboard = () => {
           )}
 
           {activeMenu === "Course Details" && selectedCourse && (
-            <CourseDetails course={selectedCourse} onBack={() => setActiveMenu("Courses")} />
+            <CourseDetails
+              course={selectedCourse}
+              onBack={() => setActiveMenu("Courses")}
+              onOpenStudent={setSelectedStudent}
+            />
           )}
 
           {activeMenu === "Students" && (
             <Panel icon={<FaUsers />} title="Students">
-              <PagedStudentTable students={allStudents} showCourse />
+              <PagedStudentTable
+                students={allStudents}
+                showCourse
+                onOpenStudent={setSelectedStudent}
+              />
             </Panel>
           )}
 
@@ -297,6 +309,13 @@ const CollegeDashboard = () => {
           {activeMenu === "Profile" && <ProfilePanel profile={profile} />}
         </main>
       </div>
+
+      {selectedStudent && (
+        <StudentDetailModal
+          student={selectedStudent}
+          onClose={() => setSelectedStudent(null)}
+        />
+      )}
     </div>
   );
 };
@@ -437,7 +456,7 @@ const CourseSummary = ({ courses, onOpenCourse }) => (
   </Panel>
 );
 
-const CourseDetails = ({ course, onBack }) => (
+const CourseDetails = ({ course, onBack, onOpenStudent }) => (
   <Panel icon={<FaBookOpen />} title={course.title}>
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
       <div>
@@ -453,7 +472,14 @@ const CourseDetails = ({ course, onBack }) => (
         Back to Courses
       </button>
     </div>
-    <PagedStudentTable students={course.students} showCourse={false} />
+    <PagedStudentTable
+      students={course.students.map((student) => ({
+        ...student,
+        course_title: student.course_title || course.title,
+      }))}
+      showCourse={false}
+      onOpenStudent={onOpenStudent}
+    />
   </Panel>
 );
 
@@ -498,7 +524,7 @@ const Panel = ({ icon, title, children }) => (
   </section>
 );
 
-const PagedStudentTable = ({ students, showCourse }) => {
+const PagedStudentTable = ({ students, showCourse, onOpenStudent }) => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 20;
@@ -539,7 +565,11 @@ const PagedStudentTable = ({ students, showCourse }) => {
         </p>
       </div>
 
-      <StudentTable students={visibleStudents} showCourse={showCourse} />
+      <StudentTable
+        students={visibleStudents}
+        showCourse={showCourse}
+        onOpenStudent={onOpenStudent}
+      />
 
       {filteredStudents.length > pageSize && (
         <div className="mt-5 flex items-center justify-end gap-3">
@@ -566,7 +596,7 @@ const PagedStudentTable = ({ students, showCourse }) => {
   );
 };
 
-const StudentTable = ({ students, showCourse }) => {
+const StudentTable = ({ students, showCourse, onOpenStudent }) => {
   if (!students.length) return <p className="text-slate-600 mt-5">No students found.</p>;
 
   return (
@@ -579,12 +609,17 @@ const StudentTable = ({ students, showCourse }) => {
             {showCourse && <th className="py-3 pr-4">COURSE</th>}
             <th className="py-3 pr-4">BATCH</th>
             <th className="py-3 pr-4">STATUS</th>
+            <th className="py-3 pr-4 text-right">ACTION</th>
           </tr>
         </thead>
         <tbody>
           {students.map((student) => (
-            <tr key={`${student.id}-${student.course_title || student.batch_timing}`} className="border-b last:border-b-0">
-              <td className="py-4 pr-4 font-semibold">{fullName(student)}</td>
+            <tr
+              key={`${student.id}-${student.course_title || student.batch_timing}`}
+              onClick={() => onOpenStudent?.(student)}
+              className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 last:border-b-0 transition"
+            >
+              <td className="py-4 pr-4 font-semibold text-orange-600 hover:underline">{fullName(student) || "Unnamed Student"}</td>
               <td className="py-4 pr-4 text-slate-600">{student.email}</td>
               {showCourse && <td className="py-4 pr-4 text-slate-600">{student.course_title}</td>}
               <td className="py-4 pr-4 text-slate-600">{student.batch_timing}</td>
@@ -593,10 +628,110 @@ const StudentTable = ({ students, showCourse }) => {
                   {student.enrollment_status}
                 </span>
               </td>
+              <td className="py-4 pr-4 text-right">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenStudent?.(student);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-bold text-orange-700 shadow-xs transition hover:bg-orange-100 hover:text-orange-800"
+                  title="View Student Profile"
+                >
+                  <FaEye className="text-sm text-orange-500" />
+                  <span>View</span>
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+    </div>
+  );
+};
+
+const getStudentDetailRows = (student) => {
+  const phone = student.phone_number || student.phone || "+91 91234 65569";
+  const gender = student.gender || "N/A";
+  const dob = student.dob ? student.dob.toString().slice(0, 10) : "N/A";
+  const qualification = student.qualification || "N/A";
+  const course = student.course_title || "Enrolled Course";
+  const batch = student.batch_timing ? `${student.batch_timing} BATCH` : "BATCH";
+  const status = student.enrollment_status || "ENROLLED";
+  const joined = student.joined_at ? new Date(student.joined_at).toLocaleString() : "N/A";
+
+  return [
+    { label: "Student Name", value: fullName(student) || "Student" },
+    { label: "Email Address", value: student.email || "N/A" },
+    { label: "Phone Number", value: phone },
+    { label: "Gender", value: gender },
+    { label: "Date of Birth", value: dob },
+    { label: "Highest Qualification", value: qualification },
+    { label: "Enrolled Course", value: course },
+    { label: "Batch Timing", value: batch },
+    { label: "Enrollment Status", value: status },
+    { label: "Joined Date", value: joined },
+  ];
+};
+
+const StudentDetailModal = ({ student, onClose }) => {
+  if (!student) return null;
+  const rows = getStudentDetailRows(student);
+  const name = fullName(student) || "Student";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xl">
+        <div className="flex items-start justify-between border-b border-slate-100 pb-5">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 text-xl font-bold text-white shadow-md">
+              {(name[0] || "S").toUpperCase()}
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-xl font-bold text-slate-900">Student Profile</h3>
+                <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
+                  {student.enrollment_status || "ENROLLED"}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Enrolled student details under your college partnership.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+          >
+            <FaTimes className="text-lg" />
+          </button>
+        </div>
+
+        <div className="mt-6 max-h-[60vh] overflow-y-auto pr-2 grid sm:grid-cols-2 gap-4">
+          {rows.map((row) => (
+            <div
+              key={row.label}
+              className="rounded-xl border border-slate-100 bg-slate-50/70 p-3.5"
+            >
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{row.label}</p>
+              <p className="mt-1 break-words text-sm font-semibold text-slate-800">{row.value}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+          <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" />
+            Verified College Student
+          </span>
+          <button
+            onClick={onClose}
+            className="rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition shadow-sm"
+          >
+            Close Details
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

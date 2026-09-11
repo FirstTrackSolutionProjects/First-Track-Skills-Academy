@@ -7,6 +7,7 @@ import {
   FaCheck,
   FaChevronDown,
   FaClipboardList,
+  FaEye,
   FaHome,
   FaLayerGroup,
   FaPaperPlane,
@@ -1501,15 +1502,26 @@ const CollegeList = ({ colleges, updatingId, onOpen, onStatus, emptyText }) =>
       {colleges.map((college) => (
         <div key={college.id} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <button onClick={() => onOpen(college)} className="text-left">
+            <button onClick={() => onOpen(college)} className="text-left flex-1 cursor-pointer">
               <div className="flex flex-wrap items-center gap-3">
-                <h4 className="text-xl font-bold hover:text-blue-700">{college.college_name}</h4>
+                <h4 className="text-xl font-bold hover:text-orange-600 transition">{college.college_name}</h4>
                 <StatusBadge status={college.status} />
               </div>
               <p className="mt-2 text-slate-500">{[college.city, college.state].filter(Boolean).join(", ") || "Location not added"}</p>
               <p className="mt-1 text-sm text-slate-500">{college.user?.email || "No email found"}</p>
             </button>
-            <ActionButtons college={college} updatingId={updatingId} onStatus={onStatus} />
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => onOpen(college)}
+                className="flex h-10 items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-4 font-semibold text-orange-700 hover:bg-orange-100 hover:text-orange-800 transition shadow-xs"
+                title="View College Profile"
+              >
+                <FaEye className="text-base text-orange-600" />
+                <span>View Profile</span>
+              </button>
+              <ActionButtons college={college} updatingId={updatingId} onStatus={onStatus} />
+            </div>
           </div>
         </div>
       ))}
@@ -1576,6 +1588,7 @@ const UserTable = ({ users, emptyText = "No admin users found.", onOpenUser }) =
             <th className="py-3 pr-4">NAME</th>
             <th className="py-3 pr-4">EMAIL</th>
             <th className="py-3 pr-4">ROLE</th>
+            <th className="py-3 pr-4 text-right">ACTION</th>
           </tr>
         </thead>
         <tbody>
@@ -1583,11 +1596,25 @@ const UserTable = ({ users, emptyText = "No admin users found.", onOpenUser }) =
             <tr
               key={user.id}
               onClick={() => onOpenUser?.(user)}
-              className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 last:border-b-0"
+              className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 last:border-b-0 transition"
             >
-              <td className="py-4 pr-4 font-semibold text-blue-700">{fullName(user) || "Unnamed User"}</td>
+              <td className="py-4 pr-4 font-semibold text-orange-600 hover:underline">{fullName(user) || "Unnamed User"}</td>
               <td className="py-4 pr-4 text-slate-600">{user.email}</td>
               <td className="py-4 pr-4"><StatusBadge status={user.role} /></td>
+              <td className="py-4 pr-4 text-right">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenUser?.(user);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-bold text-orange-700 shadow-xs transition hover:bg-orange-100 hover:text-orange-800"
+                  title="View Profile"
+                >
+                  <FaEye className="text-sm text-orange-500" />
+                  <span>View</span>
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -1607,6 +1634,7 @@ const StudentMiniTable = ({ students, onOpenStudent }) =>
             <th className="py-3 pr-4">EMAIL</th>
             <th className="py-3 pr-4">BATCH</th>
             <th className="py-3 pr-4">STATUS</th>
+            <th className="py-3 pr-4 text-right">ACTION</th>
           </tr>
         </thead>
         <tbody>
@@ -1614,12 +1642,26 @@ const StudentMiniTable = ({ students, onOpenStudent }) =>
             <tr
               key={`${student.id}-${student.batch_timing}-${student.joined_at}`}
               onClick={() => onOpenStudent?.(student)}
-              className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 last:border-b-0"
+              className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 last:border-b-0 transition"
             >
-              <td className="py-3 pr-4 font-semibold text-blue-700">{fullName(student) || "Unnamed Student"}</td>
+              <td className="py-3 pr-4 font-semibold text-orange-600 hover:underline">{fullName(student) || "Unnamed Student"}</td>
               <td className="py-3 pr-4 text-slate-600">{student.email}</td>
               <td className="py-3 pr-4 text-slate-600">{student.batch_timing}</td>
               <td className="py-3 pr-4"><StatusBadge status={student.enrollment_status} /></td>
+              <td className="py-3 pr-4 text-right">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenStudent?.(student);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-2.5 py-1 text-xs font-bold text-orange-700 shadow-xs transition hover:bg-orange-100 hover:text-orange-800"
+                  title="View Student Profile"
+                >
+                  <FaEye className="text-xs text-orange-500" />
+                  <span>View</span>
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -1642,6 +1684,7 @@ const StudentEnrollmentTable = ({ students, onOpenStudent }) =>
             <th className="py-3 pr-4">BATCH</th>
             <th className="py-3 pr-4">STATUS</th>
             <th className="py-3 pr-4">JOINED</th>
+            <th className="py-3 pr-4 text-right">ACTION</th>
           </tr>
         </thead>
         <tbody>
@@ -1649,15 +1692,29 @@ const StudentEnrollmentTable = ({ students, onOpenStudent }) =>
             <tr
               key={student.enrollment_id}
               onClick={() => onOpenStudent?.(student)}
-              className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 last:border-b-0"
+              className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 last:border-b-0 transition"
             >
-              <td className="py-4 pr-4 font-semibold text-blue-700">{student.student_name || "Unnamed Student"}</td>
+              <td className="py-4 pr-4 font-semibold text-orange-600 hover:underline">{student.student_name || "Unnamed Student"}</td>
               <td className="py-4 pr-4 text-slate-600">{student.email}</td>
               <td className="py-4 pr-4 text-slate-600">{student.college_name}</td>
               <td className="py-4 pr-4 text-slate-600">{student.course_title}</td>
               <td className="py-4 pr-4 text-slate-600">{student.batch_timing}</td>
               <td className="py-4 pr-4"><StatusBadge status={student.enrollment_status} /></td>
               <td className="py-4 pr-4 text-slate-600">{student.joined_at ? new Date(student.joined_at).toLocaleDateString() : "N/A"}</td>
+              <td className="py-4 pr-4 text-right">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenStudent?.(student);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-bold text-orange-700 shadow-xs transition hover:bg-orange-100 hover:text-orange-800"
+                  title="View Student Profile"
+                >
+                  <FaEye className="text-sm text-orange-500" />
+                  <span>View</span>
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
