@@ -2023,11 +2023,43 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
 
   const selectedTargetBatch = batches.find((b) => String(b.id) === String(targetBatchId));
 
+  const activeCourseId = filters.course_id
+    ? Number(filters.course_id)
+    : selectedTargetBatch
+    ? selectedTargetBatch.course_id
+    : null;
+
+  const sortedStudents = useMemo(() => {
+    if (!activeCourseId) {
+      return [...unallocated].sort((a, b) => {
+        if (!a.batch_id && b.batch_id) return -1;
+        if (a.batch_id && !b.batch_id) return 1;
+        return 0;
+      });
+    }
+
+    return [...unallocated].sort((a, b) => {
+      const aAlreadyIn = a.course_id === activeCourseId && Boolean(a.batch_id);
+      const bAlreadyIn = b.course_id === activeCourseId && Boolean(b.batch_id);
+      // Students NOT in this course or without a batch in this course are pushed ABOVE
+      if (!aAlreadyIn && bAlreadyIn) return -1;
+      if (aAlreadyIn && !bAlreadyIn) return 1;
+      return 0;
+    });
+  }, [unallocated, activeCourseId]);
+
+  const selectableStudents = useMemo(() => {
+    if (!activeCourseId) {
+      return sortedStudents.filter((s) => !s.batch_id);
+    }
+    return sortedStudents.filter((s) => !(s.course_id === activeCourseId && s.batch_id));
+  }, [sortedStudents, activeCourseId]);
+
   const toggleSelectAll = () => {
-    if (selectedIds.size === unallocated.length && unallocated.length > 0) {
+    if (selectedIds.size === selectableStudents.length && selectableStudents.length > 0) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(unallocated.map((s) => s.enrollment_id)));
+      setSelectedIds(new Set(selectableStudents.map((s) => s.enrollment_id)));
     }
   };
 
@@ -2087,6 +2119,21 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
       setAllocating(true);
       await allocateStudentsToBatch(batchId, [enrollmentId]);
       toast.success("Student allocated to batch");
+      await loadUnallocated();
+      onRefresh?.();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setAllocating(false);
+    }
+  };
+
+  const handleUnallocate = async (batchId, enrollmentId, studentName) => {
+    if (!batchId) return;
+    try {
+      setAllocating(true);
+      await unallocateStudent(batchId, enrollmentId);
+      toast.success(`Removed ${studentName || "student"} from batch`);
       await loadUnallocated();
       onRefresh?.();
     } catch (err) {
@@ -2213,15 +2260,15 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-orange-200 bg-orange-50/40 mb-4">
         <div className="flex items-center gap-3">
           <span className="font-bold text-sm text-slate-800">
-            {selectedIds.size} student enrollment{selectedIds.size === 1 ? "" : "s"} selected
+            {selectedIds.size} student{selectedIds.size === 1 ? "" : "s"} selected
           </span>
-          {unallocated.length > 0 && (
+          {selectableStudents.length > 0 && (
             <button
               type="button"
               onClick={toggleSelectAll}
               className="text-xs font-semibold text-orange-600 hover:text-orange-700 underline"
             >
-              {selectedIds.size === unallocated.length ? "Deselect All" : "Select All"}
+              {selectedIds.size === selectableStudents.length ? "Deselect All" : `Select All Eligible (${selectableStudents.length})`}
             </button>
           )}
         </div>
@@ -2266,7 +2313,7 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
             <span className="font-semibold text-slate-800">{selectedTargetBatch.batch_timing}</span>
           </div>
           <div className="font-semibold text-orange-800">
-            Assigns selected students into {selectedTargetBatch.course?.title || "this course"} batch (1 batch per course)
+            {selectableStudents.length} student{selectableStudents.length === 1 ? "" : "s"} ready to allocate to this course
           </div>
         </div>
       )}
@@ -2275,7 +2322,7 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
         <div className="flex justify-center p-12">
           <FaSpinner className="animate-spin text-orange-500 text-2xl" />
         </div>
-      ) : unallocated.length ? (
+      ) : sortedStudents.length ? (
         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
@@ -2283,34 +2330,51 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
                 <th className="py-3 px-4 w-10">
                   <input
                     type="checkbox"
-                    checked={unallocated.length > 0 && selectedIds.size === unallocated.length}
+                    checked={selectableStudents.length > 0 && selectedIds.size === selectableStudents.length}
                     onChange={toggleSelectAll}
                     className="h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400"
                   />
                 </th>
                 <th className="py-3 px-4">Student Name</th>
                 <th className="py-3 px-4">College / Origin</th>
-                <th className="py-3 px-4">Enrolled Course</th>
+                <th className="py-3 px-4">Enrolled Course &amp; Batch</th>
                 <th className="py-3 px-4">Timing</th>
                 <th className="py-3 px-4">Enrolled Date</th>
-                <th className="py-3 px-4 text-right">Quick Allocate</th>
+                <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {unallocated.map((st) => {
+              {sortedStudents.map((st) => {
                 const isChecked = selectedIds.has(st.enrollment_id);
+                const isAlreadyInActiveCourse = Boolean(
+                  activeCourseId && st.course_id === activeCourseId && st.batch_id
+                );
 
                 return (
                   <tr
                     key={st.enrollment_id}
-                    className={`hover:bg-slate-50/80 transition ${isChecked ? "bg-orange-50/30" : ""}`}
+                    className={`transition ${
+                      isAlreadyInActiveCourse
+                        ? "opacity-60 bg-slate-100/70 hover:bg-slate-100"
+                        : isChecked
+                        ? "bg-orange-50/40 hover:bg-orange-50/60"
+                        : "hover:bg-slate-50/80"
+                    }`}
                   >
                     <td className="py-3 px-4">
                       <input
                         type="checkbox"
                         checked={isChecked}
+                        disabled={isAlreadyInActiveCourse}
                         onChange={() => toggleSelectOne(st.enrollment_id)}
-                        className="h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400"
+                        title={
+                          isAlreadyInActiveCourse
+                            ? `Already allocated to ${st.batch_name}. A student can only have 1 batch per course.`
+                            : undefined
+                        }
+                        className={`h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400 ${
+                          isAlreadyInActiveCourse ? "opacity-30 cursor-not-allowed" : ""
+                        }`}
                       />
                     </td>
 
@@ -2335,12 +2399,21 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
 
                     <td className="py-3 px-4">
                       <div className="font-semibold text-slate-800 text-xs">{st.course_title || "Course"}</div>
-                      {selectedTargetBatch && st.course_id !== selectedTargetBatch.course_id && (
+                      {st.batch_name ? (
+                        <span className="inline-flex items-center gap-1 mt-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                          In Batch: {st.batch_name}
+                        </span>
+                      ) : activeCourseId && st.course_id !== activeCourseId ? (
                         <span
                           className="inline-block mt-0.5 text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded px-1.5 py-0.5"
-                          title={`Allocating will enroll student into ${selectedTargetBatch.course?.title || selectedTargetBatch.course_title} batch`}
+                          title={`Allocating will enroll student into ${selectedTargetBatch?.course?.title || "selected course"} batch`}
                         >
-                          + Enrolls in {selectedTargetBatch.course?.title || selectedTargetBatch.course_title}
+                          + Available for {selectedTargetBatch?.course?.title || "this course"}
+                        </span>
+                      ) : (
+                        <span className="inline-block mt-0.5 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
+                          Unassigned Batch
                         </span>
                       )}
                     </td>
@@ -2354,40 +2427,55 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
                     </td>
 
                     <td className="py-3 px-4 text-right">
-                      <div className="inline-flex items-center gap-1.5">
-                        <select
-                          id={`quick-alloc-${st.enrollment_id}`}
-                          defaultValue=""
-                          className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-2xs focus:border-orange-500 focus:outline-hidden max-w-[170px]"
-                        >
-                          <option value="">Select Batch</option>
-                          {courses.map((c) => {
-                            const cBatches = batches.filter((b) => b.course_id === c.id && b.status === "ACTIVE");
-                            if (cBatches.length === 0) return null;
-                            return (
-                              <optgroup key={c.id} label={c.title}>
-                                {cBatches.map((mb) => (
-                                  <option key={mb.id} value={mb.id}>
-                                    {mb.batch_name} ({mb.batch_timing})
-                                  </option>
-                                ))}
-                              </optgroup>
-                            );
-                          })}
-                        </select>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const sel = document.getElementById(`quick-alloc-${st.enrollment_id}`);
-                            if (sel?.value) handleQuickAllocate(st.enrollment_id, sel.value);
-                            else toast.error("Please select a batch from the dropdown");
-                          }}
-                          disabled={allocating}
-                          className="rounded-lg bg-orange-50 border border-orange-200 hover:bg-orange-100 px-2.5 py-1 text-xs font-bold text-orange-700 transition"
-                        >
-                          Assign
-                        </button>
-                      </div>
+                      {st.batch_id ? (
+                        <div className="inline-flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleUnallocate(st.batch_id, st.enrollment_id, st.student_name)}
+                            disabled={allocating}
+                            title={`Remove ${st.student_name || "student"} from ${st.batch_name}`}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 px-3 py-1 text-xs font-bold transition shadow-2xs"
+                          >
+                            <FaUserTimes className="text-xs" />
+                            <span>Unallocate</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center gap-1.5">
+                          <select
+                            id={`quick-alloc-${st.enrollment_id}`}
+                            defaultValue=""
+                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-2xs focus:border-orange-500 focus:outline-hidden max-w-[170px]"
+                          >
+                            <option value="">Select Batch</option>
+                            {courses.map((c) => {
+                              const cBatches = batches.filter((b) => b.course_id === c.id && b.status === "ACTIVE");
+                              if (cBatches.length === 0) return null;
+                              return (
+                                <optgroup key={c.id} label={c.title}>
+                                  {cBatches.map((mb) => (
+                                    <option key={mb.id} value={mb.id}>
+                                      {mb.batch_name} ({mb.batch_timing})
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              );
+                            })}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const sel = document.getElementById(`quick-alloc-${st.enrollment_id}`);
+                              if (sel?.value) handleQuickAllocate(st.enrollment_id, sel.value);
+                              else toast.error("Please select a batch from the dropdown");
+                            }}
+                            disabled={allocating}
+                            className="rounded-lg bg-orange-50 border border-orange-200 hover:bg-orange-100 px-2.5 py-1 text-xs font-bold text-orange-700 transition"
+                          >
+                            Assign
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
@@ -2397,7 +2485,7 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
         </div>
       ) : (
         <div className="rounded-xl border border-dashed border-emerald-300 bg-emerald-50/50 p-8 text-center text-sm text-emerald-800 font-semibold">
-          All students matching current filters are allocated to batches! No pending allocations.
+          No students match the current filters.
         </div>
       )}
     </Panel>
