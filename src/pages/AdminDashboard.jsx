@@ -337,12 +337,14 @@ const AdminDashboard = () => {
     try {
       if (showLoading) setLoading(true);
       const [collegeData, userData, mentorData, superCollegeData, courseData, batchData] = await Promise.all([
-        getColleges(auth.token),
-        getUsers(auth.token, { limit: 100 }),
-        getMentors({ limit: 100 }),
-        isSuperadmin ? getSuperadminColleges(auth.token) : Promise.resolve([]),
-        getCourses(),
-        fetchBatchesApi(),
+        getColleges(auth.token).catch((err) => { console.warn("Failed to load colleges:", err); return []; }),
+        getUsers(auth.token, { limit: 100 }).catch((err) => { console.warn("Failed to load users:", err); return { data: [] }; }),
+        getMentors({ limit: 100 }).catch((err) => { console.warn("Failed to load mentors:", err); return { data: [] }; }),
+        isSuperadmin
+          ? getSuperadminColleges(auth.token).catch((err) => { console.warn("Failed to load superadmin colleges:", err); return []; })
+          : Promise.resolve([]),
+        getCourses().catch((err) => { console.warn("Failed to load courses:", err); return []; }),
+        fetchBatchesApi().catch((err) => { console.warn("Failed to load batches:", err); return []; }),
       ]);
       setColleges(collegeData || []);
       setUsers(userData?.data || []);
