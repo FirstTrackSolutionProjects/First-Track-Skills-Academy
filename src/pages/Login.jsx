@@ -42,7 +42,14 @@ const Login = () => {
         refreshToken: data.tokens.refresh_token,
       });
       toast.success("Logged in successfully");
-      navigate("/dashboard");
+      const userRole = data.user?.role;
+      if (userRole === "SUPERADMIN" || userRole === "ADMIN") {
+        navigate("/admin-dashboard");
+      } else if (userRole === "COLLEGE") {
+        navigate("/college-dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error) {
       toast.error(error.message);
     } finally {

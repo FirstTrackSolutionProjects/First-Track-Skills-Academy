@@ -115,9 +115,17 @@ const RoleDashboard = () => {
 
         if (role === "MENTOR") {
           const batchData = await getMyMentorBatches();
-          const primary = (batchData?.primary_batches || []).map((b) => ({ ...b, role_type: "PRIMARY" }));
-          const substitute = (batchData?.substitute_batches || []).map((b) => ({ ...b, role_type: "SUBSTITUTE" }));
-          setBatches([...primary, ...substitute]);
+          if (Array.isArray(batchData)) {
+            const normalized = batchData.map((b) => ({
+              ...b,
+              role_type: b.is_user_substitute ? "SUBSTITUTE" : "PRIMARY",
+            }));
+            setBatches(normalized);
+          } else {
+            const primary = (batchData?.primary_batches || []).map((b) => ({ ...b, role_type: "PRIMARY" }));
+            const substitute = (batchData?.substitute_batches || []).map((b) => ({ ...b, role_type: "SUBSTITUTE" }));
+            setBatches([...primary, ...substitute]);
+          }
         }
       } catch (error) {
         toast.error(error.message);

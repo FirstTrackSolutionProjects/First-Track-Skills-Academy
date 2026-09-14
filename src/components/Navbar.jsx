@@ -9,6 +9,12 @@ const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [scroll, setScroll] = useState(false);
   const role = auth?.user?.role;
+  const dashboardPath =
+    role === "SUPERADMIN" || role === "ADMIN"
+      ? "/admin-dashboard"
+      : role === "COLLEGE"
+      ? "/college-dashboard"
+      : "/dashboard";
 
   useEffect(() => {
     const handleScroll = () => setScroll(window.scrollY > 40);
@@ -139,7 +145,7 @@ const Navbar = () => {
           {auth ? (
             <div className="hidden xl:flex items-center gap-3 shrink-0">
               <NavLink
-                to="/dashboard"
+                to={dashboardPath}
                 className="flex items-center gap-2 rounded-full border border-orange-200 bg-white px-5 py-2.5 font-semibold text-orange-600 transition hover:bg-orange-50 whitespace-nowrap"
               >
                 Dashboard
@@ -180,7 +186,7 @@ const Navbar = () => {
           <div className="xl:hidden flex items-center gap-2 shrink-0">
             {auth ? (
               <NavLink
-                to="/dashboard"
+                to={dashboardPath}
                 className="rounded-full bg-orange-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-orange-600 transition whitespace-nowrap"
               >
                 Dashboard
@@ -272,7 +278,7 @@ const Navbar = () => {
             {auth ? (
               <div className="grid gap-3">
                 <NavLink
-                  to="/dashboard"
+                  to={dashboardPath}
                   onClick={() => setOpen(false)}
                   className="w-full flex items-center justify-center gap-2 bg-orange-50 border border-orange-300 text-orange-600 py-3.5 rounded-2xl font-bold transition hover:bg-orange-100"
                 >

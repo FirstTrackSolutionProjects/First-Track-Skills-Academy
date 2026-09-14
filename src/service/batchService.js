@@ -108,6 +108,11 @@ export const getMyMentorBatches = async () => {
     const res = await axiosBatchInstance.get("/my-batches");
     return res.data.data;
   } catch (error) {
-    throw new Error(extractError(error, "Failed to load mentor batches"));
+    try {
+      const fallbackRes = await axiosBatchInstance.get("");
+      return fallbackRes.data.data;
+    } catch {
+      throw new Error(extractError(error, "Failed to load mentor batches"));
+    }
   }
 };
