@@ -2335,6 +2335,14 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
 
   const selectedTargetBatch = batches.find((b) => String(b.id) === String(targetBatchId));
 
+  const targetBatchAvailableSeats = selectedTargetBatch
+    ? selectedTargetBatch.available_seats ??
+      Math.max(
+        0,
+        50 - (selectedTargetBatch.student_count ?? selectedTargetBatch.enrollment_count ?? 0)
+      )
+    : null;
+
   const activeCourseId = filters.course_id
     ? Number(filters.course_id)
     : selectedTargetBatch
@@ -2367,25 +2375,48 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
     return sortedStudents.filter((s) => !(s.course_id === activeCourseId && s.batch_id));
   }, [sortedStudents, activeCourseId]);
 
+  const handleAutoSelectAvailable = () => {
+    if (!selectedTargetBatch) return;
+    const maxToSelect = Math.min(targetBatchAvailableSeats ?? 50, selectableStudents.length);
+    const topIds = selectableStudents.slice(0, maxToSelect).map((s) => s.enrollment_id);
+    setSelectedIds(new Set(topIds));
+    toast.info(`Auto-selected ${topIds.length} students (capped to ${targetBatchAvailableSeats} available seats).`);
+  };
+
   const toggleSelectAll = () => {
-    if (selectedIds.size === selectableStudents.length && selectableStudents.length > 0) {
+    const maxSeats = targetBatchAvailableSeats !== null ? targetBatchAvailableSeats : selectableStudents.length;
+    const targetLimit = Math.min(maxSeats, selectableStudents.length);
+
+    if (selectedIds.size >= targetLimit && selectedIds.size > 0) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(selectableStudents.map((s) => s.enrollment_id)));
+      const idsToSelect = selectableStudents.slice(0, targetLimit).map((s) => s.enrollment_id);
+      setSelectedIds(new Set(idsToSelect));
+      if (selectableStudents.length > maxSeats) {
+        toast.info(`Auto-selected ${idsToSelect.length} students (${maxSeats} available seats in batch).`);
+      }
     }
   };
 
   const toggleSelectOne = (id) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        if (targetBatchAvailableSeats !== null && next.size >= targetBatchAvailableSeats) {
+          toast.warning(`Cannot select more than ${targetBatchAvailableSeats} students. Batch capacity limit reached!`);
+          return prev;
+        }
+        next.add(id);
+      }
       return next;
     });
   };
 
   const handleTargetBatchChange = (e) => {
     setTargetBatchId(e.target.value);
+    setSelectedIds(new Set());
   };
 
   const handleManualAllocate = async () => {
@@ -2592,11 +2623,16 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-2xs focus:border-orange-500 focus:outline-hidden max-w-xs"
           >
             <option value="">-- Choose Target Batch --</option>
-            {availableBatches.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.batch_name} ({b.course?.title} - {b.batch_timing})
-              </option>
-            ))}
+            {availableBatches.map((b) => {
+              const seats =
+                b.available_seats ??
+                Math.max(0, 50 - (b.student_count ?? b.enrollment_count ?? 0));
+              return (
+                <option key={b.id} value={b.id} disabled={seats === 0}>
+                  {b.batch_name} ({b.course?.title} - {b.batch_timing}) • {seats > 0 ? `${seats} seats available` : "FULL (0 seats)"}
+                </option>
+              );
+            })}
           </select>
           <button
             type="button"
@@ -2605,14 +2641,14 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
             className="rounded-lg bg-orange-500 hover:bg-orange-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition disabled:opacity-40 flex items-center gap-1.5"
           >
             {allocating && <FaSpinner className="animate-spin" />}
-            Allocate Selected
+            Allocate Selected ({selectedIds.size})
           </button>
         </div>
       </div>
 
       {selectedTargetBatch && (
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-orange-200 bg-orange-50/80 px-4 py-2.5 text-xs text-orange-950">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-orange-200 bg-orange-50/80 px-4 py-3 text-xs text-orange-950 shadow-2xs">
+          <div className="flex flex-wrap items-center gap-2.5">
             <span className="font-bold uppercase tracking-wider text-orange-800 text-[11px]">Target Batch:</span>
             <span className="font-bold rounded-md bg-white px-2.5 py-0.5 border border-orange-200 text-orange-700 shadow-2xs">
               {selectedTargetBatch.batch_name}
@@ -2623,9 +2659,38 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
             <span className="text-orange-300">|</span>
             <span className="font-bold text-slate-700">Timing:</span>
             <span className="font-semibold text-slate-800">{selectedTargetBatch.batch_timing}</span>
+            <span className="text-orange-300">|</span>
+            <span
+              className={`inline-flex items-center gap-1.5 font-bold rounded-md px-2.5 py-0.5 border shadow-2xs ${
+                targetBatchAvailableSeats > 0
+                  ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                  : "bg-red-100 text-red-800 border-red-300"
+              }`}
+            >
+              <span className={`h-2 w-2 rounded-full ${targetBatchAvailableSeats > 0 ? "bg-emerald-600 animate-pulse" : "bg-red-600"}`}></span>
+              <span>
+                {targetBatchAvailableSeats > 0
+                  ? `${targetBatchAvailableSeats} Seats Available (${50 - targetBatchAvailableSeats}/50 enrolled)`
+                  : "Batch Full (0 Seats Available)"}
+              </span>
+            </span>
           </div>
-          <div className="font-semibold text-orange-800">
-            {selectableStudents.length} student{selectableStudents.length === 1 ? "" : "s"} ready to allocate to this course
+
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="font-semibold text-orange-800">
+              {selectedIds.size} of {Math.min(targetBatchAvailableSeats ?? 50, selectableStudents.length)} selected
+            </span>
+            {targetBatchAvailableSeats > 0 && selectableStudents.length > 0 && (
+              <button
+                type="button"
+                onClick={handleAutoSelectAvailable}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white shadow-2xs transition"
+                title={`Auto-select up to ${Math.min(targetBatchAvailableSeats, selectableStudents.length)} available students`}
+              >
+                <FaUserCheck className="text-xs" />
+                <span>Auto-Select {Math.min(targetBatchAvailableSeats, selectableStudents.length)} Students</span>
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -2642,7 +2707,10 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
                 <th className="py-3.5 px-4 w-10">
                   <input
                     type="checkbox"
-                    checked={selectableStudents.length > 0 && selectedIds.size === selectableStudents.length}
+                    checked={
+                      selectableStudents.length > 0 &&
+                      selectedIds.size === Math.min(targetBatchAvailableSeats ?? selectableStudents.length, selectableStudents.length)
+                    }
                     onChange={toggleSelectAll}
                     className="h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400"
                   />
@@ -2660,6 +2728,12 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
                 const isChecked = selectedIds.has(st.enrollment_id);
                 const isAlreadyInActiveCourse = Boolean(
                   activeCourseId && st.course_id === activeCourseId && st.batch_id
+                );
+
+                const isCapacityFullForThisRow = Boolean(
+                  targetBatchAvailableSeats !== null &&
+                  selectedIds.size >= targetBatchAvailableSeats &&
+                  !isChecked
                 );
 
                 const displayName =
@@ -2683,15 +2757,17 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
                       <input
                         type="checkbox"
                         checked={isChecked}
-                        disabled={isAlreadyInActiveCourse}
+                        disabled={isAlreadyInActiveCourse || isCapacityFullForThisRow}
                         onChange={() => toggleSelectOne(st.enrollment_id)}
                         title={
                           isAlreadyInActiveCourse
                             ? `Already allocated to ${st.batch_name}. A student can only have 1 batch per course.`
+                            : isCapacityFullForThisRow
+                            ? `Batch capacity limit reached (${targetBatchAvailableSeats} seats available).`
                             : undefined
                         }
                         className={`h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400 ${
-                          isAlreadyInActiveCourse ? "opacity-30 cursor-not-allowed" : ""
+                          isAlreadyInActiveCourse || isCapacityFullForThisRow ? "opacity-30 cursor-not-allowed" : ""
                         }`}
                       />
                     </td>
