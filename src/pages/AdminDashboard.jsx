@@ -2021,11 +2021,19 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
     loadUnallocated();
   }, [loadUnallocated]);
 
+  const selectedTargetBatch = batches.find((b) => String(b.id) === String(targetBatchId));
+
+  const eligibleStudents = useMemo(() => {
+    if (!selectedTargetBatch) return unallocated;
+    return unallocated.filter((s) => s.course_id === selectedTargetBatch.course_id);
+  }, [selectedTargetBatch, unallocated]);
+
   const toggleSelectAll = () => {
-    if (selectedIds.size === unallocated.length) {
+    const listToSelect = selectedTargetBatch ? eligibleStudents : unallocated;
+    if (selectedIds.size === listToSelect.length && listToSelect.length > 0) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(unallocated.map((s) => s.enrollment_id)));
+      setSelectedIds(new Set(listToSelect.map((s) => s.enrollment_id)));
     }
   };
 
@@ -2038,13 +2046,44 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
     });
   };
 
+  const handleTargetBatchChange = (e) => {
+    const newBatchId = e.target.value;
+    setTargetBatchId(newBatchId);
+    const newBatch = batches.find((b) => String(b.id) === String(newBatchId));
+    if (newBatch) {
+      // Keep only selected IDs that belong to the new batch's course
+      setSelectedIds((prev) => {
+        const next = new Set();
+        unallocated.forEach((s) => {
+          if (prev.has(s.enrollment_id) && s.course_id === newBatch.course_id) {
+            next.add(s.enrollment_id);
+          }
+        });
+        return next;
+      });
+    }
+  };
+
   const handleManualAllocate = async () => {
     if (!targetBatchId) return toast.error("Please select a target batch");
     if (selectedIds.size === 0) return toast.error("Select at least one student to allocate");
+
+    // Filter to only enrollments that match the target batch's course
+    const validIds = Array.from(selectedIds).filter((id) => {
+      const st = unallocated.find((s) => s.enrollment_id === id);
+      return !st || !selectedTargetBatch || st.course_id === selectedTargetBatch.course_id;
+    });
+
+    if (validIds.length === 0) {
+      return toast.error(
+        `Selected student(s) are enrolled in a different course. Please select students enrolled in ${selectedTargetBatch?.course?.title || selectedTargetBatch?.course_title || "this batch's course"}.`
+      );
+    }
+
     try {
       setAllocating(true);
-      const res = await allocateStudentsToBatch(targetBatchId, Array.from(selectedIds));
-      toast.success(res?.message || `Successfully allocated ${selectedIds.size} students!`);
+      const res = await allocateStudentsToBatch(targetBatchId, validIds);
+      toast.success(res?.message || `Successfully allocated ${validIds.length} student(s)!`);
       setSelectedIds(new Set());
       setTargetBatchId("");
       await loadUnallocated();
@@ -2125,10 +2164,9 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
       <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50/70 p-4 text-blue-900 flex items-start gap-3">
         <FaLayerGroup className="text-blue-600 text-lg mt-0.5 shrink-0" />
         <div>
-          <h4 className="font-bold text-sm">Flexible Cross-College Student Pooling</h4>
+          <h4 className="font-bold text-sm">Flexible Cross-College Student Pooling &amp; Multi-Course Enrollments</h4>
           <p className="text-xs text-blue-800 mt-0.5">
-            Students from partner colleges and independent direct applicants can be pooled together into the same batch.
-            Use individual checkboxes for custom batch distribution or click &ldquo;Auto-Allocate All Eligible&rdquo; to automatically distribute students into available batches.
+            Students can enroll in multiple courses concurrently, with one batch assigned per course. Each row below represents an active course enrollment. Students from partner colleges and independent direct applicants can be pooled together into any active batch of their enrolled course.
           </p>
         </div>
       </div>
@@ -2204,10 +2242,10 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-orange-200 bg-orange-50/40 mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-orange-200 bg-orange-50/40 mb-4">
         <div className="flex items-center gap-3">
           <span className="font-bold text-sm text-slate-800">
-            {selectedIds.size} student{selectedIds.size === 1 ? "" : "s"} selected
+            {selectedIds.size} student enrollment{selectedIds.size === 1 ? "" : "s"} selected
           </span>
           {unallocated.length > 0 && (
             <button
@@ -2215,7 +2253,11 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
               onClick={toggleSelectAll}
               className="text-xs font-semibold text-orange-600 hover:text-orange-700 underline"
             >
-              {selectedIds.size === unallocated.length ? "Deselect All" : "Select All Unassigned"}
+              {selectedIds.size === (selectedTargetBatch ? eligibleStudents.length : unallocated.length) && (selectedTargetBatch ? eligibleStudents.length : unallocated.length) > 0
+                ? "Deselect All"
+                : selectedTargetBatch
+                ? `Select All ${eligibleStudents.length} Eligible`
+                : "Select All Unassigned"}
             </button>
           )}
         </div>
@@ -2223,7 +2265,7 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <select
             value={targetBatchId}
-            onChange={(e) => setTargetBatchId(e.target.value)}
+            onChange={handleTargetBatchChange}
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-2xs focus:border-orange-500 focus:outline-hidden max-w-xs"
           >
             <option value="">-- Choose Target Batch --</option>
@@ -2245,6 +2287,26 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
         </div>
       </div>
 
+      {selectedTargetBatch && (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-orange-200 bg-orange-50/80 px-4 py-2.5 text-xs text-orange-950">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-bold uppercase tracking-wider text-orange-800 text-[11px]">Target Batch:</span>
+            <span className="font-bold rounded-md bg-white px-2.5 py-0.5 border border-orange-200 text-orange-700 shadow-2xs">
+              {selectedTargetBatch.batch_name}
+            </span>
+            <span className="text-orange-300">|</span>
+            <span className="font-bold text-slate-700">Course:</span>
+            <span className="font-semibold text-slate-800">{selectedTargetBatch.course?.title || selectedTargetBatch.course_title}</span>
+            <span className="text-orange-300">|</span>
+            <span className="font-bold text-slate-700">Timing:</span>
+            <span className="font-semibold text-slate-800">{selectedTargetBatch.batch_timing}</span>
+          </div>
+          <div className="font-bold text-orange-800">
+            {eligibleStudents.length} eligible enrollment{eligibleStudents.length === 1 ? "" : "s"} for this course
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex justify-center p-12">
           <FaSpinner className="animate-spin text-orange-500 text-2xl" />
@@ -2257,7 +2319,10 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
                 <th className="py-3 px-4 w-10">
                   <input
                     type="checkbox"
-                    checked={unallocated.length > 0 && selectedIds.size === unallocated.length}
+                    checked={
+                      (selectedTargetBatch ? eligibleStudents.length : unallocated.length) > 0 &&
+                      selectedIds.size === (selectedTargetBatch ? eligibleStudents.length : unallocated.length)
+                    }
                     onChange={toggleSelectAll}
                     className="h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400"
                   />
@@ -2273,6 +2338,9 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
             <tbody className="divide-y divide-slate-100">
               {unallocated.map((st) => {
                 const isChecked = selectedIds.has(st.enrollment_id);
+                const isMismatchedWithTarget = Boolean(
+                  selectedTargetBatch && st.course_id !== selectedTargetBatch.course_id
+                );
                 const matchingBatches = batches.filter(
                   (b) => b.course_id === st.course_id && b.status === "ACTIVE"
                 );
@@ -2280,14 +2348,24 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
                 return (
                   <tr
                     key={st.enrollment_id}
-                    className={`hover:bg-slate-50/80 transition ${isChecked ? "bg-orange-50/30" : ""}`}
+                    className={`hover:bg-slate-50/80 transition ${
+                      isChecked ? "bg-orange-50/30" : ""
+                    } ${isMismatchedWithTarget ? "opacity-60 bg-slate-50/50" : ""}`}
                   >
                     <td className="py-3 px-4">
                       <input
                         type="checkbox"
                         checked={isChecked}
+                        disabled={isMismatchedWithTarget}
                         onChange={() => toggleSelectOne(st.enrollment_id)}
-                        className="h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400"
+                        title={
+                          isMismatchedWithTarget
+                            ? `Cannot select: Student is enrolled in ${st.course_title || "another course"}, while the selected batch is for ${selectedTargetBatch?.course?.title || selectedTargetBatch?.course_title || "a different course"}.`
+                            : undefined
+                        }
+                        className={`h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400 ${
+                          isMismatchedWithTarget ? "opacity-30 cursor-not-allowed" : ""
+                        }`}
                       />
                     </td>
 
@@ -2312,6 +2390,11 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
 
                     <td className="py-3 px-4">
                       <div className="font-semibold text-slate-800 text-xs">{st.course_title || "Course"}</div>
+                      {isMismatchedWithTarget && (
+                        <span className="inline-block mt-0.5 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
+                          Different course
+                        </span>
+                      )}
                     </td>
 
                     <td className="py-3 px-4 text-xs font-semibold text-slate-600">
