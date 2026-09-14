@@ -2023,17 +2023,11 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
 
   const selectedTargetBatch = batches.find((b) => String(b.id) === String(targetBatchId));
 
-  const eligibleStudents = useMemo(() => {
-    if (!selectedTargetBatch) return unallocated;
-    return unallocated.filter((s) => s.course_id === selectedTargetBatch.course_id);
-  }, [selectedTargetBatch, unallocated]);
-
   const toggleSelectAll = () => {
-    const listToSelect = selectedTargetBatch ? eligibleStudents : unallocated;
-    if (selectedIds.size === listToSelect.length && listToSelect.length > 0) {
+    if (selectedIds.size === unallocated.length && unallocated.length > 0) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(listToSelect.map((s) => s.enrollment_id)));
+      setSelectedIds(new Set(unallocated.map((s) => s.enrollment_id)));
     }
   };
 
@@ -2047,43 +2041,17 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
   };
 
   const handleTargetBatchChange = (e) => {
-    const newBatchId = e.target.value;
-    setTargetBatchId(newBatchId);
-    const newBatch = batches.find((b) => String(b.id) === String(newBatchId));
-    if (newBatch) {
-      // Keep only selected IDs that belong to the new batch's course
-      setSelectedIds((prev) => {
-        const next = new Set();
-        unallocated.forEach((s) => {
-          if (prev.has(s.enrollment_id) && s.course_id === newBatch.course_id) {
-            next.add(s.enrollment_id);
-          }
-        });
-        return next;
-      });
-    }
+    setTargetBatchId(e.target.value);
   };
 
   const handleManualAllocate = async () => {
     if (!targetBatchId) return toast.error("Please select a target batch");
     if (selectedIds.size === 0) return toast.error("Select at least one student to allocate");
 
-    // Filter to only enrollments that match the target batch's course
-    const validIds = Array.from(selectedIds).filter((id) => {
-      const st = unallocated.find((s) => s.enrollment_id === id);
-      return !st || !selectedTargetBatch || st.course_id === selectedTargetBatch.course_id;
-    });
-
-    if (validIds.length === 0) {
-      return toast.error(
-        `Selected student(s) are enrolled in a different course. Please select students enrolled in ${selectedTargetBatch?.course?.title || selectedTargetBatch?.course_title || "this batch's course"}.`
-      );
-    }
-
     try {
       setAllocating(true);
-      const res = await allocateStudentsToBatch(targetBatchId, validIds);
-      toast.success(res?.message || `Successfully allocated ${validIds.length} student(s)!`);
+      const res = await allocateStudentsToBatch(targetBatchId, Array.from(selectedIds));
+      toast.success(res?.message || `Successfully allocated ${selectedIds.size} student(s)!`);
       setSelectedIds(new Set());
       setTargetBatchId("");
       await loadUnallocated();
@@ -2253,11 +2221,7 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
               onClick={toggleSelectAll}
               className="text-xs font-semibold text-orange-600 hover:text-orange-700 underline"
             >
-              {selectedIds.size === (selectedTargetBatch ? eligibleStudents.length : unallocated.length) && (selectedTargetBatch ? eligibleStudents.length : unallocated.length) > 0
-                ? "Deselect All"
-                : selectedTargetBatch
-                ? `Select All ${eligibleStudents.length} Eligible`
-                : "Select All Unassigned"}
+              {selectedIds.size === unallocated.length ? "Deselect All" : "Select All"}
             </button>
           )}
         </div>
@@ -2301,8 +2265,8 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
             <span className="font-bold text-slate-700">Timing:</span>
             <span className="font-semibold text-slate-800">{selectedTargetBatch.batch_timing}</span>
           </div>
-          <div className="font-bold text-orange-800">
-            {eligibleStudents.length} eligible enrollment{eligibleStudents.length === 1 ? "" : "s"} for this course
+          <div className="font-semibold text-orange-800">
+            Assigns selected students into {selectedTargetBatch.course?.title || "this course"} batch (1 batch per course)
           </div>
         </div>
       )}
@@ -2319,10 +2283,7 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
                 <th className="py-3 px-4 w-10">
                   <input
                     type="checkbox"
-                    checked={
-                      (selectedTargetBatch ? eligibleStudents.length : unallocated.length) > 0 &&
-                      selectedIds.size === (selectedTargetBatch ? eligibleStudents.length : unallocated.length)
-                    }
+                    checked={unallocated.length > 0 && selectedIds.size === unallocated.length}
                     onChange={toggleSelectAll}
                     className="h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400"
                   />
@@ -2338,34 +2299,18 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
             <tbody className="divide-y divide-slate-100">
               {unallocated.map((st) => {
                 const isChecked = selectedIds.has(st.enrollment_id);
-                const isMismatchedWithTarget = Boolean(
-                  selectedTargetBatch && st.course_id !== selectedTargetBatch.course_id
-                );
-                const matchingBatches = batches.filter(
-                  (b) => b.course_id === st.course_id && b.status === "ACTIVE"
-                );
 
                 return (
                   <tr
                     key={st.enrollment_id}
-                    className={`hover:bg-slate-50/80 transition ${
-                      isChecked ? "bg-orange-50/30" : ""
-                    } ${isMismatchedWithTarget ? "opacity-60 bg-slate-50/50" : ""}`}
+                    className={`hover:bg-slate-50/80 transition ${isChecked ? "bg-orange-50/30" : ""}`}
                   >
                     <td className="py-3 px-4">
                       <input
                         type="checkbox"
                         checked={isChecked}
-                        disabled={isMismatchedWithTarget}
                         onChange={() => toggleSelectOne(st.enrollment_id)}
-                        title={
-                          isMismatchedWithTarget
-                            ? `Cannot select: Student is enrolled in ${st.course_title || "another course"}, while the selected batch is for ${selectedTargetBatch?.course?.title || selectedTargetBatch?.course_title || "a different course"}.`
-                            : undefined
-                        }
-                        className={`h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400 ${
-                          isMismatchedWithTarget ? "opacity-30 cursor-not-allowed" : ""
-                        }`}
+                        className="h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400"
                       />
                     </td>
 
@@ -2390,12 +2335,12 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
 
                     <td className="py-3 px-4">
                       <div className="font-semibold text-slate-800 text-xs">{st.course_title || "Course"}</div>
-                      {isMismatchedWithTarget && (
+                      {selectedTargetBatch && st.course_id !== selectedTargetBatch.course_id && (
                         <span
-                          className="inline-block mt-0.5 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5"
-                          title={`Target batch is for ${selectedTargetBatch?.course?.title || selectedTargetBatch?.course_title}`}
+                          className="inline-block mt-0.5 text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded px-1.5 py-0.5"
+                          title={`Allocating will enroll student into ${selectedTargetBatch.course?.title || selectedTargetBatch.course_title} batch`}
                         >
-                          Target is {selectedTargetBatch?.course?.title || selectedTargetBatch?.course_title}
+                          + Enrolls in {selectedTargetBatch.course?.title || selectedTargetBatch.course_title}
                         </span>
                       )}
                     </td>
@@ -2413,14 +2358,22 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
                         <select
                           id={`quick-alloc-${st.enrollment_id}`}
                           defaultValue=""
-                          className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+                          className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-2xs focus:border-orange-500 focus:outline-hidden max-w-[170px]"
                         >
                           <option value="">Select Batch</option>
-                          {matchingBatches.map((mb) => (
-                            <option key={mb.id} value={mb.id}>
-                              {mb.batch_name} ({mb.batch_timing})
-                            </option>
-                          ))}
+                          {courses.map((c) => {
+                            const cBatches = batches.filter((b) => b.course_id === c.id && b.status === "ACTIVE");
+                            if (cBatches.length === 0) return null;
+                            return (
+                              <optgroup key={c.id} label={c.title}>
+                                {cBatches.map((mb) => (
+                                  <option key={mb.id} value={mb.id}>
+                                    {mb.batch_name} ({mb.batch_timing})
+                                  </option>
+                                ))}
+                              </optgroup>
+                            );
+                          })}
                         </select>
                         <button
                           type="button"
