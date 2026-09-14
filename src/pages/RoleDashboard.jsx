@@ -15,6 +15,7 @@ import {
   FaUserTie,
 } from "react-icons/fa";
 import { getBatches, getCourses } from "../service/courseService";
+import { getMyMentorBatches, getBatchStudents } from "../service/batchService";
 import { getMyEnrolledCourses } from "../service/enrollmentService";
 import useStore, { storeActions } from "../store/useStore";
 
@@ -113,8 +114,10 @@ const RoleDashboard = () => {
         }
 
         if (role === "MENTOR") {
-          const batchData = await getBatches();
-          setBatches(batchData || []);
+          const batchData = await getMyMentorBatches();
+          const primary = (batchData?.primary_batches || []).map((b) => ({ ...b, role_type: "PRIMARY" }));
+          const substitute = (batchData?.substitute_batches || []).map((b) => ({ ...b, role_type: "SUBSTITUTE" }));
+          setBatches([...primary, ...substitute]);
         }
       } catch (error) {
         toast.error(error.message);
@@ -473,14 +476,36 @@ const CoursePanel = ({ courses, isStudent, onSelectCourse }) => (
             </div>
 
             {isStudent ? (
-              <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
-                <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-1 flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-amber-500 inline-block animate-pulse" />
-                  Pending - Awaiting Batch Allocation
-                </span>
-                <span className="inline-flex items-center gap-1 text-xs font-bold text-orange-600 group-hover:translate-x-1 transition">
-                  View Classes &rarr;
-                </span>
+              <div className="mt-5 pt-4 border-t border-slate-100 flex flex-col gap-2.5">
+                <div className="flex items-center justify-between">
+                  {course.is_allocated ? (
+                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-1 flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                      Batch Active
+                    </span>
+                  ) : (
+                    <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-1 flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-amber-500 inline-block animate-pulse" />
+                      Pending - Awaiting Batch Allocation
+                    </span>
+                  )}
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-orange-600 group-hover:translate-x-1 transition">
+                    View Classes &rarr;
+                  </span>
+                </div>
+
+                {course.is_allocated && (
+                  <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 rounded-lg p-2.5 border border-slate-100">
+                    <div>
+                      <span className="text-slate-400 block font-medium">Batch:</span>
+                      <span className="font-bold text-slate-800">{course.batch_name || "Assigned Batch"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block font-medium">Instructor:</span>
+                      <span className="font-bold text-slate-800">{course.mentor_name || "Instructor"}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <p className="mt-4 pt-3 border-t border-slate-100 text-xs font-semibold text-slate-400">
@@ -516,24 +541,56 @@ const CoursePanel = ({ courses, isStudent, onSelectCourse }) => (
 );
 
 const BatchPanel = ({ batches, onOpenBatch }) => (
-  <Panel icon={<FaLayerGroup />} title="Batches">
+  <Panel icon={<FaLayerGroup />} title="My Assigned Batches">
     {batches.length ? (
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {batches.map((batch) => (
           <button
-            key={batch.id}
+            key={`${batch.id}-${batch.role_type || "batch"}`}
             onClick={() => onOpenBatch(batch)}
-            className="rounded-lg border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50/30"
+            className={`rounded-xl border p-5 text-left shadow-sm transition hover:shadow-md ${
+              batch.role_type === "SUBSTITUTE"
+                ? "border-amber-200 bg-amber-50/20 hover:border-amber-400 hover:bg-amber-50/40"
+                : "border-slate-200 bg-white hover:border-orange-400 hover:bg-orange-50/20"
+            }`}
           >
-            <p className="text-xs font-bold text-blue-700">{batch.course?.category || "COURSE"}</p>
-            <h3 className="mt-2 text-xl font-bold">{batch.batch_name}</h3>
-            <p className="mt-2 text-sm font-semibold text-slate-700">{batch.course?.title || "Course not found"}</p>
-            <div className="mt-5 grid gap-2 text-sm text-slate-500">
-              <p>{batch.batch_timing}</p>
-              <p>{batch.start_date || "Start date not added"}</p>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                {batch.course?.category || "COURSE"}
+              </span>
+              {batch.role_type === "SUBSTITUTE" ? (
+                <span className="rounded-full bg-amber-100 border border-amber-300 px-2.5 py-0.5 text-xs font-bold text-amber-800 flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-600 animate-pulse" />
+                  SUBSTITUTE COVERAGE
+                </span>
+              ) : (
+                <span className="rounded-full bg-blue-100 border border-blue-200 px-2.5 py-0.5 text-xs font-bold text-blue-700">
+                  PRIMARY INSTRUCTOR
+                </span>
+              )}
             </div>
-            <span className="mt-5 inline-flex rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-bold text-blue-700">
-              View Details
+
+            <h3 className="mt-3 text-xl font-bold text-slate-900">{batch.batch_name}</h3>
+            <p className="mt-1 text-sm font-semibold text-slate-700">{batch.course?.title || "Course"}</p>
+
+            {batch.role_type === "SUBSTITUTE" && batch.substitute_info && (
+              <div className="mt-3 rounded-lg bg-amber-50 border border-amber-200 p-2.5 text-xs text-amber-900">
+                <p className="font-semibold">
+                  Coverage: {batch.substitute_info.start_date?.slice(0, 10)} &rarr; {batch.substitute_info.end_date?.slice(0, 10)}
+                </p>
+                {batch.substitute_info.reason && (
+                  <p className="mt-1 text-amber-700">Reason: {batch.substitute_info.reason}</p>
+                )}
+              </div>
+            )}
+
+            <div className="mt-4 grid gap-1 text-xs text-slate-500">
+              <p><span className="font-semibold text-slate-700">Timing:</span> {batch.batch_timing} BATCH</p>
+              <p><span className="font-semibold text-slate-700">Start Date:</span> {batch.start_date ? new Date(batch.start_date).toLocaleDateString() : "TBD"}</p>
+            </div>
+
+            <span className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-orange-600">
+              View Class &amp; Student Roster &rarr;
             </span>
           </button>
         ))}
@@ -544,30 +601,123 @@ const BatchPanel = ({ batches, onOpenBatch }) => (
   </Panel>
 );
 
-const BatchDetails = ({ batch, onBack }) => (
-  <Panel icon={<FaLayerGroup />} title={batch.batch_name}>
-    <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div>
-        <p className="text-sm font-bold text-blue-700">{batch.course?.title || "Course not found"}</p>
-        <p className="mt-1 text-slate-500">{batch.course?.duration_weeks || "N/A"} weeks</p>
+const BatchDetails = ({ batch, onBack }) => {
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (batch?.id) {
+      setLoading(true);
+      getBatchStudents(batch.id)
+        .then((data) => setStudents(data || []))
+        .catch((err) => toast.error(err.message))
+        .finally(() => setLoading(false));
+    }
+  }, [batch?.id]);
+
+  return (
+    <Panel icon={<FaLayerGroup />} title={batch.batch_name}>
+      <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <h3 className="text-xl font-bold text-slate-900">{batch.batch_name}</h3>
+            {batch.role_type === "SUBSTITUTE" ? (
+              <span className="rounded-full bg-amber-100 border border-amber-300 px-2.5 py-0.5 text-xs font-bold text-amber-800">
+                SUBSTITUTE COVERAGE
+              </span>
+            ) : (
+              <span className="rounded-full bg-blue-100 border border-blue-200 px-2.5 py-0.5 text-xs font-bold text-blue-700">
+                PRIMARY INSTRUCTOR
+              </span>
+            )}
+          </div>
+          <p className="text-sm font-semibold text-orange-600 mt-1">{batch.course?.title}</p>
+        </div>
+        <button
+          onClick={onBack}
+          className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+        >
+          &larr; Back to Batches
+        </button>
       </div>
-      <button
-        onClick={onBack}
-        className="rounded-md border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50"
-      >
-        Back to Batches
-      </button>
-    </div>
-    <div className="grid gap-4 md:grid-cols-3">
-      <InfoBox label="Batch Timing" value={batch.batch_timing} />
-      <InfoBox label="Start Date" value={batch.start_date || "N/A"} />
-      <InfoBox label="End Date" value={batch.end_date || "N/A"} />
-      <InfoBox label="Status" value={batch.status} />
-      <InfoBox label="Course Category" value={batch.course?.category || "N/A"} />
-      <InfoBox label="Mentor Email" value={batch.mentor?.email || "N/A"} />
-    </div>
-  </Panel>
-);
+
+      <div className="grid gap-4 md:grid-cols-3 mb-8">
+        <InfoBox label="Batch Timing" value={`${batch.batch_timing} BATCH`} />
+        <InfoBox label="Start Date" value={batch.start_date ? new Date(batch.start_date).toLocaleDateString() : "N/A"} />
+        <InfoBox label="End Date" value={batch.end_date ? new Date(batch.end_date).toLocaleDateString() : "N/A"} />
+        <InfoBox label="Status" value={batch.status} />
+        <InfoBox label="Course Category" value={batch.course?.category || "N/A"} />
+        <InfoBox label="Enrolled Students" value={`${students.length} Students`} />
+      </div>
+
+      {batch.role_type === "SUBSTITUTE" && batch.substitute_info && (
+        <div className="mb-8 rounded-xl bg-amber-50 border border-amber-200 p-4">
+          <h4 className="font-bold text-amber-900 text-sm">Substitute Coverage Period</h4>
+          <p className="text-xs text-amber-800 mt-1">
+            Active from <span className="font-semibold">{batch.substitute_info.start_date?.slice(0, 10)}</span> to <span className="font-semibold">{batch.substitute_info.end_date?.slice(0, 10)}</span>
+          </p>
+          {batch.substitute_info.reason && (
+            <p className="text-xs text-amber-700 mt-1">Coverage Reason: {batch.substitute_info.reason}</p>
+          )}
+        </div>
+      )}
+
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h4 className="text-lg font-bold text-slate-900">Enrolled Student Roster</h4>
+            <p className="text-xs text-slate-500">Students assigned to this batch across colleges</p>
+          </div>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
+            {students.length} Students
+          </span>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center p-8">
+            <FaSpinner className="animate-spin text-orange-500 text-2xl" />
+          </div>
+        ) : students.length ? (
+          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 text-xs uppercase text-slate-500 border-b border-slate-200">
+                <tr>
+                  <th className="py-3 px-4">Student</th>
+                  <th className="py-3 px-4">College / Origin</th>
+                  <th className="py-3 px-4">Timing</th>
+                  <th className="py-3 px-4">Allocated Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {students.map((st) => (
+                  <tr key={st.enrollment_id || st.id} className="hover:bg-slate-50/60">
+                    <td className="py-3.5 px-4 font-semibold text-slate-900">
+                      <div>{st.student_name || "Student"}</div>
+                      <div className="text-xs text-slate-500 font-normal">{st.email}</div>
+                    </td>
+                    <td className="py-3.5 px-4 text-slate-600">
+                      <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
+                        {st.college_name || "Direct Student"}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-slate-600">{st.batch_timing || batch.batch_timing}</td>
+                    <td className="py-3.5 px-4 text-xs text-slate-500">
+                      {st.allocated_at ? new Date(st.allocated_at).toLocaleDateString() : (st.enrolled_at ? new Date(st.enrolled_at).toLocaleDateString() : "N/A")}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
+            No students currently enrolled in this batch.
+          </div>
+        )}
+      </div>
+    </Panel>
+  );
+};
 
 const BatchTimingsPanel = ({ batches }) => (
   <Panel icon={<FaClock />} title="Batch Timings">

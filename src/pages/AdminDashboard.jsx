@@ -20,6 +20,12 @@ import {
   FaUserGraduate,
   FaUserShield,
   FaUsers,
+  FaUserCheck,
+  FaExchangeAlt,
+  FaUserTimes,
+  FaHistory,
+  FaUserTie,
+  FaSyncAlt,
 } from "react-icons/fa";
 import useStore, { storeActions } from "../store/useStore";
 import { createAdmin } from "../service/adminService";
@@ -30,6 +36,19 @@ import {
   updateCollegeStatus,
 } from "../service/collegeService";
 import { createBatch, createCourse, getBatches, getCourses } from "../service/courseService";
+import {
+  getBatches as fetchBatchesApi,
+  getBatchStudents,
+  getBatchSubstitutes,
+  assignPrimaryMentor,
+  assignSubstituteMentor,
+  updateSubstituteStatus,
+  allocateStudentsToBatch,
+  unallocateStudent,
+  transferStudentBatch,
+  autoAllocateStudents,
+  getUnallocatedStudents,
+} from "../service/batchService";
 import { createMentor, getMentors } from "../service/mentorService";
 import { getUsers } from "../service/userService";
 import { collegeProfileIdParamSchema, updateCollegeProfileStatusSchema } from "../validator/collegeProfileSchema";
@@ -224,7 +243,14 @@ const menuSections = (role) =>
             },
           ],
         },
-        { title: "Students", icon: <FaUserGraduate />, items: [{ name: "Students", icon: <FaUsers /> }] },
+        {
+          title: "Students",
+          icon: <FaUserGraduate />,
+          items: [
+            { name: "Students", icon: <FaUsers /> },
+            { name: "Student Allocation", icon: <FaLayerGroup /> },
+          ],
+        },
         { title: "Account", icon: <FaUserShield />, items: [{ name: "Profile", icon: <FaUserShield /> }] },
       ]
     : [
@@ -252,7 +278,14 @@ const menuSections = (role) =>
           icon: <FaBuilding />,
           items: [{ name: "All Colleges", icon: <FaBuilding /> }],
         },
-        { title: "Students", icon: <FaUserGraduate />, items: [{ name: "Students", icon: <FaUsers /> }] },
+        {
+          title: "Students",
+          icon: <FaUserGraduate />,
+          items: [
+            { name: "Students", icon: <FaUsers /> },
+            { name: "Student Allocation", icon: <FaLayerGroup /> },
+          ],
+        },
         { title: "Account", icon: <FaUserShield />, items: [{ name: "Profile", icon: <FaUserShield /> }] },
       ];
 
@@ -292,6 +325,8 @@ const AdminDashboard = () => {
   const [batchForm, setBatchForm] = useState(initialBatchForm);
   const [fieldErrors, setFieldErrors] = useState({});
   const [selectedDetail, setSelectedDetail] = useState(null);
+  const [selectedBatchForMentors, setSelectedBatchForMentors] = useState(null);
+  const [selectedBatchForRoster, setSelectedBatchForRoster] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const role = auth?.user?.role;
@@ -307,7 +342,7 @@ const AdminDashboard = () => {
         getMentors({ limit: 100 }),
         isSuperadmin ? getSuperadminColleges(auth.token) : Promise.resolve([]),
         getCourses(),
-        getBatches(),
+        fetchBatchesApi(),
       ]);
       setColleges(collegeData || []);
       setUsers(userData?.data || []);
@@ -765,7 +800,16 @@ const AdminDashboard = () => {
                 />
               )}
               {activeMenu === "Course Data" && <CourseDataPanel courses={courses} />}
-              {activeMenu === "Batch Data" && <BatchDataPanel batches={batches} />}
+              {activeMenu === "Batch Data" && (
+                <BatchDataPanel
+                  batches={batches}
+                  mentors={mentors}
+                  courses={courses}
+                  onManageMentors={(batch) => setSelectedBatchForMentors(batch)}
+                  onViewRoster={(batch) => setSelectedBatchForRoster(batch)}
+                  onRefresh={() => loadBaseData(false)}
+                />
+              )}
               {activeMenu === "Add Admin" && isSuperadmin && (
                 <AdminFormPanel form={adminForm} errors={fieldErrors} loading={formLoading} onChange={changeAdminForm} onSubmit={submitAdmin} />
               )}
@@ -807,6 +851,16 @@ const AdminDashboard = () => {
                   studentsPage={studentsPage}
                   loading={studentsLoading}
                   onFilterChange={updateStudentFilter}
+                  onOpenStudent={(student) => openDetail("Student Details", getStudentRows(student))}
+                />
+              )}
+
+              {activeMenu === "Student Allocation" && (
+                <StudentAllocationPanel
+                  batches={batches}
+                  courses={courses}
+                  colleges={colleges}
+                  onRefresh={() => loadBaseData(false)}
                   onOpenStudent={(student) => openDetail("Student Details", getStudentRows(student))}
                 />
               )}
@@ -891,6 +945,24 @@ const AdminDashboard = () => {
           title={selectedDetail.title}
           rows={selectedDetail.rows}
           onClose={() => setSelectedDetail(null)}
+        />
+      )}
+
+      {selectedBatchForMentors && (
+        <ManageMentorsModal
+          batch={selectedBatchForMentors}
+          mentors={mentors}
+          onClose={() => setSelectedBatchForMentors(null)}
+          onSuccess={() => loadBaseData(false)}
+        />
+      )}
+
+      {selectedBatchForRoster && (
+        <BatchRosterModal
+          batch={selectedBatchForRoster}
+          batches={batches}
+          onClose={() => setSelectedBatchForRoster(null)}
+          onSuccess={() => loadBaseData(false)}
         />
       )}
     </div>
@@ -1051,20 +1123,72 @@ const CourseDataPanel = ({ courses }) => (
   </Panel>
 );
 
-const BatchDataPanel = ({ batches }) => (
-  <Panel>
-    <div className="mb-6 flex items-center gap-4">
-      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
-        <FaLayerGroup />
+const BatchDataPanel = ({ batches, mentors, courses, onManageMentors, onViewRoster, onRefresh }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterCourse, setFilterCourse] = useState("");
+
+  const filteredBatches = useMemo(() => {
+    return batches.filter((b) => {
+      const matchesCourse = !filterCourse || b.course_id === filterCourse;
+      const term = searchTerm.toLowerCase();
+      const matchesSearch =
+        !term ||
+        (b.batch_name || "").toLowerCase().includes(term) ||
+        (b.course?.title || "").toLowerCase().includes(term) ||
+        (b.mentor ? fullName(b.mentor) : "").toLowerCase().includes(term);
+      return matchesCourse && matchesSearch;
+    });
+  }, [batches, filterCourse, searchTerm]);
+
+  return (
+    <Panel>
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-600 text-xl border border-orange-100">
+            <FaLayerGroup />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold text-slate-900">Batch Management &amp; Teachers</h3>
+            <p className="text-slate-500 text-sm">
+              Manage instructors, substitute coverage, and view student allocations across academy batches.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            value={filterCourse}
+            onChange={(e) => setFilterCourse(e.target.value)}
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+          >
+            <option value="">All Courses</option>
+            {courses?.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
+            ))}
+          </select>
+          <div className="relative">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
+            <input
+              type="text"
+              placeholder="Search batches..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="rounded-xl border border-slate-200 bg-white pl-8 pr-3 py-2 text-xs font-medium text-slate-700 shadow-2xs placeholder:text-slate-400 focus:border-orange-500 focus:outline-hidden"
+            />
+          </div>
+        </div>
       </div>
-      <div>
-        <h3 className="text-2xl font-bold">Batch Data</h3>
-        <p className="text-slate-500">Existing batches and assigned mentors.</p>
-      </div>
-    </div>
-    <BatchTable batches={batches} />
-  </Panel>
-);
+
+      <BatchTable
+        batches={filteredBatches}
+        onManageMentors={onManageMentors}
+        onViewRoster={onViewRoster}
+      />
+    </Panel>
+  );
+};
 
 const AdminFormPanel = ({ form, errors, loading, onChange, onSubmit }) => (
   <Panel>
@@ -1173,35 +1297,1071 @@ const BatchFormPanel = ({ form, errors, loading, courses, mentors, batches, onCh
   </Panel>
 );
 
-const BatchTable = ({ batches }) =>
+const BatchTable = ({ batches, onManageMentors, onViewRoster }) =>
   batches.length ? (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
       <table className="w-full text-left text-sm">
-        <thead>
-          <tr className="border-b border-slate-200 text-slate-500">
-            <th className="py-3 pr-4">BATCH</th>
-            <th className="py-3 pr-4">COURSE</th>
-            <th className="py-3 pr-4">MENTOR</th>
-            <th className="py-3 pr-4">TIMING</th>
-            <th className="py-3 pr-4">STATUS</th>
+        <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+          <tr>
+            <th className="py-3 px-4">Batch Details</th>
+            <th className="py-3 px-4">Course</th>
+            <th className="py-3 px-4">Primary Instructor</th>
+            <th className="py-3 px-4">Substitute Coverage</th>
+            <th className="py-3 px-4">Students</th>
+            <th className="py-3 px-4">Status</th>
+            {(onManageMentors || onViewRoster) && <th className="py-3 px-4 text-right">Actions</th>}
           </tr>
         </thead>
-        <tbody>
-          {batches.map((batch) => (
-            <tr key={batch.id} className="border-b border-slate-100 last:border-b-0">
-              <td className="py-4 pr-4 font-semibold">{batch.batch_name}</td>
-              <td className="py-4 pr-4 text-slate-600">{batch.course?.title || "N/A"}</td>
-              <td className="py-4 pr-4 text-slate-600">{batch.mentor ? fullName(batch.mentor) || batch.mentor.email : "N/A"}</td>
-              <td className="py-4 pr-4 text-slate-600">{batch.batch_timing}</td>
-              <td className="py-4 pr-4"><StatusBadge status={batch.status} /></td>
-            </tr>
-          ))}
+        <tbody className="divide-y divide-slate-100">
+          {batches.map((batch) => {
+            const activeSub = (batch.substitutes || []).find((s) => s.status === "ACTIVE") || batch.substitutes?.[0];
+            const studentCount = batch.enrollment_count ?? batch.enrollments?.length ?? 0;
+
+            return (
+              <tr key={batch.id} className="hover:bg-slate-50/70 transition">
+                <td className="py-3.5 px-4 font-semibold text-slate-900">
+                  <div className="text-sm font-bold text-slate-900">{batch.batch_name}</div>
+                  <div className="mt-0.5 inline-flex items-center gap-1.5">
+                    <span className="rounded-md bg-orange-50 px-2 py-0.5 text-[11px] font-bold text-orange-700 border border-orange-200">
+                      {batch.batch_timing} BATCH
+                    </span>
+                    {batch.start_date && (
+                      <span className="text-[11px] text-slate-400">
+                        Starts {new Date(batch.start_date).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                </td>
+
+                <td className="py-3.5 px-4 text-slate-600">
+                  <div className="font-semibold text-slate-900">{batch.course?.title || "N/A"}</div>
+                  <div className="text-xs text-slate-400">{batch.course?.category || "Course"}</div>
+                </td>
+
+                <td className="py-3.5 px-4">
+                  {batch.mentor ? (
+                    <div>
+                      <div className="font-semibold text-slate-800 text-sm">
+                        {fullName(batch.mentor) || batch.mentor.email}
+                      </div>
+                      <div className="text-xs text-slate-500">{batch.mentor.email}</div>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-rose-500 font-semibold">Unassigned</span>
+                  )}
+                </td>
+
+                <td className="py-3.5 px-4">
+                  {activeSub && activeSub.status === "ACTIVE" ? (
+                    <div className="flex flex-col gap-0.5">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-800 border border-amber-200">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                        {fullName(activeSub.substitute_mentor) || activeSub.substitute_mentor?.email || "Substitute"}
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        {activeSub.start_date?.slice(0, 10)} to {activeSub.end_date?.slice(0, 10)}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-slate-400">None Active</span>
+                  )}
+                </td>
+
+                <td className="py-3.5 px-4">
+                  <button
+                    type="button"
+                    onClick={() => onViewRoster?.(batch)}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 hover:bg-slate-200 px-3 py-1 text-xs font-bold text-slate-700 transition"
+                  >
+                    <span>{studentCount} Students</span>
+                    <FaEye className="text-slate-400 text-[10px]" />
+                  </button>
+                </td>
+
+                <td className="py-3.5 px-4">
+                  <StatusBadge status={batch.status} />
+                </td>
+
+                {(onManageMentors || onViewRoster) && (
+                  <td className="py-3.5 px-4 text-right">
+                    <div className="inline-flex items-center gap-2">
+                      {onManageMentors && (
+                        <button
+                          type="button"
+                          onClick={() => onManageMentors(batch)}
+                          className="rounded-lg border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 text-xs font-bold text-indigo-700 shadow-2xs transition"
+                          title="Manage primary and substitute instructors"
+                        >
+                          Manage Mentors
+                        </button>
+                      )}
+                      {onViewRoster && (
+                        <button
+                          type="button"
+                          onClick={() => onViewRoster(batch)}
+                          className="rounded-lg border border-orange-200 bg-orange-50 hover:bg-orange-100 px-2.5 py-1.5 text-xs font-bold text-orange-700 shadow-2xs transition"
+                          title="View enrolled students roster"
+                        >
+                          Roster
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                )}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
   ) : (
     <EmptyState text="No batches created yet." />
   );
+
+const ManageMentorsModal = ({ batch, mentors, onClose, onSuccess }) => {
+  const [activeTab, setActiveTab] = useState("primary");
+  const [primaryMentorId, setPrimaryMentorId] = useState(batch?.mentor_id || "");
+  const [substituteForm, setSubstituteForm] = useState({
+    substitute_mentor_id: "",
+    start_date: "",
+    end_date: "",
+    reason: "",
+  });
+  const [substitutes, setSubstitutes] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const loadHistory = useCallback(async () => {
+    if (!batch?.id) return;
+    try {
+      setLoadingHistory(true);
+      const data = await getBatchSubstitutes(batch.id);
+      setSubstitutes(data || []);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, [batch?.id]);
+
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
+
+  const handleUpdatePrimary = async (e) => {
+    e.preventDefault();
+    if (!primaryMentorId) return toast.error("Please select a primary mentor");
+    try {
+      setSaving(true);
+      await assignPrimaryMentor(batch.id, primaryMentorId);
+      toast.success("Primary instructor updated successfully");
+      onSuccess?.();
+      onClose();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAssignSubstitute = async (e) => {
+    e.preventDefault();
+    if (!substituteForm.substitute_mentor_id) return toast.error("Please select a substitute mentor");
+    if (!substituteForm.start_date || !substituteForm.end_date) return toast.error("Start and end date are required");
+    try {
+      setSaving(true);
+      await assignSubstituteMentor(batch.id, substituteForm);
+      toast.success("Substitute mentor assigned successfully");
+      setSubstituteForm({ substitute_mentor_id: "", start_date: "", end_date: "", reason: "" });
+      await loadHistory();
+      onSuccess?.();
+      setActiveTab("history");
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEndSubstitute = async (substituteId) => {
+    try {
+      setSaving(true);
+      await updateSubstituteStatus(batch.id, substituteId, "COMPLETED");
+      toast.success("Substitute coverage ended");
+      await loadHistory();
+      onSuccess?.();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs overflow-y-auto">
+      <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xl my-8">
+        <div className="flex items-start justify-between border-b border-slate-100 pb-5">
+          <div>
+            <span className="rounded-md bg-orange-50 border border-orange-200 px-2.5 py-0.5 text-xs font-bold text-orange-700">
+              {batch.batch_timing} BATCH
+            </span>
+            <h3 className="text-xl font-bold text-slate-900 mt-1">Manage Mentors: {batch.batch_name}</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Course: {batch.course?.title || "N/A"}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+          >
+            <FaTimes />
+          </button>
+        </div>
+
+        <div className="flex border-b border-slate-200 mt-4 mb-6">
+          <button
+            type="button"
+            onClick={() => setActiveTab("primary")}
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition ${
+              activeTab === "primary"
+                ? "border-orange-500 text-orange-600"
+                : "border-transparent text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            <FaUserTie />
+            Primary Instructor
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("substitute")}
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition ${
+              activeTab === "substitute"
+                ? "border-orange-500 text-orange-600"
+                : "border-transparent text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            <FaUserCheck />
+            Assign Substitute
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("history")}
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition ${
+              activeTab === "history"
+                ? "border-orange-500 text-orange-600"
+                : "border-transparent text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            <FaHistory />
+            Substitute History ({substitutes.length})
+          </button>
+        </div>
+
+        {activeTab === "primary" && (
+          <form onSubmit={handleUpdatePrimary} className="space-y-5">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                Currently Assigned Primary
+              </span>
+              <p className="font-bold text-slate-900 text-base">
+                {batch.mentor ? fullName(batch.mentor) || batch.mentor.email : "No Primary Mentor Assigned"}
+              </p>
+              <p className="text-xs text-slate-500">{batch.mentor?.email}</p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+                Select New Primary Instructor
+              </label>
+              <select
+                value={primaryMentorId}
+                onChange={(e) => setPrimaryMentorId(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+                required
+              >
+                <option value="">-- Choose Instructor --</option>
+                {mentors.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {fullName(m) || m.email} ({m.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="rounded-xl bg-orange-500 hover:bg-orange-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition disabled:opacity-50 flex items-center gap-2"
+              >
+                {saving && <FaSpinner className="animate-spin" />}
+                Save Primary Instructor
+              </button>
+            </div>
+          </form>
+        )}
+
+        {activeTab === "substitute" && (
+          <form onSubmit={handleAssignSubstitute} className="space-y-4">
+            <div className="rounded-xl bg-amber-50 border border-amber-200 p-3.5 text-xs text-amber-900">
+              Assign a substitute mentor to cover classes during leave or emergencies. Substitute instructors
+              gain access to this batch roster and class schedules for the specified duration.
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                Substitute Instructor
+              </label>
+              <select
+                value={substituteForm.substitute_mentor_id}
+                onChange={(e) =>
+                  setSubstituteForm({ ...substituteForm, substitute_mentor_id: e.target.value })
+                }
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+                required
+              >
+                <option value="">-- Choose Substitute Mentor --</option>
+                {mentors
+                  .filter((m) => m.id !== batch.mentor_id)
+                  .map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {fullName(m) || m.email} ({m.email})
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Coverage Start Date
+                </label>
+                <input
+                  type="date"
+                  value={substituteForm.start_date}
+                  onChange={(e) => setSubstituteForm({ ...substituteForm, start_date: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-800 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Coverage End Date
+                </label>
+                <input
+                  type="date"
+                  value={substituteForm.end_date}
+                  onChange={(e) => setSubstituteForm({ ...substituteForm, end_date: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-800 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                Reason / Remarks (Optional)
+              </label>
+              <textarea
+                rows={2}
+                value={substituteForm.reason}
+                onChange={(e) => setSubstituteForm({ ...substituteForm, reason: e.target.value })}
+                placeholder="e.g. Leave of absence, medical leave, conference coverage"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-800 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="rounded-xl bg-orange-500 hover:bg-orange-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition disabled:opacity-50 flex items-center gap-2"
+              >
+                {saving && <FaSpinner className="animate-spin" />}
+                Assign Substitute Mentor
+              </button>
+            </div>
+          </form>
+        )}
+
+        {activeTab === "history" && (
+          <div>
+            {loadingHistory ? (
+              <div className="flex justify-center p-8">
+                <FaSpinner className="animate-spin text-orange-500 text-2xl" />
+              </div>
+            ) : substitutes.length ? (
+              <div className="space-y-3 max-h-[340px] overflow-y-auto pr-1">
+                {substitutes.map((sub) => (
+                  <div
+                    key={sub.id}
+                    className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-4"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-900 text-sm">
+                          {fullName(sub.substitute_mentor) || sub.substitute_mentor?.email || "Substitute"}
+                        </span>
+                        <StatusBadge status={sub.status} />
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Period: {sub.start_date?.slice(0, 10)} to {sub.end_date?.slice(0, 10)}
+                      </p>
+                      {sub.reason && <p className="text-xs text-slate-600 mt-0.5">Reason: {sub.reason}</p>}
+                    </div>
+
+                    {sub.status === "ACTIVE" && (
+                      <button
+                        type="button"
+                        onClick={() => handleEndSubstitute(sub.id)}
+                        disabled={saving}
+                        className="rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 text-xs font-bold text-rose-700 transition"
+                      >
+                        End Coverage
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center py-8 text-xs text-slate-500">
+                No substitutes assigned to this batch yet.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const BatchRosterModal = ({ batch, batches, onClose, onSuccess }) => {
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [transferringId, setTransferringId] = useState(null);
+  const [targetBatchId, setTargetBatchId] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const loadStudents = useCallback(async () => {
+    if (!batch?.id) return;
+    try {
+      setLoading(true);
+      const data = await getBatchStudents(batch.id);
+      setStudents(data || []);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [batch?.id]);
+
+  useEffect(() => {
+    loadStudents();
+  }, [loadStudents]);
+
+  const handleUnallocate = async (enrollmentId, studentName) => {
+    if (!window.confirm(`Are you sure you want to remove ${studentName || "this student"} from this batch?`))
+      return;
+    try {
+      setActionLoading(true);
+      await unallocateStudent(batch.id, enrollmentId);
+      toast.success("Student removed from batch");
+      await loadStudents();
+      onSuccess?.();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleTransfer = async (enrollmentId) => {
+    if (!targetBatchId) return toast.error("Please select a target batch");
+    try {
+      setActionLoading(true);
+      await transferStudentBatch(batch.id, {
+        enrollment_id: enrollmentId,
+        target_batch_id: targetBatchId,
+      });
+      toast.success("Student transferred successfully");
+      setTransferringId(null);
+      setTargetBatchId("");
+      await loadStudents();
+      onSuccess?.();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const otherBatches = batches.filter(
+    (b) => b.course_id === batch.course_id && b.id !== batch.id && b.status === "ACTIVE"
+  );
+
+  const filteredStudents = students.filter((st) => {
+    const term = search.toLowerCase();
+    const name = (st.student_name || "").toLowerCase();
+    const email = (st.email || "").toLowerCase();
+    const college = (st.college_name || "").toLowerCase();
+    return name.includes(term) || email.includes(term) || college.includes(term);
+  });
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs overflow-y-auto">
+      <div className="w-full max-w-4xl rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xl my-8">
+        <div className="flex items-start justify-between border-b border-slate-100 pb-5">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="rounded-md bg-orange-50 border border-orange-200 px-2.5 py-0.5 text-xs font-bold text-orange-700">
+                {batch.batch_timing} BATCH
+              </span>
+              <span className="text-xs text-slate-500 font-semibold">{batch.course?.title}</span>
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 mt-1">Student Roster: {batch.batch_name}</h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Total Enrolled: {students.length} Students (Pooled across colleges &amp; individual applicants)
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+          >
+            <FaTimes />
+          </button>
+        </div>
+
+        <div className="my-4 flex items-center justify-between gap-4">
+          <div className="relative flex-1 max-w-sm">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
+            <input
+              type="text"
+              placeholder="Search students or colleges..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-white pl-8 pr-3 py-2 text-xs font-medium text-slate-700 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+            />
+          </div>
+          <span className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-full">
+            Showing {filteredStudents.length} of {students.length}
+          </span>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center p-12">
+            <FaSpinner className="animate-spin text-orange-500 text-2xl" />
+          </div>
+        ) : filteredStudents.length ? (
+          <div className="overflow-x-auto rounded-xl border border-slate-200 max-h-[420px] overflow-y-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 sticky top-0">
+                <tr>
+                  <th className="py-3 px-4">Student</th>
+                  <th className="py-3 px-4">College / Origin</th>
+                  <th className="py-3 px-4">Timing</th>
+                  <th className="py-3 px-4">Allocated Date</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredStudents.map((st) => (
+                  <tr key={st.enrollment_id} className="hover:bg-slate-50/70 transition">
+                    <td className="py-3 px-4">
+                      <div className="font-semibold text-slate-900">{st.student_name || "Student"}</div>
+                      <div className="text-xs text-slate-500">{st.email}</div>
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <span className="rounded-md bg-slate-100 border border-slate-200 px-2.5 py-0.5 text-xs font-semibold text-slate-700">
+                        {st.college_name || "Direct Student"}
+                      </span>
+                    </td>
+
+                    <td className="py-3 px-4 text-slate-600 text-xs font-medium">
+                      {st.batch_timing || batch.batch_timing}
+                    </td>
+
+                    <td className="py-3 px-4 text-xs text-slate-500">
+                      {st.allocated_at ? new Date(st.allocated_at).toLocaleDateString() : "N/A"}
+                    </td>
+
+                    <td className="py-3 px-4 text-right">
+                      {transferringId === st.enrollment_id ? (
+                        <div className="inline-flex items-center gap-2">
+                          <select
+                            value={targetBatchId}
+                            onChange={(e) => setTargetBatchId(e.target.value)}
+                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700"
+                          >
+                            <option value="">Select target batch</option>
+                            {otherBatches.map((ob) => (
+                              <option key={ob.id} value={ob.id}>
+                                {ob.batch_name} ({ob.batch_timing})
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => handleTransfer(st.enrollment_id)}
+                            disabled={actionLoading}
+                            className="rounded-md bg-orange-500 px-2.5 py-1 text-xs font-bold text-white hover:bg-orange-600"
+                          >
+                            Move
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setTransferringId(null)}
+                            className="rounded-md border border-slate-200 px-2 py-1 text-xs font-medium text-slate-500 hover:bg-slate-50"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center gap-2">
+                          {otherBatches.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTransferringId(st.enrollment_id);
+                                setTargetBatchId("");
+                              }}
+                              className="rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 transition"
+                              title="Transfer to another batch of this course"
+                            >
+                              Transfer
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleUnallocate(st.enrollment_id, st.student_name)}
+                            disabled={actionLoading}
+                            className="rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 text-xs font-bold text-rose-700 transition"
+                            title="Remove student from this batch"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+            No students currently enrolled in this batch.
+          </div>
+        )}
+
+        <div className="flex justify-end pt-5 mt-4 border-t border-slate-100">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl bg-slate-900 hover:bg-slate-800 px-5 py-2.5 text-xs font-bold text-white transition"
+          >
+            Close Roster
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenStudent }) => {
+  const [unallocated, setUnallocated] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState({
+    course_id: "",
+    batch_timing: "",
+    college_id: "",
+    search: "",
+  });
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [targetBatchId, setTargetBatchId] = useState("");
+  const [allocating, setAllocating] = useState(false);
+  const [autoAllocating, setAutoAllocating] = useState(false);
+
+  const loadUnallocated = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params = {};
+      if (filters.course_id) params.course_id = filters.course_id;
+      if (filters.batch_timing) params.batch_timing = filters.batch_timing;
+      if (filters.college_id) params.college_id = filters.college_id;
+      if (filters.search) params.search = filters.search;
+      params.limit = 100;
+
+      const data = await getUnallocatedStudents(params);
+      setUnallocated(data || []);
+      setSelectedIds(new Set());
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [filters]);
+
+  useEffect(() => {
+    loadUnallocated();
+  }, [loadUnallocated]);
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === unallocated.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(unallocated.map((s) => s.enrollment_id)));
+    }
+  };
+
+  const toggleSelectOne = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleManualAllocate = async () => {
+    if (!targetBatchId) return toast.error("Please select a target batch");
+    if (selectedIds.size === 0) return toast.error("Select at least one student to allocate");
+    try {
+      setAllocating(true);
+      const res = await allocateStudentsToBatch(targetBatchId, Array.from(selectedIds));
+      toast.success(res?.message || `Successfully allocated ${selectedIds.size} students!`);
+      setSelectedIds(new Set());
+      setTargetBatchId("");
+      await loadUnallocated();
+      onRefresh?.();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setAllocating(false);
+    }
+  };
+
+  const handleAutoAllocate = async () => {
+    try {
+      setAutoAllocating(true);
+      const payload = {};
+      if (filters.course_id) payload.course_id = filters.course_id;
+      if (filters.batch_timing) payload.batch_timing = filters.batch_timing;
+
+      const res = await autoAllocateStudents(payload);
+      toast.success(res?.message || `Auto-allocated ${res?.allocated_count || 0} students across batches!`);
+      await loadUnallocated();
+      onRefresh?.();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setAutoAllocating(false);
+    }
+  };
+
+  const handleQuickAllocate = async (enrollmentId, batchId) => {
+    if (!batchId) return toast.error("Please select a batch");
+    try {
+      setAllocating(true);
+      await allocateStudentsToBatch(batchId, [enrollmentId]);
+      toast.success("Student allocated to batch");
+      await loadUnallocated();
+      onRefresh?.();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setAllocating(false);
+    }
+  };
+
+  const availableBatches = batches.filter((b) => {
+    if (b.status !== "ACTIVE") return false;
+    if (filters.course_id && b.course_id !== filters.course_id) return false;
+    if (filters.batch_timing && b.batch_timing !== filters.batch_timing) return false;
+    return true;
+  });
+
+  return (
+    <Panel>
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-600 text-xl border border-orange-100">
+            <FaLayerGroup />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold text-slate-900">Cross-College Student Allocation</h3>
+            <p className="text-slate-500 text-sm">
+              Assign enrolled students across partner colleges and direct individual applicants into active course batches.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleAutoAllocate}
+          disabled={autoAllocating || unallocated.length === 0}
+          className="rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 px-5 py-2.5 text-xs font-bold text-white shadow-md transition disabled:opacity-50 flex items-center gap-2"
+        >
+          {autoAllocating ? <FaSpinner className="animate-spin" /> : <FaSyncAlt />}
+          Auto-Allocate All Eligible
+        </button>
+      </div>
+
+      <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50/70 p-4 text-blue-900 flex items-start gap-3">
+        <FaLayerGroup className="text-blue-600 text-lg mt-0.5 shrink-0" />
+        <div>
+          <h4 className="font-bold text-sm">Flexible Cross-College Student Pooling</h4>
+          <p className="text-xs text-blue-800 mt-0.5">
+            Students from partner colleges and independent direct applicants can be pooled together into the same batch.
+            Use individual checkboxes for custom batch distribution or click &ldquo;Auto-Allocate All Eligible&rdquo; to automatically distribute students into available batches.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6 p-4 rounded-xl border border-slate-200 bg-slate-50">
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+            Filter by Course
+          </label>
+          <select
+            value={filters.course_id}
+            onChange={(e) => setFilters({ ...filters, course_id: e.target.value })}
+            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+          >
+            <option value="">All Enrolled Courses</option>
+            {courses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+            Preferred Timing
+          </label>
+          <select
+            value={filters.batch_timing}
+            onChange={(e) => setFilters({ ...filters, batch_timing: e.target.value })}
+            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+          >
+            <option value="">All Timings</option>
+            <option value="MORNING">Morning</option>
+            <option value="AFTERNOON">Afternoon</option>
+            <option value="EVENING">Evening</option>
+            <option value="NIGHT">Night</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+            Partner College / Origin
+          </label>
+          <select
+            value={filters.college_id}
+            onChange={(e) => setFilters({ ...filters, college_id: e.target.value })}
+            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+          >
+            <option value="">All Colleges &amp; Direct</option>
+            {colleges.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.college_name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+            Search Student
+          </label>
+          <div className="relative">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
+            <input
+              type="text"
+              placeholder="Name, email, college..."
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              className="w-full rounded-lg border border-slate-200 bg-white pl-8 pr-3 py-2 text-xs font-medium text-slate-700 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-orange-200 bg-orange-50/40 mb-6">
+        <div className="flex items-center gap-3">
+          <span className="font-bold text-sm text-slate-800">
+            {selectedIds.size} student{selectedIds.size === 1 ? "" : "s"} selected
+          </span>
+          {unallocated.length > 0 && (
+            <button
+              type="button"
+              onClick={toggleSelectAll}
+              className="text-xs font-semibold text-orange-600 hover:text-orange-700 underline"
+            >
+              {selectedIds.size === unallocated.length ? "Deselect All" : "Select All Unassigned"}
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <select
+            value={targetBatchId}
+            onChange={(e) => setTargetBatchId(e.target.value)}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-2xs focus:border-orange-500 focus:outline-hidden max-w-xs"
+          >
+            <option value="">-- Choose Target Batch --</option>
+            {availableBatches.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.batch_name} ({b.course?.title} - {b.batch_timing})
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={handleManualAllocate}
+            disabled={allocating || selectedIds.size === 0 || !targetBatchId}
+            className="rounded-lg bg-orange-500 hover:bg-orange-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition disabled:opacity-40 flex items-center gap-1.5"
+          >
+            {allocating && <FaSpinner className="animate-spin" />}
+            Allocate Selected
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center p-12">
+          <FaSpinner className="animate-spin text-orange-500 text-2xl" />
+        </div>
+      ) : unallocated.length ? (
+        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+              <tr>
+                <th className="py-3 px-4 w-10">
+                  <input
+                    type="checkbox"
+                    checked={unallocated.length > 0 && selectedIds.size === unallocated.length}
+                    onChange={toggleSelectAll}
+                    className="h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400"
+                  />
+                </th>
+                <th className="py-3 px-4">Student Name</th>
+                <th className="py-3 px-4">College / Origin</th>
+                <th className="py-3 px-4">Enrolled Course</th>
+                <th className="py-3 px-4">Timing</th>
+                <th className="py-3 px-4">Enrolled Date</th>
+                <th className="py-3 px-4 text-right">Quick Allocate</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {unallocated.map((st) => {
+                const isChecked = selectedIds.has(st.enrollment_id);
+                const matchingBatches = batches.filter(
+                  (b) => b.course_id === st.course_id && b.status === "ACTIVE"
+                );
+
+                return (
+                  <tr
+                    key={st.enrollment_id}
+                    className={`hover:bg-slate-50/80 transition ${isChecked ? "bg-orange-50/30" : ""}`}
+                  >
+                    <td className="py-3 px-4">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggleSelectOne(st.enrollment_id)}
+                        className="h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400"
+                      />
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => onOpenStudent?.(st)}
+                          className="font-bold text-slate-900 hover:text-orange-600 transition text-left"
+                        >
+                          {st.student_name || "Student"}
+                        </button>
+                      </div>
+                      <div className="text-xs text-slate-500">{st.email}</div>
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <span className="rounded-md bg-slate-100 border border-slate-200 px-2.5 py-0.5 text-xs font-semibold text-slate-700">
+                        {st.college_name || "Direct Student"}
+                      </span>
+                    </td>
+
+                    <td className="py-3 px-4">
+                      <div className="font-semibold text-slate-800 text-xs">{st.course_title || "Course"}</div>
+                    </td>
+
+                    <td className="py-3 px-4 text-xs font-semibold text-slate-600">
+                      {st.batch_timing ? `${st.batch_timing} BATCH` : "MORNING"}
+                    </td>
+
+                    <td className="py-3 px-4 text-xs text-slate-500">
+                      {st.enrolled_at ? new Date(st.enrolled_at).toLocaleDateString() : "N/A"}
+                    </td>
+
+                    <td className="py-3 px-4 text-right">
+                      <div className="inline-flex items-center gap-1.5">
+                        <select
+                          id={`quick-alloc-${st.enrollment_id}`}
+                          defaultValue=""
+                          className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+                        >
+                          <option value="">Select Batch</option>
+                          {matchingBatches.map((mb) => (
+                            <option key={mb.id} value={mb.id}>
+                              {mb.batch_name} ({mb.batch_timing})
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const sel = document.getElementById(`quick-alloc-${st.enrollment_id}`);
+                            if (sel?.value) handleQuickAllocate(st.enrollment_id, sel.value);
+                            else toast.error("Please select a batch from the dropdown");
+                          }}
+                          disabled={allocating}
+                          className="rounded-lg bg-orange-50 border border-orange-200 hover:bg-orange-100 px-2.5 py-1 text-xs font-bold text-orange-700 transition"
+                        >
+                          Assign
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-dashed border-emerald-300 bg-emerald-50/50 p-8 text-center text-sm text-emerald-800 font-semibold">
+          All students matching current filters are allocated to batches! No pending allocations.
+        </div>
+      )}
+    </Panel>
+  );
+};
 
 const CourseTable = ({ courses }) =>
   courses.length ? (
