@@ -26,6 +26,7 @@ import {
   FaHistory,
   FaUserTie,
   FaSyncAlt,
+  FaGraduationCap,
 } from "react-icons/fa";
 import useStore, { storeActions } from "../store/useStore";
 import { createAdmin } from "../service/adminService";
@@ -1983,6 +1984,316 @@ const BatchRosterModal = ({ batch, batches, onClose, onSuccess }) => {
   );
 };
 
+const StudentBatchTrackerModal = ({ student, batches, courses, onClose, onRefresh }) => {
+  const [allocating, setAllocating] = useState(false);
+  const [newCourseId, setNewCourseId] = useState("");
+  const [newBatchId, setNewBatchId] = useState("");
+
+  if (!student) return null;
+
+  const studentName =
+    student.student_name ||
+    [student.first_name, student.last_name].filter(Boolean).join(" ") ||
+    student.email?.split("@")[0] ||
+    "Student";
+
+  const coursesList = student.student_courses && student.student_courses.length > 0
+    ? student.student_courses
+    : [
+        {
+          enrollment_id: student.enrollment_id,
+          course_id: student.course_id,
+          course_title: student.course_title,
+          course_category: student.course_category,
+          batch_id: student.batch_id,
+          batch_name: student.batch_name,
+          batch_timing: student.batch_timing,
+          mentor_name: null,
+          enrollment_status: student.enrollment_status,
+          joined_at: student.joined_at,
+        },
+      ];
+
+  const enrolledCourseIds = new Set(coursesList.map((c) => c.course_id));
+  const availableNewCourses = courses.filter((c) => !enrolledCourseIds.has(c.id));
+  const availableBatchesForNewCourse = batches.filter(
+    (b) => b.course_id === Number(newCourseId) && b.status === "ACTIVE"
+  );
+
+  const handleModalUnallocate = async (batchId, enrollmentId, courseTitle) => {
+    try {
+      setAllocating(true);
+      await unallocateStudent(batchId, enrollmentId);
+      toast.success(`Removed ${studentName} from ${courseTitle} batch`);
+      onRefresh?.();
+      onClose?.();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setAllocating(false);
+    }
+  };
+
+  const handleModalAssign = async (enrollmentId, batchId, courseTitle) => {
+    if (!batchId) return toast.error("Please select a batch");
+    try {
+      setAllocating(true);
+      await allocateStudentsToBatch(batchId, [enrollmentId]);
+      toast.success(`Assigned ${studentName} to ${courseTitle} batch`);
+      onRefresh?.();
+      onClose?.();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setAllocating(false);
+    }
+  };
+
+  const handleModalEnrollAndAssign = async () => {
+    if (!newBatchId) return toast.error("Please select a target batch");
+    try {
+      setAllocating(true);
+      await allocateStudentsToBatch(Number(newBatchId), [student.enrollment_id]);
+      toast.success(`Enrolled & allocated ${studentName} successfully!`);
+      setNewCourseId("");
+      setNewBatchId("");
+      onRefresh?.();
+      onClose?.();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setAllocating(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs animate-fadeIn">
+      <div className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between border-b border-orange-200 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 px-6 py-4 text-white">
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/20 text-xl font-bold backdrop-blur-md shadow-inner">
+              <FaClipboardList className="text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-bold">{studentName}</h3>
+                <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[11px] font-semibold text-white">
+                  Student Schedule Tracker
+                </span>
+              </div>
+              <p className="text-xs text-orange-100 flex items-center gap-2 mt-0.5">
+                <span>{student.email}</span>
+                <span>•</span>
+                <span>{student.college_name || "Direct Student"}</span>
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg bg-white/10 hover:bg-white/20 p-2 text-white transition"
+          >
+            <FaTimes className="text-base" />
+          </button>
+        </div>
+
+        {/* Modal Body */}
+        <div className="overflow-y-auto p-6 space-y-6">
+          {/* Summary Tracker Ribbon */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-center shadow-2xs">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Enrolled Courses</div>
+              <div className="mt-1 text-xl font-extrabold text-slate-800">{coursesList.length}</div>
+            </div>
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 text-center shadow-2xs">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Allocated Batches</div>
+              <div className="mt-1 text-xl font-extrabold text-emerald-700">
+                {coursesList.filter((c) => Boolean(c.batch_id)).length}
+              </div>
+            </div>
+            <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-center shadow-2xs">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-amber-700">Pending Batches</div>
+              <div className="mt-1 text-xl font-extrabold text-amber-700">
+                {coursesList.filter((c) => !c.batch_id).length}
+              </div>
+            </div>
+          </div>
+
+          {/* Enrolled Courses Breakdown */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                <span>Current Courses &amp; Batch Assignments</span>
+                <span className="text-[11px] font-normal lowercase text-slate-400">
+                  (1 batch per course allowed)
+                </span>
+              </h4>
+            </div>
+
+            <div className="space-y-3">
+              {coursesList.map((c) => {
+                const cBatches = batches.filter((b) => b.course_id === c.course_id && b.status === "ACTIVE");
+                const hasBatch = Boolean(c.batch_id);
+
+                return (
+                  <div
+                    key={c.enrollment_id || c.course_id}
+                    className={`rounded-xl border p-4 transition shadow-2xs ${
+                      hasBatch
+                        ? "border-emerald-200 bg-emerald-50/30"
+                        : "border-amber-200 bg-amber-50/30"
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-slate-900 text-sm">{c.course_title}</span>
+                          <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 rounded px-1.5 py-0.5 border border-slate-200">
+                            {c.course_category || "TECH"}
+                          </span>
+                        </div>
+
+                        {hasBatch ? (
+                          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                            <span className="inline-flex items-center gap-1 font-bold text-emerald-800 bg-emerald-100/70 border border-emerald-300 rounded-md px-2 py-0.5">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-600"></span>
+                              Batch: {c.batch_name}
+                            </span>
+                            <span className="font-semibold text-slate-600 bg-white border border-slate-200 rounded-md px-2 py-0.5">
+                              Timing: {c.batch_timing || "Morning"}
+                            </span>
+                            {c.mentor_name && (
+                              <span className="text-slate-600">
+                                Mentor: <strong className="text-slate-800">{c.mentor_name}</strong>
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="mt-2 text-xs font-semibold text-amber-700 flex items-center gap-1.5">
+                            <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                            No batch assigned for this course yet
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action buttons inside card */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {hasBatch ? (
+                          <button
+                            type="button"
+                            onClick={() => handleModalUnallocate(c.batch_id, c.enrollment_id, c.course_title)}
+                            disabled={allocating}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 px-3 py-1.5 text-xs font-bold transition shadow-2xs"
+                          >
+                            <FaUserTimes className="text-xs" />
+                            <span>Unallocate Batch</span>
+                          </button>
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            <select
+                              id={`modal-assign-${c.enrollment_id}`}
+                              defaultValue=""
+                              className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-2xs focus:border-orange-500 focus:outline-hidden max-w-[180px]"
+                            >
+                              <option value="">Select Batch</option>
+                              {cBatches.map((b) => (
+                                <option key={b.id} value={b.id}>
+                                  {b.batch_name} ({b.batch_timing})
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const sel = document.getElementById(`modal-assign-${c.enrollment_id}`);
+                                if (sel?.value) handleModalAssign(c.enrollment_id, sel.value, c.course_title);
+                                else toast.error("Please choose a batch to assign");
+                              }}
+                              disabled={allocating}
+                              className="rounded-lg bg-orange-500 hover:bg-orange-600 px-3 py-1 text-xs font-bold text-white shadow-2xs transition"
+                            >
+                              Assign
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Enroll in Another Course Section */}
+          {availableNewCourses.length > 0 && (
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 shadow-2xs">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                Enroll &amp; Allocate to Another Course
+              </h4>
+              <p className="text-xs text-slate-500 mb-3">
+                Students can be enrolled in multiple courses concurrently with 1 batch assigned to each course.
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  value={newCourseId}
+                  onChange={(e) => {
+                    setNewCourseId(e.target.value);
+                    setNewBatchId("");
+                  }}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+                >
+                  <option value="">-- Choose Additional Course --</option>
+                  {availableNewCourses.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.title}
+                    </option>
+                  ))}
+                </select>
+
+                {newCourseId && (
+                  <select
+                    value={newBatchId}
+                    onChange={(e) => setNewBatchId(e.target.value)}
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 shadow-2xs focus:border-orange-500 focus:outline-hidden"
+                  >
+                    <option value="">-- Choose Target Batch --</option>
+                    {availableBatchesForNewCourse.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.batch_name} ({b.batch_timing})
+                      </option>
+                    ))}
+                  </select>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleModalEnrollAndAssign}
+                  disabled={allocating || !newBatchId}
+                  className="rounded-lg bg-orange-500 hover:bg-orange-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-2xs transition disabled:opacity-40"
+                >
+                  {allocating ? "Assigning..." : "Enroll & Assign Batch"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Modal Footer */}
+        <div className="flex justify-end border-t border-slate-200 bg-slate-50 px-6 py-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 transition shadow-2xs"
+          >
+            Close Tracker
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenStudent }) => {
   const [unallocated, setUnallocated] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -1996,6 +2307,7 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
   const [targetBatchId, setTargetBatchId] = useState("");
   const [allocating, setAllocating] = useState(false);
   const [autoAllocating, setAutoAllocating] = useState(false);
+  const [trackingStudent, setTrackingStudent] = useState(null);
 
   const loadUnallocated = useCallback(async () => {
     try {
@@ -2327,7 +2639,7 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
               <tr>
-                <th className="py-3 px-4 w-10">
+                <th className="py-3.5 px-4 w-10">
                   <input
                     type="checkbox"
                     checked={selectableStudents.length > 0 && selectedIds.size === selectableStudents.length}
@@ -2335,12 +2647,12 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
                     className="h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400"
                   />
                 </th>
-                <th className="py-3 px-4">Student Name</th>
-                <th className="py-3 px-4">College / Origin</th>
-                <th className="py-3 px-4">Enrolled Course &amp; Batch</th>
-                <th className="py-3 px-4">Timing</th>
-                <th className="py-3 px-4">Enrolled Date</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+                <th className="py-3.5 px-4">Student Name</th>
+                <th className="py-3.5 px-4">College / Origin</th>
+                <th className="py-3.5 px-4">Enrolled Course &amp; Batch</th>
+                <th className="py-3.5 px-4">Timing</th>
+                <th className="py-3.5 px-4">Enrolled Date</th>
+                <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -2349,6 +2661,12 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
                 const isAlreadyInActiveCourse = Boolean(
                   activeCourseId && st.course_id === activeCourseId && st.batch_id
                 );
+
+                const displayName =
+                  st.student_name ||
+                  [st.first_name, st.last_name].filter(Boolean).join(" ") ||
+                  st.email?.split("@")[0] ||
+                  "Student";
 
                 return (
                   <tr
@@ -2361,7 +2679,7 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
                         : "hover:bg-slate-50/80"
                     }`}
                   >
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4">
                       <input
                         type="checkbox"
                         checked={isChecked}
@@ -2378,104 +2696,134 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
                       />
                     </td>
 
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => onOpenStudent?.(st)}
+                          onClick={() => setTrackingStudent(st)}
                           className="font-bold text-slate-900 hover:text-orange-600 transition text-left"
+                          title="Click to track courses and batches for this student"
                         >
-                          {st.student_name || "Student"}
+                          {displayName}
                         </button>
                       </div>
                       <div className="text-xs text-slate-500">{st.email}</div>
                     </td>
 
-                    <td className="py-3 px-4">
-                      <span className="rounded-md bg-slate-100 border border-slate-200 px-2.5 py-0.5 text-xs font-semibold text-slate-700">
-                        {st.college_name || "Direct Student"}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold border shadow-2xs ${
+                          st.enrollment_type === "COLLEGE_COHORT" ||
+                          st.college_name?.toLowerCase().includes("college") ||
+                          st.college_name?.toLowerCase().includes("institute") ||
+                          st.college_name?.toLowerCase().includes("academy")
+                            ? "bg-slate-100 border-slate-200 text-slate-800"
+                            : "bg-purple-50 border-purple-200 text-purple-700"
+                        }`}
+                      >
+                        <FaBuilding className="text-[11px] shrink-0 opacity-60 text-slate-500" />
+                        <span className="truncate max-w-[200px]" title={st.college_name || "Direct Student"}>
+                          {st.college_name || "Direct Student"}
+                        </span>
                       </span>
                     </td>
 
-                    <td className="py-3 px-4">
-                      <div className="font-semibold text-slate-800 text-xs">{st.course_title || "Course"}</div>
+                    <td className="py-3.5 px-4">
+                      <div className="font-bold text-slate-900 text-xs">{st.course_title || "Course"}</div>
                       {st.batch_name ? (
-                        <span className="inline-flex items-center gap-1 mt-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5">
+                        <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-0.5 shadow-2xs">
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                          In Batch: {st.batch_name}
-                        </span>
-                      ) : activeCourseId && st.course_id !== activeCourseId ? (
-                        <span
-                          className="inline-block mt-0.5 text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded px-1.5 py-0.5"
-                          title={`Allocating will enroll student into ${selectedTargetBatch?.course?.title || "selected course"} batch`}
-                        >
-                          + Available for {selectedTargetBatch?.course?.title || "this course"}
+                          Batch: {st.batch_name}
                         </span>
                       ) : (
-                        <span className="inline-block mt-0.5 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
+                        <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-0.5 shadow-2xs">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
                           Unassigned Batch
                         </span>
                       )}
-                    </td>
-
-                    <td className="py-3 px-4 text-xs font-semibold text-slate-600">
-                      {st.batch_timing ? `${st.batch_timing} BATCH` : "MORNING"}
-                    </td>
-
-                    <td className="py-3 px-4 text-xs text-slate-500">
-                      {st.enrolled_at ? new Date(st.enrolled_at).toLocaleDateString() : "N/A"}
-                    </td>
-
-                    <td className="py-3 px-4 text-right">
-                      {st.batch_id ? (
-                        <div className="inline-flex items-center justify-end gap-2">
+                      {st.student_courses && st.student_courses.length > 1 && (
+                        <div className="mt-1">
                           <button
                             type="button"
-                            onClick={() => handleUnallocate(st.batch_id, st.enrollment_id, st.student_name)}
+                            onClick={() => setTrackingStudent(st)}
+                            className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded px-2 py-0.5 transition shadow-2xs"
+                            title="Click to track all courses and batch assignments for this student"
+                          >
+                            <FaGraduationCap className="text-[10px] text-indigo-600" />
+                            <span>{st.student_courses.length} Courses Enrolled (Track)</span>
+                          </button>
+                        </div>
+                      )}
+                    </td>
+
+                    <td className="py-3.5 px-4 text-xs font-semibold text-slate-600 whitespace-nowrap">
+                      {st.batch_timing ? `${st.batch_timing} BATCH` : "MORNING BATCH"}
+                    </td>
+
+                    <td className="py-3.5 px-4 text-xs text-slate-500 whitespace-nowrap">
+                      {st.joined_at ? new Date(st.joined_at).toLocaleDateString() : "N/A"}
+                    </td>
+
+                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                      <div className="inline-flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setTrackingStudent(st)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2.5 py-1 text-xs font-bold transition shadow-2xs"
+                          title="Open Student Schedule Tracker"
+                        >
+                          <FaClipboardList className="text-xs text-indigo-500" />
+                          <span>Track</span>
+                        </button>
+
+                        {st.batch_id ? (
+                          <button
+                            type="button"
+                            onClick={() => handleUnallocate(st.batch_id, st.enrollment_id, displayName)}
                             disabled={allocating}
-                            title={`Remove ${st.student_name || "student"} from ${st.batch_name}`}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 px-3 py-1 text-xs font-bold transition shadow-2xs"
+                            title={`Remove ${displayName} from ${st.batch_name}`}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 px-2.5 py-1 text-xs font-bold transition shadow-2xs"
                           >
                             <FaUserTimes className="text-xs" />
                             <span>Unallocate</span>
                           </button>
-                        </div>
-                      ) : (
-                        <div className="inline-flex items-center gap-1.5">
-                          <select
-                            id={`quick-alloc-${st.enrollment_id}`}
-                            defaultValue=""
-                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-2xs focus:border-orange-500 focus:outline-hidden max-w-[170px]"
-                          >
-                            <option value="">Select Batch</option>
-                            {courses.map((c) => {
-                              const cBatches = batches.filter((b) => b.course_id === c.id && b.status === "ACTIVE");
-                              if (cBatches.length === 0) return null;
-                              return (
-                                <optgroup key={c.id} label={c.title}>
-                                  {cBatches.map((mb) => (
-                                    <option key={mb.id} value={mb.id}>
-                                      {mb.batch_name} ({mb.batch_timing})
-                                    </option>
-                                  ))}
-                                </optgroup>
-                              );
-                            })}
-                          </select>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const sel = document.getElementById(`quick-alloc-${st.enrollment_id}`);
-                              if (sel?.value) handleQuickAllocate(st.enrollment_id, sel.value);
-                              else toast.error("Please select a batch from the dropdown");
-                            }}
-                            disabled={allocating}
-                            className="rounded-lg bg-orange-50 border border-orange-200 hover:bg-orange-100 px-2.5 py-1 text-xs font-bold text-orange-700 transition"
-                          >
-                            Assign
-                          </button>
-                        </div>
-                      )}
+                        ) : (
+                          <div className="inline-flex items-center gap-1.5">
+                            <select
+                              id={`quick-alloc-${st.enrollment_id}`}
+                              defaultValue=""
+                              className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-2xs focus:border-orange-500 focus:outline-hidden max-w-[150px]"
+                            >
+                              <option value="">Select Batch</option>
+                              {courses.map((c) => {
+                                const cBatches = batches.filter((b) => b.course_id === c.id && b.status === "ACTIVE");
+                                if (cBatches.length === 0) return null;
+                                return (
+                                  <optgroup key={c.id} label={c.title}>
+                                    {cBatches.map((mb) => (
+                                      <option key={mb.id} value={mb.id}>
+                                        {mb.batch_name} ({mb.batch_timing})
+                                      </option>
+                                    ))}
+                                  </optgroup>
+                                );
+                              })}
+                            </select>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const sel = document.getElementById(`quick-alloc-${st.enrollment_id}`);
+                                if (sel?.value) handleQuickAllocate(st.enrollment_id, sel.value);
+                                else toast.error("Please select a batch from the dropdown");
+                              }}
+                              disabled={allocating}
+                              className="rounded-lg bg-orange-50 border border-orange-200 hover:bg-orange-100 px-2.5 py-1 text-xs font-bold text-orange-700 transition"
+                            >
+                              Assign
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -2487,6 +2835,16 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
         <div className="rounded-xl border border-dashed border-emerald-300 bg-emerald-50/50 p-8 text-center text-sm text-emerald-800 font-semibold">
           No students match the current filters.
         </div>
+      )}
+
+      {trackingStudent && (
+        <StudentBatchTrackerModal
+          student={trackingStudent}
+          batches={batches}
+          courses={courses}
+          onClose={() => setTrackingStudent(null)}
+          onRefresh={loadUnallocated}
+        />
       )}
     </Panel>
   );
