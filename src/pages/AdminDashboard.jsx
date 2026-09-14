@@ -27,6 +27,10 @@ import {
   FaUserTie,
   FaSyncAlt,
   FaGraduationCap,
+  FaBan,
+  FaTrashAlt,
+  FaCheckCircle,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 import useStore, { storeActions } from "../store/useStore";
 import { createAdmin } from "../service/adminService";
@@ -36,7 +40,7 @@ import {
   getSuperadminStudents,
   updateCollegeStatus,
 } from "../service/collegeService";
-import { createBatch, createCourse, getBatches, getCourses } from "../service/courseService";
+import { createBatch, createCourse, getBatches, getCourses, updateCourseStatus, softDeleteCourse } from "../service/courseService";
 import {
   getBatches as fetchBatchesApi,
   getBatchStudents,
@@ -49,9 +53,11 @@ import {
   transferStudentBatch,
   autoAllocateStudents,
   getUnallocatedStudents,
+  updateBatchStatus,
+  softDeleteBatch,
 } from "../service/batchService";
 import { createMentor, getMentors } from "../service/mentorService";
-import { getUsers } from "../service/userService";
+import { getUsers, updateUserStatus, softDeleteUser } from "../service/userService";
 import { collegeProfileIdParamSchema, updateCollegeProfileStatusSchema } from "../validator/collegeProfileSchema";
 import { createBatchSchema, createCourseSchema } from "../validator/courseSchema";
 import { adminOnboardingSchema } from "../validator/adminProfileSchema";
@@ -135,7 +141,7 @@ const getAdminRows = (admin) => [
   { label: "System Role", value: admin.role || "ADMIN" },
   { label: "Department", value: admin.department || admin.admin_profile?.department || "Administration" },
   { label: "Account ID", value: `#ADM-${admin.id || "001"}` },
-  { label: "Account Status", value: "Active Verified" },
+  { label: "Account Status", value: admin.is_active === false ? "Disabled" : "Active Verified" },
   { label: "Account Created", value: admin.created_at ? new Date(admin.created_at).toLocaleString() : "N/A" },
 ];
 
@@ -144,6 +150,7 @@ const getMentorRows = (mentor) => {
   const subjects = Array.isArray(profile.subjects)
     ? profile.subjects.join(", ")
     : profile.subjects || "AWS Deployment, DevOps & Cloud";
+  const isActive = (mentor.is_active !== undefined ? mentor.is_active : mentor.user?.is_active) !== false;
 
   return [
     { label: "Full Name", value: fullName(mentor) || "Aditya Kumar" },
@@ -153,7 +160,7 @@ const getMentorRows = (mentor) => {
     { label: "Subjects / Expertise", value: subjects },
     { label: "Bio / Experience", value: profile.bio || "AWS Cloud & Deployment mentor guiding students through CI/CD, containerization, and AWS cloud management." },
     { label: "Account ID", value: `#MEN-${mentor.id || "001"}` },
-    { label: "Account Status", value: "Active Instructor" },
+    { label: "Account Status", value: !isActive ? "Disabled" : "Active Instructor" },
     { label: "Account Created", value: mentor.created_at ? new Date(mentor.created_at).toLocaleString() : "N/A" },
   ];
 };
@@ -175,6 +182,7 @@ const getStudentRows = (student) => {
     : student.college_city
     ? `${student.college_city}, ${student.college_state || ""}`
     : "N/A";
+  const isActive = student.is_active !== false;
 
   return [
     { label: "Student Name", value: student.student_name || fullName(student) || "Student" },
@@ -186,6 +194,7 @@ const getStudentRows = (student) => {
     { label: "College / University", value: collegeName },
     { label: "Address / Location", value: location },
     { label: "System Role", value: student.role || "STUDENT" },
+    { label: "Account Status", value: !isActive ? "Disabled" : (student.enrollment_status || "Active Student") },
     { label: "Enrolled Course", value: student.course_title || "AWS Deployment" },
     { label: "Course Category", value: student.course_category || "DEVOPS" },
     { label: "Batch Timing", value: student.batch_timing ? `${student.batch_timing} BATCH` : "MORNING BATCH" },
@@ -196,6 +205,30 @@ const getStudentRows = (student) => {
     ...(student.resume || profile.resume ? [{ label: "Resume File", value: student.resume || profile.resume }] : []),
   ];
 };
+
+const getCourseRows = (course) => [
+  { label: "Course Title", value: course.title || "N/A" },
+  { label: "Course Slug", value: course.slug || "No slug" },
+  { label: "Category", value: course.category || "N/A" },
+  { label: "Duration", value: `${course.duration_weeks || 0} weeks` },
+  { label: "Description", value: course.description || "No description provided." },
+  { label: "Course Status", value: course.is_active === false ? "Disabled" : "Active" },
+  { label: "Course ID", value: `#CRS-${course.id}` },
+  { label: "Created At", value: course.created_at ? new Date(course.created_at).toLocaleString() : "N/A" },
+];
+
+const getBatchRows = (batch) => [
+  { label: "Batch Name", value: batch.batch_name || "N/A" },
+  { label: "Course", value: batch.course?.title || batch.course_title || "N/A" },
+  { label: "Mentor / Instructor", value: batch.mentor ? fullName(batch.mentor) : batch.mentor_name || "Unassigned" },
+  { label: "Batch Timing", value: `${batch.batch_timing || "MORNING"} BATCH` },
+  { label: "Start Date", value: batch.start_date ? new Date(batch.start_date).toLocaleDateString() : "N/A" },
+  { label: "End Date", value: batch.end_date ? new Date(batch.end_date).toLocaleDateString() : "N/A" },
+  { label: "Status", value: batch.status || "ACTIVE" },
+  { label: "Enrolled Students", value: `${batch.student_count ?? batch.enrollments?.length ?? 0} students` },
+  { label: "Batch ID", value: `#BTC-${batch.id}` },
+  { label: "Created At", value: batch.created_at ? new Date(batch.created_at).toLocaleString() : "N/A" },
+];
 
 const menuSections = (role) =>
   role === "SUPERADMIN"
@@ -462,8 +495,8 @@ const AdminDashboard = () => {
     setMobileMenuOpen(false);
   };
 
-  const openDetail = (title, rows) => {
-    setSelectedDetail({ title, rows });
+  const openDetail = (title, rows, target = null) => {
+    setSelectedDetail({ title, rows, target });
   };
 
   const updateStudentFilter = (name, value) => {
@@ -793,16 +826,44 @@ const AdminDashboard = () => {
               {activeMenu === "Admin Data" && isSuperadmin && (
                 <AdminDataPanel
                   admins={users.filter((user) => ["ADMIN", "SUPERADMIN"].includes(user.role))}
-                  onOpenAdmin={(admin) => openDetail("Admin Details", getAdminRows(admin))}
+                  onOpenAdmin={(admin) =>
+                    openDetail("Admin Details", getAdminRows(admin), {
+                      type: "USER",
+                      role: admin.role,
+                      id: admin.id,
+                      entity: admin,
+                      is_active: admin.is_active !== false,
+                    })
+                  }
                 />
               )}
               {activeMenu === "Mentor Data" && (
                 <MentorDataPanel
                   mentors={mentors}
-                  onOpenMentor={(mentor) => openDetail("Mentor Details", getMentorRows(mentor))}
+                  onOpenMentor={(mentor) =>
+                    openDetail("Mentor Details", getMentorRows(mentor), {
+                      type: "USER",
+                      role: "MENTOR",
+                      id: mentor.id || mentor.mentor_profile?.id || mentor.user?.id,
+                      entity: mentor,
+                      is_active: (mentor.is_active !== undefined ? mentor.is_active : mentor.user?.is_active) !== false,
+                    })
+                  }
                 />
               )}
-              {activeMenu === "Course Data" && <CourseDataPanel courses={courses} />}
+              {activeMenu === "Course Data" && (
+                <CourseDataPanel
+                  courses={courses}
+                  onOpenCourse={(course) =>
+                    openDetail("Course Details", getCourseRows(course), {
+                      type: "COURSE",
+                      id: course.id,
+                      entity: course,
+                      is_active: course.is_active !== false,
+                    })
+                  }
+                />
+              )}
               {activeMenu === "Batch Data" && (
                 <BatchDataPanel
                   batches={batches}
@@ -810,6 +871,14 @@ const AdminDashboard = () => {
                   courses={courses}
                   onManageMentors={(batch) => setSelectedBatchForMentors(batch)}
                   onViewRoster={(batch) => setSelectedBatchForRoster(batch)}
+                  onOpenBatch={(batch) =>
+                    openDetail("Batch Details", getBatchRows(batch), {
+                      type: "BATCH",
+                      id: batch.id,
+                      entity: batch,
+                      is_active: batch.status !== "CANCELLED" && batch.status !== "INACTIVE",
+                    })
+                  }
                   onRefresh={() => loadBaseData(false)}
                 />
               )}
@@ -842,7 +911,15 @@ const AdminDashboard = () => {
                   openCourseIds={openCourseIds}
                   onToggleCollege={(id) => setOpenCollegeIds((prev) => ({ ...prev, [id]: !prev[id] }))}
                   onToggleCourse={(key) => setOpenCourseIds((prev) => ({ ...prev, [key]: !prev[key] }))}
-                  onOpenStudent={(student) => openDetail("Student Details", getStudentRows(student))}
+                  onOpenStudent={(student) =>
+                    openDetail("Student Details", getStudentRows(student), {
+                      type: "USER",
+                      role: "STUDENT",
+                      id: student.student_id || student.id,
+                      entity: student,
+                      is_active: student.is_active !== false,
+                    })
+                  }
                 />
               )}
 
@@ -854,7 +931,15 @@ const AdminDashboard = () => {
                   studentsPage={studentsPage}
                   loading={studentsLoading}
                   onFilterChange={updateStudentFilter}
-                  onOpenStudent={(student) => openDetail("Student Details", getStudentRows(student))}
+                  onOpenStudent={(student) =>
+                    openDetail("Student Details", getStudentRows(student), {
+                      type: "USER",
+                      role: "STUDENT",
+                      id: student.student_id || student.id,
+                      entity: student,
+                      is_active: student.is_active !== false,
+                    })
+                  }
                 />
               )}
 
@@ -864,7 +949,15 @@ const AdminDashboard = () => {
                   courses={courses}
                   colleges={colleges}
                   onRefresh={() => loadBaseData(false)}
-                  onOpenStudent={(student) => openDetail("Student Details", getStudentRows(student))}
+                  onOpenStudent={(student) =>
+                    openDetail("Student Details", getStudentRows(student), {
+                      type: "USER",
+                      role: "STUDENT",
+                      id: student.student_id || student.id,
+                      entity: student,
+                      is_active: student.is_active !== false,
+                    })
+                  }
                 />
               )}
 
@@ -947,7 +1040,13 @@ const AdminDashboard = () => {
         <DetailModal
           title={selectedDetail.title}
           rows={selectedDetail.rows}
+          target={selectedDetail.target}
+          currentUser={auth?.user}
           onClose={() => setSelectedDetail(null)}
+          onRefresh={async () => {
+            await loadBaseData(false);
+            if (activeMenu === "Students") await loadStudents();
+          }}
         />
       )}
 
@@ -972,16 +1071,81 @@ const AdminDashboard = () => {
   );
 };
 
-const DetailModal = ({ title, rows, onClose }) => {
-  const nameRow = rows?.find((r) => r.label.includes("Name"));
-  const roleRow = rows?.find((r) => r.label.includes("Role"));
+const DetailModal = ({ title, rows, target, onClose, onRefresh, currentUser }) => {
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const nameRow = rows?.find((r) => r.label.includes("Name") || r.label.includes("Title"));
+  const roleRow = rows?.find((r) => r.label.includes("Role") || r.label.includes("Category"));
+  const statusRow = rows?.find((r) => r.label.includes("Status"));
+
+  const isSelf = target?.type === "USER" && target?.id === currentUser?.id;
+  const isSuperadminTarget = target?.type === "USER" && (target?.role === "SUPERADMIN" || target?.entity?.role === "SUPERADMIN");
+  const isActive = target?.is_active !== false;
+
+  const handleExecuteAction = async () => {
+    if (!confirmAction || !target) return;
+    try {
+      setActionLoading(true);
+
+      if (target.type === "USER") {
+        if (confirmAction.type === "DISABLE") {
+          await updateUserStatus(target.id, { is_active: false });
+          toast.success("Account disabled successfully. User cannot log in.");
+        } else if (confirmAction.type === "ENABLE") {
+          await updateUserStatus(target.id, { is_active: true });
+          toast.success("Account re-enabled successfully.");
+        } else if (confirmAction.type === "REMOVE") {
+          await softDeleteUser(target.id);
+          toast.success("Account removed (soft deleted) from active records.");
+        }
+      } else if (target.type === "COURSE") {
+        if (confirmAction.type === "DISABLE") {
+          await updateCourseStatus(target.id, { is_active: false });
+          toast.success("Course disabled successfully.");
+        } else if (confirmAction.type === "ENABLE") {
+          await updateCourseStatus(target.id, { is_active: true });
+          toast.success("Course activated successfully.");
+        } else if (confirmAction.type === "REMOVE") {
+          await softDeleteCourse(target.id);
+          toast.success("Course removed (soft deleted) successfully.");
+        }
+      } else if (target.type === "BATCH") {
+        if (confirmAction.type === "DISABLE") {
+          await updateBatchStatus(target.id, { status: "CANCELLED" });
+          toast.success("Batch cancelled successfully.");
+        } else if (confirmAction.type === "ENABLE") {
+          await updateBatchStatus(target.id, { status: "ACTIVE" });
+          toast.success("Batch reactivated successfully.");
+        } else if (confirmAction.type === "REMOVE") {
+          await softDeleteBatch(target.id);
+          toast.success("Batch removed (soft deleted) successfully.");
+        }
+      }
+
+      await onRefresh?.();
+      onClose();
+    } catch (error) {
+      toast.error(error.message || "Failed to update status");
+    } finally {
+      setActionLoading(false);
+      setConfirmAction(null);
+    }
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xl">
-        <div className="flex items-start justify-between border-b border-slate-100 pb-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-fadeIn">
+      <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-start justify-between border-b border-slate-100 pb-5 shrink-0">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-xl font-bold text-white shadow-md">
+            <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-xl font-bold text-white shadow-md ${
+              target?.type === "COURSE" 
+                ? "bg-gradient-to-br from-purple-600 to-indigo-700"
+                : target?.type === "BATCH"
+                ? "bg-gradient-to-br from-amber-500 to-orange-600"
+                : "bg-gradient-to-br from-blue-600 to-indigo-700"
+            }`}>
               {(nameRow?.value?.[0] || "U").toUpperCase()}
             </div>
             <div>
@@ -992,9 +1156,22 @@ const DetailModal = ({ title, rows, onClose }) => {
                     {roleRow.value}
                   </span>
                 )}
+                {statusRow && (
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold border ${
+                    !isActive || statusRow.value?.toLowerCase().includes("disabled") || statusRow.value?.toLowerCase().includes("inactive") || statusRow.value?.toLowerCase().includes("cancelled")
+                      ? "bg-rose-50 text-rose-700 border-rose-200"
+                      : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  }`}>
+                    {!isActive ? "Disabled" : statusRow.value}
+                  </span>
+                )}
               </div>
               <p className="text-xs text-slate-500 mt-1">
-                Complete profile and enrollment record from Skills Academy directory.
+                {target?.type === "COURSE"
+                  ? "Skills Academy curriculum and course configuration record."
+                  : target?.type === "BATCH"
+                  ? "Cohort allocation, schedule, and capacity details."
+                  : "Complete profile and directory record from Skills Academy directory."}
               </p>
             </div>
           </div>
@@ -1006,12 +1183,15 @@ const DetailModal = ({ title, rows, onClose }) => {
           </button>
         </div>
 
-        <div className="mt-6 max-h-[60vh] overflow-y-auto pr-2 grid sm:grid-cols-2 gap-4">
+        {/* Rows */}
+        <div className="mt-6 overflow-y-auto pr-1 grid sm:grid-cols-2 gap-4 flex-1">
           {rows?.map((row) => (
             <div
               key={row.label}
               className={`rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 ${
-                row.label.includes("Bio") || row.label.includes("Subjects") ? "sm:col-span-2" : ""
+                row.label.includes("Bio") || row.label.includes("Subjects") || row.label.includes("Description") || row.label.includes("Address")
+                  ? "sm:col-span-2"
+                  : ""
               }`}
             >
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{row.label}</p>
@@ -1020,14 +1200,116 @@ const DetailModal = ({ title, rows, onClose }) => {
           ))}
         </div>
 
-        <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
-          <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" />
-            Verified Record
-          </span>
+        {/* Confirmation banner if action chosen */}
+        {confirmAction && (
+          <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-4 shrink-0 animate-fadeIn">
+            <div className="flex items-start gap-3">
+              <FaExclamationTriangle className="text-rose-500 mt-0.5 text-base shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-bold text-rose-900">{confirmAction.label}</p>
+                <p className="text-xs text-rose-700 mt-1 leading-relaxed">{confirmAction.message}</p>
+                <div className="mt-3 flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={actionLoading}
+                    onClick={handleExecuteAction}
+                    className="rounded-lg bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-1.5 text-xs font-bold transition shadow-xs disabled:opacity-50 inline-flex items-center gap-1.5"
+                  >
+                    {actionLoading && <FaSpinner className="animate-spin text-xs" />}
+                    Confirm &amp; Proceed
+                  </button>
+                  <button
+                    type="button"
+                    disabled={actionLoading}
+                    onClick={() => setConfirmAction(null)}
+                    className="rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 px-3.5 py-1.5 text-xs font-semibold transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="mt-6 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            {target && !isSuperadminTarget && !isSelf && (
+              <>
+                {/* Disable / Enable Button */}
+                <button
+                  type="button"
+                  disabled={actionLoading}
+                  onClick={() => {
+                    if (isActive) {
+                      setConfirmAction({
+                        type: "DISABLE",
+                        label: `Disable ${target.type === "USER" ? (target.role || "Account") : target.type === "COURSE" ? "Course" : "Batch"}`,
+                        message: target.type === "USER"
+                          ? "Are you sure you want to disable this account? The user will be blocked from logging into the platform until re-enabled."
+                          : target.type === "COURSE"
+                          ? "Are you sure you want to disable this course? It will become unavailable for new batch creation."
+                          : "Are you sure you want to cancel this batch? Ongoing activities will be paused.",
+                      });
+                    } else {
+                      setConfirmAction({
+                        type: "ENABLE",
+                        label: `Enable ${target.type === "USER" ? (target.role || "Account") : target.type === "COURSE" ? "Course" : "Batch"}`,
+                        message: target.type === "USER"
+                          ? "Are you sure you want to re-enable this account? The user will be able to log in immediately."
+                          : target.type === "COURSE"
+                          ? "Are you sure you want to re-activate this course?"
+                          : "Are you sure you want to reactivate this batch?",
+                      });
+                    }
+                  }}
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition border shadow-2xs ${
+                    isActive
+                      ? "border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100"
+                      : "border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+                  }`}
+                  title={isActive ? "Disable / Lock" : "Re-enable Access"}
+                >
+                  {isActive ? <FaBan className="text-amber-600" /> : <FaCheckCircle className="text-emerald-600" />}
+                  <span>{isActive ? `Disable ${target.type === "USER" ? "Account" : target.type === "COURSE" ? "Course" : "Batch"}` : `Enable ${target.type === "USER" ? "Account" : target.type === "COURSE" ? "Course" : "Batch"}`}</span>
+                </button>
+
+                {/* Remove (Soft Delete) Button */}
+                <button
+                  type="button"
+                  disabled={actionLoading}
+                  onClick={() => {
+                    setConfirmAction({
+                      type: "REMOVE",
+                      label: `Remove ${target.type === "USER" ? (target.role || "Account") : target.type === "COURSE" ? "Course" : "Batch"}`,
+                      message: `Are you sure you want to remove this ${target.type.toLowerCase()}? It will be soft-deleted and removed from active directories. Historical records are safely preserved in the database.`,
+                    });
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-700 shadow-2xs hover:bg-rose-100 transition"
+                  title="Remove from system"
+                >
+                  <FaTrashAlt className="text-rose-500" />
+                  <span>Remove {target.type === "USER" ? (target.role ? target.role.charAt(0) + target.role.slice(1).toLowerCase() : "User") : target.type === "COURSE" ? "Course" : "Batch"}</span>
+                </button>
+              </>
+            )}
+
+            {isSelf && (
+              <span className="text-xs text-slate-400 italic">
+                (This is your active logged-in account)
+              </span>
+            )}
+            {isSuperadminTarget && !isSelf && (
+              <span className="text-xs text-slate-400 italic">
+                (Superadmin accounts cannot be disabled or removed)
+              </span>
+            )}
+          </div>
+
           <button
             onClick={onClose}
-            className="rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition shadow-sm"
+            className="rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition shadow-sm ml-auto"
           >
             Close Details
           </button>
@@ -1111,7 +1393,7 @@ const MentorDataPanel = ({ mentors, onOpenMentor }) => (
   </Panel>
 );
 
-const CourseDataPanel = ({ courses }) => (
+const CourseDataPanel = ({ courses, onOpenCourse }) => (
   <Panel>
     <div className="mb-6 flex items-center gap-4">
       <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
@@ -1122,11 +1404,11 @@ const CourseDataPanel = ({ courses }) => (
         <p className="text-slate-500">Existing courses available for batch creation.</p>
       </div>
     </div>
-    <CourseTable courses={courses} />
+    <CourseTable courses={courses} onOpenCourse={onOpenCourse} />
   </Panel>
 );
 
-const BatchDataPanel = ({ batches, mentors, courses, onManageMentors, onViewRoster, onRefresh }) => {
+const BatchDataPanel = ({ batches, mentors, courses, onManageMentors, onViewRoster, onOpenBatch, onRefresh }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCourse, setFilterCourse] = useState("");
 
@@ -1188,6 +1470,7 @@ const BatchDataPanel = ({ batches, mentors, courses, onManageMentors, onViewRost
         batches={filteredBatches}
         onManageMentors={onManageMentors}
         onViewRoster={onViewRoster}
+        onOpenBatch={onOpenBatch}
       />
     </Panel>
   );
@@ -1300,7 +1583,7 @@ const BatchFormPanel = ({ form, errors, loading, courses, mentors, batches, onCh
   </Panel>
 );
 
-const BatchTable = ({ batches, onManageMentors, onViewRoster }) =>
+const BatchTable = ({ batches, onManageMentors, onViewRoster, onOpenBatch }) =>
   batches.length ? (
     <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
       <table className="w-full text-left text-sm">
@@ -1312,7 +1595,7 @@ const BatchTable = ({ batches, onManageMentors, onViewRoster }) =>
             <th className="py-3 px-4">Substitute Coverage</th>
             <th className="py-3 px-4">Students</th>
             <th className="py-3 px-4">Status</th>
-            {(onManageMentors || onViewRoster) && <th className="py-3 px-4 text-right">Actions</th>}
+            {(onManageMentors || onViewRoster || onOpenBatch) && <th className="py-3 px-4 text-right">Actions</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
@@ -1323,7 +1606,12 @@ const BatchTable = ({ batches, onManageMentors, onViewRoster }) =>
             return (
               <tr key={batch.id} className="hover:bg-slate-50/70 transition">
                 <td className="py-3.5 px-4 font-semibold text-slate-900">
-                  <div className="text-sm font-bold text-slate-900">{batch.batch_name}</div>
+                  <div
+                    onClick={() => onOpenBatch?.(batch)}
+                    className={`text-sm font-bold ${onOpenBatch ? "cursor-pointer text-orange-600 hover:underline" : "text-slate-900"}`}
+                  >
+                    {batch.batch_name}
+                  </div>
                   <div className="mt-0.5 inline-flex items-center gap-1.5">
                     <span className="rounded-md bg-orange-50 px-2 py-0.5 text-[11px] font-bold text-orange-700 border border-orange-200">
                       {batch.batch_timing} BATCH
@@ -1385,9 +1673,20 @@ const BatchTable = ({ batches, onManageMentors, onViewRoster }) =>
                   <StatusBadge status={batch.status} />
                 </td>
 
-                {(onManageMentors || onViewRoster) && (
+                {(onManageMentors || onViewRoster || onOpenBatch) && (
                   <td className="py-3.5 px-4 text-right">
                     <div className="inline-flex items-center gap-2">
+                      {onOpenBatch && (
+                        <button
+                          type="button"
+                          onClick={() => onOpenBatch(batch)}
+                          className="rounded-lg border border-slate-200 bg-white hover:bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-700 shadow-2xs transition inline-flex items-center gap-1.5"
+                          title="View batch details and actions"
+                        >
+                          <FaEye className="text-slate-500 text-xs" />
+                          <span>View</span>
+                        </button>
+                      )}
                       {onManageMentors && (
                         <button
                           type="button"
@@ -2926,7 +3225,7 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
   );
 };
 
-const CourseTable = ({ courses }) =>
+const CourseTable = ({ courses, onOpenCourse }) =>
   courses.length ? (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
@@ -2936,18 +3235,39 @@ const CourseTable = ({ courses }) =>
             <th className="py-3 pr-4">CATEGORY</th>
             <th className="py-3 pr-4">DURATION</th>
             <th className="py-3 pr-4">STATUS</th>
+            <th className="py-3 pr-4 text-right">ACTION</th>
           </tr>
         </thead>
         <tbody>
           {courses.map((course) => (
-            <tr key={course.id} className="border-b border-slate-100 last:border-b-0">
+            <tr
+              key={course.id}
+              onClick={() => onOpenCourse?.(course)}
+              className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 last:border-b-0 transition"
+            >
               <td className="py-4 pr-4">
-                <p className="font-semibold">{course.title}</p>
+                <p className="font-semibold text-orange-600 hover:underline">{course.title}</p>
                 <p className="mt-1 text-xs text-slate-500">{course.slug || "No slug"}</p>
               </td>
               <td className="py-4 pr-4 text-slate-600">{course.category}</td>
               <td className="py-4 pr-4 text-slate-600">{course.duration_weeks} weeks</td>
-              <td className="py-4 pr-4"><StatusBadge status={course.is_active ? "ACTIVE" : "INACTIVE"} /></td>
+              <td className="py-4 pr-4">
+                <StatusBadge status={course.is_active !== false ? "ACTIVE" : "INACTIVE"} />
+              </td>
+              <td className="py-4 pr-4 text-right">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenCourse?.(course);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-bold text-orange-700 shadow-xs transition hover:bg-orange-100 hover:text-orange-800"
+                  title="View Course Details"
+                >
+                  <FaEye className="text-sm text-orange-500" />
+                  <span>View</span>
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>

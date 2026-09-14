@@ -15,3 +15,13 @@ export const getUsers = async (_token, params = {}) => {
   });
   return response.data.data;
 };
+
+export const updateUserStatus = async (userId, payload) => {
+  const response = await axiosUserInstance.patch(`/${userId}/status`, payload);
+  return response.data;
+};
+
+export const softDeleteUser = async (userId) => {
+  const response = await axiosUserInstance.delete(`/${userId}`);
+  return response.data;
+};

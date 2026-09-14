@@ -19,3 +19,14 @@ export const createBatch = async (payload) => {
   const response = await axiosCourseInstance.post('/batches', payload);
   return response.data.data;
 };
+
+export const updateCourseStatus = async (courseId, payload) => {
+  const response = await axiosCourseInstance.patch(`/${courseId}/status`, payload);
+  return response.data;
+};
+
+export const softDeleteCourse = async (courseId) => {
+  const response = await axiosCourseInstance.delete(`/${courseId}`);
+  return response.data;
+};
+

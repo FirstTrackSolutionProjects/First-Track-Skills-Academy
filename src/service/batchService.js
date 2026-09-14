@@ -121,3 +121,22 @@ export const getMyMentorBatches = async () => {
     }
   }
 };
+
+export const updateBatchStatus = async (batchId, payload) => {
+  try {
+    const res = await axiosBatchInstance.patch(`/${batchId}/status`, payload);
+    return res.data;
+  } catch (error) {
+    throw new Error(extractError(error, "Failed to update batch status"));
+  }
+};
+
+export const softDeleteBatch = async (batchId) => {
+  try {
+    const res = await axiosBatchInstance.delete(`/${batchId}`);
+    return res.data;
+  } catch (error) {
+    throw new Error(extractError(error, "Failed to remove batch"));
+  }
+};
+
