@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import {
   FaBars,
   FaBookOpen,
+  FaCalendarCheck,
   FaChevronDown,
   FaClock,
   FaHome,
@@ -18,6 +19,7 @@ import { getBatches, getCourses } from "../service/courseService";
 import { getMyMentorBatches, getBatchStudents } from "../service/batchService";
 import { getMyEnrolledCourses } from "../service/enrollmentService";
 import useStore, { storeActions } from "../store/useStore";
+import StudentAttendancePanel from "../components/attendance/StudentAttendancePanel";
 
 const roleCopy = {
   MENTOR: {
@@ -72,6 +74,7 @@ const menuByRole = {
       items: [
         { name: "Courses", icon: <FaBookOpen /> },
         { name: "Enrollments", icon: <FaLayerGroup /> },
+        { name: "Attendance", icon: <FaCalendarCheck /> },
       ],
     },
     {
@@ -378,6 +381,9 @@ const RoleDashboard = () => {
               {activeMenu === "Batch Timings" && <BatchTimingsPanel batches={batches} />}
               {activeMenu === "Enrollments" && (
                 <CoursePanel courses={courses} isStudent={true} onSelectCourse={handleCourseSelect} />
+              )}
+              {activeMenu === "Attendance" && isStudent && (
+                <StudentAttendancePanel />
               )}
               {activeMenu === "Profile" && (
                 <ProfilePanel user={auth.user} courses={courses} batches={batches} isStudent={isStudent} />

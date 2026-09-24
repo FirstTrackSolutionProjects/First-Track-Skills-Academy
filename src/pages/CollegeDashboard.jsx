@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import {
   FaBars,
   FaBookOpen,
+  FaCalendarCheck,
   FaChartBar,
   FaChevronDown,
   FaClock,
@@ -19,6 +20,7 @@ import {
 } from "react-icons/fa";
 import useStore, { storeActions } from "../store/useStore";
 import { getCollegeDashboard } from "../service/collegeService";
+import CollegeAttendancePanel from "../components/attendance/CollegeAttendancePanel";
 
 const menuSections = [
   {
@@ -32,6 +34,7 @@ const menuSections = [
     items: [
       { name: "Courses", icon: <FaBookOpen /> },
       { name: "Students", icon: <FaUsers /> },
+      { name: "Attendance", icon: <FaCalendarCheck /> },
     ],
   },
   {
@@ -352,6 +355,10 @@ const CollegeDashboard = () => {
                 onOpenStudent={setSelectedStudent}
               />
             </Panel>
+          )}
+
+          {activeMenu === "Attendance" && (
+            <CollegeAttendancePanel courses={dashboard?.courses || []} />
           )}
 
           {activeMenu === "Partner Link" && <PartnerPanel profile={profile} />}

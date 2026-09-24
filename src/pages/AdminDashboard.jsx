@@ -31,7 +31,11 @@ import {
   FaTrashAlt,
   FaCheckCircle,
   FaExclamationTriangle,
+  FaCalendarCheck,
+  FaExternalLinkAlt,
 } from "react-icons/fa";
+import MarkAttendancePanel from "../components/attendance/MarkAttendancePanel";
+import AttendanceSessionsPanel from "../components/attendance/AttendanceSessionsPanel";
 import useStore, { storeActions } from "../store/useStore";
 import { createAdmin } from "../service/adminService";
 import {
@@ -119,6 +123,7 @@ const initialCourseForm = {
   description: "",
   duration_weeks: 12,
   thumbnail_url: "",
+  google_classroom_link: "",
 };
 
 const initialBatchForm = {
@@ -212,6 +217,7 @@ const getCourseRows = (course) => [
   { label: "Category", value: course.category || "N/A" },
   { label: "Duration", value: `${course.duration_weeks || 0} weeks` },
   { label: "Description", value: course.description || "No description provided." },
+  { label: "Google Classroom Link", value: course.google_classroom_link || "N/A" },
   { label: "Course Status", value: course.is_active === false ? "Disabled" : "Active" },
   { label: "Course ID", value: `#CRS-${course.id}` },
   { label: "Created At", value: course.created_at ? new Date(course.created_at).toLocaleString() : "N/A" },
@@ -285,6 +291,14 @@ const menuSections = (role) =>
             { name: "Student Allocation", icon: <FaLayerGroup /> },
           ],
         },
+        {
+          title: "Attendance",
+          icon: <FaCalendarCheck />,
+          items: [
+            { name: "Mark Attendance", icon: <FaCalendarCheck /> },
+            { name: "Attendance Sessions", icon: <FaHistory /> },
+          ],
+        },
         { title: "Account", icon: <FaUserShield />, items: [{ name: "Profile", icon: <FaUserShield /> }] },
       ]
     : [
@@ -320,6 +334,14 @@ const menuSections = (role) =>
             { name: "Student Allocation", icon: <FaLayerGroup /> },
           ],
         },
+        {
+          title: "Attendance",
+          icon: <FaCalendarCheck />,
+          items: [
+            { name: "Mark Attendance", icon: <FaCalendarCheck /> },
+            { name: "Attendance Sessions", icon: <FaHistory /> },
+          ],
+        },
         { title: "Account", icon: <FaUserShield />, items: [{ name: "Profile", icon: <FaUserShield /> }] },
       ];
 
@@ -347,8 +369,10 @@ const AdminDashboard = () => {
     "College Verification": false,
     Students: false,
     College: false,
+    Attendance: false,
     Account: false,
   });
+  const [attendancePreselection, setAttendancePreselection] = useState(null);
   const [openCollegeIds, setOpenCollegeIds] = useState({});
   const [openCourseIds, setOpenCourseIds] = useState({});
   const [search, setSearch] = useState("");
@@ -996,6 +1020,26 @@ const AdminDashboard = () => {
                 />
               )}
 
+              {activeMenu === "Mark Attendance" && (
+                <MarkAttendancePanel
+                  courses={courses}
+                  batches={batches}
+                  initialBatchId={attendancePreselection?.batchId}
+                  initialDate={attendancePreselection?.date}
+                />
+              )}
+
+              {activeMenu === "Attendance Sessions" && (
+                <AttendanceSessionsPanel
+                  courses={courses}
+                  batches={batches}
+                  onEditSession={({ batchId, date }) => {
+                    setAttendancePreselection({ batchId, date });
+                    setActiveMenu("Mark Attendance");
+                  }}
+                />
+              )}
+
               {activeMenu === "Profile" && (
                 <Panel>
                   <div className="rounded-2xl border border-slate-200 bg-gradient-to-r from-blue-50/80 to-indigo-50/50 p-6 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1535,6 +1579,14 @@ const CourseFormPanel = ({ form, errors, loading, onChange, onSubmit }) => (
         </SelectField>
         <FormField label="Duration Weeks" type="number" name="duration_weeks" value={form.duration_weeks} error={errors.duration_weeks} onChange={onChange} required />
         <FormField label="Thumbnail URL" name="thumbnail_url" value={form.thumbnail_url} error={errors.thumbnail_url} onChange={onChange} />
+        <FormField
+          label="Google Classroom Link"
+          name="google_classroom_link"
+          value={form.google_classroom_link || ""}
+          error={errors.google_classroom_link}
+          onChange={onChange}
+          placeholder="https://classroom.google.com/c/..."
+        />
       </div>
       <TextAreaField label="Description" name="description" value={form.description} error={errors.description} onChange={onChange} />
       <SubmitButton loading={loading} text="Create Course" />
@@ -3247,7 +3299,22 @@ const CourseTable = ({ courses, onOpenCourse }) =>
             >
               <td className="py-4 pr-4">
                 <p className="font-semibold text-orange-600 hover:underline">{course.title}</p>
-                <p className="mt-1 text-xs text-slate-500">{course.slug || "No slug"}</p>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <p className="text-xs text-slate-500">{course.slug || "No slug"}</p>
+                  {course.google_classroom_link && (
+                    <a
+                      href={course.google_classroom_link}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 rounded bg-blue-50 border border-blue-200 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 hover:bg-blue-100 transition"
+                      title="Open Google Classroom"
+                    >
+                      <span>Classroom</span>
+                      <FaExternalLinkAlt className="text-[8px]" />
+                    </a>
+                  )}
+                </div>
               </td>
               <td className="py-4 pr-4 text-slate-600">{course.category}</td>
               <td className="py-4 pr-4 text-slate-600">{course.duration_weeks} weeks</td>

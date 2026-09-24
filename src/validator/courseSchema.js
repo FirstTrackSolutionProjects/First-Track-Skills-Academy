@@ -16,6 +16,7 @@ export const createCourseSchema = z.object({
   description: z.string().trim().max(2000).optional(),
   duration_weeks: z.coerce.number().int().positive(),
   thumbnail_url: z.string().trim().max(500).optional(),
+  google_classroom_link: z.string().trim().max(500).optional().or(z.literal("")),
 });
 
 export const createBatchSchema = z.object({

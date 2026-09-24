@@ -582,17 +582,30 @@ const CourseClasses = () => {
                 <span className="font-semibold">Status:</span>
                 <span className="text-emerald-600 font-bold">Class Room Active</span>
               </div>
+              {course?.google_classroom_link && (
+                <div className="flex justify-between text-slate-600 truncate">
+                  <span className="font-semibold shrink-0">Classroom:</span>
+                  <a
+                    href={course.google_classroom_link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-600 hover:underline truncate max-w-[280px]"
+                  >
+                    {course.google_classroom_link}
+                  </a>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-3">
               <button
                 onClick={() => {
-                  window.open("https://meet.google.com", "_blank");
+                  window.open(course?.google_classroom_link || "https://classroom.google.com", "_blank");
                   setShowLiveModal(false);
                 }}
                 className="w-full flex items-center justify-center gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 text-sm shadow-md transition"
               >
-                <span>Launch Live Room</span>
+                <span>Launch Google Classroom</span>
                 <FaExternalLinkAlt className="text-xs" />
               </button>
               <button
