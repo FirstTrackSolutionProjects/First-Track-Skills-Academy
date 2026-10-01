@@ -1,13 +1,28 @@
 import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { HiMenuAlt3, HiX } from "react-icons/hi";
-import { FaArrowRight } from "react-icons/fa";
+import {
+  FaArrowRight,
+  FaHome,
+  FaBookOpen,
+  FaGraduationCap,
+  FaInfoCircle,
+  FaBriefcase,
+  FaFileAlt,
+  FaEnvelope,
+  FaSignOutAlt,
+  FaUserGraduate,
+  FaBuilding,
+  FaSignInAlt,
+  FaChartBar,
+} from "react-icons/fa";
 import useStore, { storeActions } from "../store/useStore";
 
 const Navbar = () => {
   const { auth } = useStore();
   const [open, setOpen] = useState(false);
   const [scroll, setScroll] = useState(false);
+
   const role = auth?.user?.role;
   const dashboardPath =
     role === "SUPERADMIN" || role === "ADMIN"
@@ -16,12 +31,14 @@ const Navbar = () => {
       ? "/college-dashboard"
       : "/dashboard";
 
+  // Track window scroll
   useEffect(() => {
-    const handleScroll = () => setScroll(window.scrollY > 40);
+    const handleScroll = () => setScroll(window.scrollY > 30);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Lock background scroll when drawer is open & handle Escape key
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "auto";
     const handleKeyDown = (e) => {
@@ -36,15 +53,26 @@ const Navbar = () => {
     };
   }, [open]);
 
-  // Public menu with Enroll normally included
+  // Automatically close mobile menu on screen resize to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Navigation Items
   const menu = [
-    { name: "Home", path: "/" },
-    { name: "Courses", path: "/courses" },
-    { name: "Enroll", path: "/enroll" },
-    { name: "About", path: "/about" },
-    { name: "Career", path: "/career" },
-    { name: "Program Details", path: "/program-details" },
-    { name: "Contact", path: "/contact" },
+    { name: "Home", path: "/", icon: <FaHome /> },
+    { name: "Courses", path: "/courses", icon: <FaBookOpen /> },
+    { name: "Enroll", path: "/enroll", icon: <FaGraduationCap /> },
+    { name: "About", path: "/about", icon: <FaInfoCircle /> },
+    { name: "Career", path: "/career", icon: <FaBriefcase /> },
+    { name: "Program Details", path: "/program-details", icon: <FaFileAlt /> },
+    { name: "Contact", path: "/contact", icon: <FaEnvelope /> },
   ];
 
   return (
@@ -52,87 +80,51 @@ const Navbar = () => {
       <header
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
           scroll
-            ? "bg-white/95 backdrop-blur-xl shadow-lg py-3"
-            : "bg-white/80 md:bg-transparent backdrop-blur-md md:backdrop-blur-none py-4 md:py-5"
+            ? "bg-white/95 backdrop-blur-xl shadow-md py-2.5 sm:py-3 border-b border-orange-100/80"
+            : "bg-white/90 lg:bg-white/80 backdrop-blur-md py-3 sm:py-4 border-b border-orange-100/40"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-5 lg:px-8 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3">
+          {/* ========================================================= */}
+          {/* Brand Logo & Name (Always on the Left)                   */}
+          {/* ========================================================= */}
+          <NavLink
+            to="/"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 sm:gap-3 group shrink-0"
+          >
+            <img
+              src="/images/companylogo.jpg"
+              alt="First Track"
+              className="w-10 h-10 sm:w-12 sm:h-12 lg:w-13 lg:h-13 rounded-full border-2 border-orange-500 object-cover shadow-sm transition group-hover:scale-105 shrink-0"
+            />
 
-          {/* Left: Burger Button on mobile/tablet & Logo Branding */}
-          <div className="flex items-center gap-3 shrink-0">
-            {/* Mobile & Tablet Collapsible Burger Button (on the left) */}
-            <button
-              onClick={() => setOpen(!open)}
-              aria-label={open ? "Close Navigation Menu" : "Open Navigation Menu"}
-              aria-expanded={open}
-              className={`xl:hidden flex items-center justify-center p-1.5 rounded-xl text-3xl transition ${
-                scroll ? "text-gray-900" : "text-black"
-              }`}
-            >
-              {open ? <HiX /> : <HiMenuAlt3 />}
-            </button>
-
-            {/* Logo Branding */}
-            <NavLink
-              to="/"
-              className="flex items-center gap-3 shrink-0 group"
-            >
-              <img
-                src="/images/companylogo.jpg"
-                alt="First Track"
-                className="w-12 h-12 lg:w-14 lg:h-14 rounded-full border-2 border-orange-500 object-cover shadow-md transition group-hover:scale-105 shrink-0"
-              />
-
-              {/* Desktop Brand Text */}
-              <div className="hidden md:block shrink-0">
-                <h2
-                  className={`font-extrabold leading-tight transition ${
-                    scroll ? "text-gray-900" : "text-black"
-                  }`}
-                >
-                  First Track
-                  <span className="text-orange-500"> Skills Academy</span>
-                </h2>
-
-                <p
-                  className={`text-xs ${
-                    scroll ? "text-gray-700" : "text-gray-800"
-                  }`}
-                >
-                  Learn • Grow • Succeed
-                </p>
-              </div>
-
-              {/* Mobile Brand Text */}
-              <div className="md:hidden leading-tight">
-                <h2
-                  className={`text-base font-extrabold ${
-                    scroll ? "text-gray-900" : "text-black"
-                  }`}
-                >
-                  First Track
-                </h2>
-
-                <p className="text-orange-500 text-xs font-semibold">
+            <div className="leading-tight">
+              <div className="text-sm sm:text-base lg:text-lg font-black text-gray-900 tracking-tight flex flex-col sm:flex-row sm:items-baseline sm:gap-1.5">
+                <span className="leading-none sm:leading-tight">First Track</span>
+                <span className="text-orange-500 text-xs sm:text-base lg:text-lg font-extrabold leading-none sm:leading-tight">
                   Skills Academy
-                </p>
+                </span>
               </div>
-            </NavLink>
-          </div>
+              <p className="text-[10px] sm:text-xs font-semibold text-gray-500 hidden md:block mt-0.5">
+                Learn • Grow • Succeed
+              </p>
+            </div>
+          </NavLink>
 
-          {/* Desktop Menu */}
-          <nav className="hidden xl:flex items-center gap-1 bg-white/10 backdrop-blur-xl rounded-full border border-white/20 px-3 py-2 shrink-0">
+          {/* ========================================================= */}
+          {/* Desktop Navigation Links (Visible on lg: 1024px and up)   */}
+          {/* ========================================================= */}
+          <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1 bg-white/70 backdrop-blur-xl rounded-full border border-orange-100/80 px-2.5 xl:px-3 py-1.5 shadow-2xs">
             {menu.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `whitespace-nowrap px-3.5 py-2 rounded-full font-medium transition ${
+                  `whitespace-nowrap px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-sm font-semibold transition ${
                     isActive
-                      ? "bg-orange-500 text-white"
-                      : scroll
-                      ? "text-gray-700 hover:text-orange-500 hover:bg-orange-100"
-                      : "text-black hover:bg-white/20"
+                      ? "bg-orange-500 text-white shadow-xs"
+                      : "text-gray-700 hover:text-orange-600 hover:bg-orange-50"
                   }`
                 }
               >
@@ -141,190 +133,227 @@ const Navbar = () => {
             ))}
           </nav>
 
-          {/* Desktop CTA */}
+          {/* ========================================================= */}
+          {/* Desktop Right CTAs (Visible on lg: 1024px and up)         */}
+          {/* ========================================================= */}
           {auth ? (
-            <div className="hidden xl:flex items-center gap-3 shrink-0">
+            <div className="hidden lg:flex items-center gap-2.5 shrink-0">
               <NavLink
                 to={dashboardPath}
-                className="flex items-center gap-2 rounded-full border border-orange-200 bg-white px-5 py-2.5 font-semibold text-orange-600 transition hover:bg-orange-50 whitespace-nowrap"
+                className="flex items-center gap-1.5 rounded-full border border-orange-200 bg-white px-4 py-2 text-xs xl:text-sm font-bold text-orange-600 transition hover:bg-orange-50 whitespace-nowrap shadow-xs"
               >
-                Dashboard
+                <FaChartBar className="text-xs" />
+                <span>Dashboard</span>
               </NavLink>
               <button
                 onClick={storeActions.clearAuth}
-                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-full font-semibold transition hover:scale-105 whitespace-nowrap"
+                className="flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white px-4 xl:px-5 py-2 rounded-full text-xs xl:text-sm font-bold transition hover:scale-102 whitespace-nowrap shadow-xs"
               >
-                Logout
-                <FaArrowRight size={14} />
+                <span>Logout</span>
+                <FaArrowRight size={11} />
               </button>
             </div>
           ) : (
-            <div className="hidden xl:flex items-center gap-2.5 shrink-0">
+            <div className="hidden lg:flex items-center gap-2 shrink-0">
               <NavLink
                 to="/student-onboarding"
-                className="flex items-center gap-1.5 rounded-full border border-orange-200 bg-white px-4 py-2.5 font-semibold text-orange-600 transition hover:bg-orange-50 hover:border-orange-300 whitespace-nowrap shadow-xs"
+                className="hidden xl:inline-flex items-center gap-1 rounded-full border border-orange-200 bg-white px-3.5 py-2 text-xs xl:text-sm font-semibold text-orange-600 transition hover:bg-orange-50 whitespace-nowrap shadow-2xs"
               >
-                Register as Student
+                Student
               </NavLink>
               <NavLink
                 to="/college-onboarding"
-                className="flex items-center gap-1.5 rounded-full border border-orange-200 bg-white px-4 py-2.5 font-semibold text-orange-600 transition hover:bg-orange-50 hover:border-orange-300 whitespace-nowrap shadow-xs"
+                className="hidden 2xl:inline-flex items-center gap-1 rounded-full border border-orange-200 bg-white px-3.5 py-2 text-xs xl:text-sm font-semibold text-orange-600 transition hover:bg-orange-50 whitespace-nowrap shadow-2xs"
               >
-                College Account
+                College
+              </NavLink>
+              <NavLink
+                to="/enroll"
+                className="inline-flex items-center gap-1 rounded-full border border-orange-200 bg-orange-50 hover:bg-orange-100 px-3.5 py-2 text-xs xl:text-sm font-bold text-orange-700 transition whitespace-nowrap shadow-2xs"
+              >
+                Enroll
               </NavLink>
               <NavLink
                 to="/login"
-                className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 font-semibold rounded-full transition hover:scale-105 whitespace-nowrap shadow-sm"
+                className="flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white px-4 xl:px-5 py-2 font-bold text-xs xl:text-sm rounded-full transition hover:scale-102 whitespace-nowrap shadow-sm"
               >
-                Login
-                <FaArrowRight size={13} />
+                <span>Login</span>
+                <FaArrowRight size={11} />
               </NavLink>
             </div>
           )}
 
-          {/* Mobile & Tablet Right CTA buttons */}
-          <div className="xl:hidden flex items-center gap-2 shrink-0">
+          {/* ========================================================= */}
+          {/* Mobile & Tablet Header Right Actions (< 1024px)           */}
+          {/* ========================================================= */}
+          <div className="lg:hidden flex items-center gap-2 sm:gap-2.5 shrink-0">
             {auth ? (
               <NavLink
                 to={dashboardPath}
-                className="rounded-full bg-orange-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-orange-600 transition whitespace-nowrap"
+                className="inline-flex items-center gap-1 rounded-full bg-orange-500 hover:bg-orange-600 text-white px-3 sm:px-4 py-1.5 text-xs font-bold shadow-xs transition whitespace-nowrap"
               >
-                Dashboard
+                <FaChartBar className="text-[10px]" />
+                <span>Dashboard</span>
               </NavLink>
             ) : (
               <>
                 <NavLink
                   to="/student-onboarding"
-                  className="rounded-full border border-orange-200 bg-white px-3 py-1.5 text-xs font-semibold text-orange-600 shadow-xs hover:bg-orange-50 transition whitespace-nowrap"
+                  className="hidden sm:inline-flex items-center rounded-full border border-orange-200 bg-white hover:bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-600 shadow-2xs transition whitespace-nowrap"
                 >
                   Register
                 </NavLink>
                 <NavLink
                   to="/login"
-                  className="rounded-full bg-orange-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-orange-600 transition whitespace-nowrap"
+                  className="inline-flex items-center gap-1 rounded-full bg-orange-500 hover:bg-orange-600 text-white px-3 sm:px-3.5 py-1.5 text-xs font-bold shadow-xs transition whitespace-nowrap"
                 >
-                  Login
+                  <FaSignInAlt className="text-[10px]" />
+                  <span>Login</span>
                 </NavLink>
               </>
             )}
-          </div>
 
+            {/* Hamburger Toggle Button (Cleanly Positioned on the Right) */}
+            <button
+              onClick={() => setOpen(!open)}
+              aria-label={open ? "Close Navigation Menu" : "Open Navigation Menu"}
+              aria-expanded={open}
+              className="flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 rounded-xl border border-orange-200 bg-orange-50/80 text-orange-700 hover:bg-orange-100 hover:text-orange-800 transition shadow-2xs text-xl sm:text-2xl shrink-0"
+            >
+              {open ? <HiX /> : <HiMenuAlt3 />}
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* Mobile Collapsible Burger Menu Drawer (from the LEFT) */}
+      {/* ========================================================= */}
+      {/* Mobile & Tablet Slide-Over Navigation Drawer (from Right) */}
+      {/* ========================================================= */}
       <div
-        className={`fixed inset-0 z-[999] transition-all duration-300 ${
-          open ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
+        className={`fixed inset-0 z-[999] transition-opacity duration-300 ${
+          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
       >
         {/* Backdrop */}
         <div
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
           onClick={() => setOpen(false)}
         />
 
-        {/* Collapsible Panel on the LEFT */}
+        {/* Drawer Content Panel (Right-Aligned) */}
         <div
-          className={`absolute left-0 top-0 flex h-full w-[85%] max-w-sm flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
-            open ? "translate-x-0" : "-translate-x-full"
+          className={`absolute right-0 top-0 flex h-full w-[85%] max-w-sm flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
+            open ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          {/* Top Header */}
-          <div className="flex shrink-0 justify-between items-center p-6 border-b">
+          {/* Drawer Top Header */}
+          <div className="flex shrink-0 items-center justify-between border-b border-orange-100 px-5 py-4 bg-orange-50/40">
             <div className="flex items-center gap-3">
               <img
                 src="/images/companylogo.jpg"
                 alt="First Track"
-                className="w-12 h-12 rounded-full border border-orange-300 object-cover"
+                className="w-10 h-10 rounded-full border-2 border-orange-500 object-cover"
               />
-              <div>
-                <h2 className="font-bold text-lg leading-tight">First Track</h2>
-                <p className="text-orange-500 text-sm font-semibold">Skills Academy</p>
+              <div className="leading-tight">
+                <h2 className="font-extrabold text-slate-900 text-sm">First Track</h2>
+                <p className="text-orange-500 text-xs font-bold">Skills Academy</p>
               </div>
             </div>
 
             <button
               onClick={() => setOpen(false)}
-              className="text-3xl text-gray-700 hover:text-orange-600 transition"
-              aria-label="Close menu"
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-500 hover:text-orange-600 hover:border-orange-300 transition text-xl shadow-2xs"
+              aria-label="Close navigation menu"
             >
               <HiX />
             </button>
           </div>
 
-          {/* Links */}
-          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-6">
+          {/* Drawer Links List */}
+          <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-4 sm:p-5">
+            <p className="px-3 pt-1 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Navigation Menu
+            </p>
             {menu.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
                 onClick={() => setOpen(false)}
                 className={({ isActive }) =>
-                  `px-5 py-3.5 rounded-2xl font-medium transition ${
+                  `flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition ${
                     isActive
-                      ? "bg-orange-500 text-white font-bold"
-                      : "text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+                      ? "bg-orange-500 text-white font-bold shadow-xs"
+                      : "text-slate-700 hover:bg-orange-50 hover:text-orange-600"
                   }`
                 }
               >
-                {item.name}
+                <span className="text-base shrink-0 opacity-80">{item.icon}</span>
+                <span>{item.name}</span>
               </NavLink>
             ))}
           </div>
 
-          {/* Bottom Actions */}
-          <div className="shrink-0 border-t border-orange-100 bg-white p-6">
+          {/* Drawer Bottom Actions */}
+          <div className="shrink-0 border-t border-orange-100 bg-slate-50/70 p-4 sm:p-5 space-y-3">
             {auth ? (
-              <div className="grid gap-3">
+              <div className="space-y-2.5">
                 <NavLink
                   to={dashboardPath}
                   onClick={() => setOpen(false)}
-                  className="w-full flex items-center justify-center gap-2 bg-orange-50 border border-orange-300 text-orange-600 py-3.5 rounded-2xl font-bold transition hover:bg-orange-100"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white py-3 text-sm font-bold shadow-sm transition"
                 >
-                  Go to Dashboard
+                  <FaChartBar />
+                  <span>Go to Dashboard</span>
                 </NavLink>
+
                 <button
                   onClick={() => {
                     storeActions.clearAuth();
                     setOpen(false);
                   }}
-                  className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-3.5 rounded-2xl font-semibold transition"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 py-2.5 text-xs font-bold transition shadow-2xs"
                 >
-                  Logout
-                  <FaArrowRight />
+                  <FaSignOutAlt />
+                  <span>Logout</span>
                 </button>
               </div>
             ) : (
-              <div className="grid gap-2.5">
+              <div className="space-y-2.5">
                 <NavLink
                   to="/student-onboarding"
                   onClick={() => setOpen(false)}
-                  className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-3.5 rounded-2xl text-base font-bold shadow-md shadow-orange-200 transition hover:scale-105"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white py-3 text-sm font-bold shadow-md shadow-orange-100 transition"
                 >
-                  Register as Student
-                  <FaArrowRight />
+                  <FaUserGraduate />
+                  <span>Register as Student</span>
+                  <FaArrowRight size={11} />
                 </NavLink>
+
                 <div className="grid grid-cols-2 gap-2">
                   <NavLink
                     to="/login"
                     onClick={() => setOpen(false)}
-                    className="flex items-center justify-center gap-1.5 rounded-2xl border border-gray-300 bg-white py-2.5 text-xs font-bold text-gray-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
+                    className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-bold text-slate-700 shadow-2xs transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
                   >
+                    <FaSignInAlt className="text-[11px]" />
                     <span>Login</span>
                   </NavLink>
                   <NavLink
                     to="/college-onboarding"
                     onClick={() => setOpen(false)}
-                    className="flex items-center justify-center gap-1.5 rounded-2xl border border-orange-200 bg-white py-2.5 text-xs font-bold text-orange-600 shadow-sm transition hover:bg-orange-50"
+                    className="flex items-center justify-center gap-1.5 rounded-xl border border-orange-200 bg-white py-2.5 text-xs font-bold text-orange-600 shadow-2xs transition hover:bg-orange-50"
                   >
-                    <span>College Account</span>
+                    <FaBuilding className="text-[11px]" />
+                    <span>College</span>
                   </NavLink>
                 </div>
               </div>
             )}
-          </div>
 
+            <div className="pt-2 text-center text-[11px] font-medium text-slate-400">
+              First Track Skills Academy • 2026
+            </div>
+          </div>
         </div>
       </div>
     </>
