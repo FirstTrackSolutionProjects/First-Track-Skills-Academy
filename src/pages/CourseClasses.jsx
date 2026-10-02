@@ -220,28 +220,30 @@ const CourseClasses = () => {
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900">
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-md px-4 py-3 sm:px-8">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <div className="flex items-center gap-4">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-md px-3 sm:px-8 py-2.5 sm:py-3 shadow-2xs">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <button
               onClick={() => navigate("/dashboard")}
-              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 transition shadow-sm"
+              className="flex items-center gap-1.5 sm:gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-slate-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 transition shadow-2xs"
             >
-              <FaArrowLeft />
-              <span>Back to Dashboard</span>
+              <FaArrowLeft className="text-xs sm:text-sm" />
+              <span className="hidden sm:inline">Back to Dashboard</span>
+              <span className="sm:hidden">Dashboard</span>
             </button>
             <div className="hidden sm:block h-6 w-px bg-slate-200" />
-            <span className="hidden sm:inline-block text-sm font-semibold text-slate-500">
+            <span className="hidden md:inline-block text-xs sm:text-sm font-semibold text-slate-500">
               Student Classroom Portal
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="rounded-full bg-blue-50 border border-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
+          <div className="flex items-center justify-end gap-1.5 sm:gap-3 shrink-0">
+            <span className="rounded-full bg-blue-50 border border-blue-100 px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-bold text-blue-700 whitespace-nowrap">
               {course?.batch_timing || "MORNING"} BATCH
             </span>
-            <span className="rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-bold text-amber-700">
-              PENDING - AWAITING BATCH ALLOCATION
+            <span className="hidden xs:inline-flex rounded-full bg-amber-50 border border-amber-200 px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-bold text-amber-700 whitespace-nowrap">
+              <span className="hidden sm:inline">PENDING - AWAITING BATCH ALLOCATION</span>
+              <span className="sm:hidden">PENDING ALLOCATION</span>
             </span>
           </div>
         </div>

@@ -65,6 +65,18 @@ const CollegeDashboard = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? "hidden" : "auto";
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setMobileMenuOpen(false);
+    };
+    if (mobileMenuOpen) window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "auto";
+    };
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
     const loadDashboard = async () => {
       try {
         const data = await getCollegeDashboard(auth.token);
@@ -249,78 +261,99 @@ const CollegeDashboard = () => {
       </aside>
 
       <div className="lg:ml-[245px]">
-        <header className="sticky top-0 z-20 border-b border-orange-100 bg-white/95 backdrop-blur-md px-4 py-3.5 shadow-sm sm:px-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
-            <div className="flex min-w-0 items-center gap-3.5 sm:gap-5">
-              {/* Mobile Burger Menu Button on the LEFT */}
+        <header className="sticky top-0 z-20 border-b border-orange-100 bg-white/95 backdrop-blur-md px-3 sm:px-6 py-2.5 sm:py-3.5 shadow-2xs">
+          <div className="flex items-center justify-between gap-2.5 sm:gap-4">
+            {/* Left: Mobile Hamburger & Brand (< lg) / Desktop Panel Heading (lg+) */}
+            <div className="flex min-w-0 items-center gap-2.5 sm:gap-4">
+              {/* Mobile Burger Menu Button */}
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(true)}
                 aria-label="Open Navigation Menu"
-                className="lg:hidden flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 hover:text-orange-800 transition shadow-xs"
+                className="lg:hidden flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 hover:text-orange-800 transition shadow-2xs"
               >
-                <FaBars className="text-lg" />
+                <FaBars className="text-base sm:text-lg" />
               </button>
 
-              {/* Attached Brand Logo on Upper Bar */}
-              <Link to="/" className="group flex shrink-0 items-center gap-3" title="First Track Skills Academy">
+              {/* Mobile / Tablet Brand (< lg) */}
+              <Link to="/" className="lg:hidden flex items-center gap-2 sm:gap-2.5 shrink-0" title="First Track Skills Academy">
                 <img
                   src="/images/companylogo.jpg"
                   alt="First Track"
-                  className="h-11 w-11 sm:h-12 sm:w-12 rounded-full border-2 border-orange-500 object-cover shadow-md transition group-hover:scale-105"
+                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-full border-2 border-orange-500 object-cover shadow-2xs"
                 />
                 <div className="leading-tight">
-                  <h1 className="text-base sm:text-lg font-extrabold text-gray-900 leading-tight">
-                    First Track <span className="text-orange-500">Skills Academy</span>
-                  </h1>
-                  <p className="text-[11px] font-semibold text-gray-500 hidden sm:block">
+                  <div className="text-xs sm:text-sm font-black text-gray-900 leading-tight">
+                    First Track <span className="text-orange-500 font-extrabold">Skills</span>
+                  </div>
+                  <p className="text-[10px] font-semibold text-gray-400 hidden sm:block">
                     Learn • Grow • Succeed
                   </p>
                 </div>
               </Link>
 
-              {/* Vertical divider */}
-              <div className="hidden md:block h-10 w-px bg-orange-200"></div>
-
-              {/* Active Menu & Panel Info */}
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="hidden lg:flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-xl text-orange-600 shadow-sm">
+              {/* Desktop Active Menu & Panel Info (Visible on lg: 1024px+) */}
+              <div className="hidden lg:flex items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-xl text-orange-600 shadow-2xs">
                   <FaChartBar />
                 </div>
-                <div className="min-w-0">
-                  <span className="inline-block bg-orange-100 text-orange-700 border border-orange-200 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase">
+                <div>
+                  <span className="inline-block bg-orange-100 text-orange-700 border border-orange-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase">
                     COLLEGE PANEL
                   </span>
-                  <h2 className="break-words text-xl sm:text-2xl font-bold text-gray-900 leading-tight mt-0.5">{activeMenu}</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight mt-0.5">
+                    {activeMenu}
+                  </h2>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-              <Link
-                to="/"
-                className="flex items-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-orange-700 shadow-sm transition hover:bg-orange-100 hover:text-orange-800"
-                title="Return to Website Homepage"
-              >
-                <FaHome className="text-orange-500" />
-                <span>Homepage</span>
-              </Link>
-              <Link
-                to="/courses"
-                className="hidden sm:flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
-                title="Browse Courses"
-              >
-                <span>Courses</span>
-              </Link>
-              <Link
-                to="/career"
-                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
-                title="Explore Career Portal"
-              >
-                <span>Career</span>
-              </Link>
-              <div className="w-fit rounded-full border border-orange-200 bg-orange-50/50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-orange-700">
-                {auth.user.role}
+            {/* Right: Mobile Section Pill & Actions (< lg) / Desktop Quick Links (lg+) */}
+            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+              {/* Mobile Right Controls (< lg) */}
+              <div className="lg:hidden flex items-center gap-1.5 sm:gap-2">
+                <span className="inline-flex items-center px-2 sm:px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-orange-100 text-orange-800 border border-orange-200/80 truncate max-w-[110px] sm:max-w-[160px] shadow-2xs">
+                  {activeMenu}
+                </span>
+                <Link
+                  to="/"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 hover:text-orange-800 transition shadow-2xs"
+                  title="Return to Website Homepage"
+                >
+                  <FaHome className="text-sm text-orange-600" />
+                </Link>
+                <span className="hidden sm:inline-flex items-center rounded-full border border-orange-200 bg-orange-50/70 px-2.5 py-1 text-xs font-bold text-orange-700">
+                  {auth.user.role}
+                </span>
+              </div>
+
+              {/* Desktop Quick Links (lg+) */}
+              <div className="hidden lg:flex items-center gap-2.5">
+                <Link
+                  to="/"
+                  className="flex items-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3.5 py-2 text-xs font-bold text-orange-700 shadow-2xs transition hover:bg-orange-100 hover:text-orange-800"
+                  title="Return to Website Homepage"
+                >
+                  <FaHome className="text-orange-500" />
+                  <span>Homepage</span>
+                </Link>
+                <Link
+                  to="/courses"
+                  className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-700 shadow-2xs transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
+                  title="Browse Courses"
+                >
+                  <span>Courses</span>
+                </Link>
+                <Link
+                  to="/career"
+                  className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-700 shadow-2xs transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600"
+                  title="Explore Career Portal"
+                >
+                  <span>Career</span>
+                </Link>
+                <div className="rounded-full border border-orange-200 bg-orange-50/70 px-3.5 py-1.5 text-xs font-bold text-orange-700 shadow-2xs">
+                  {auth.user.role}
+                </div>
               </div>
             </div>
           </div>
