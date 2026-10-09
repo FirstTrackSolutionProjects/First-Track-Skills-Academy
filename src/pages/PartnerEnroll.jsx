@@ -51,9 +51,14 @@ const PartnerEnroll = () => {
         const partnerData = await verifyPartner(partnerCode);
         setPartner(partnerData);
 
-        // Adjust default payment mode based on college preference if configured
+        // Adjust default payment mode based on college preference and URL param
+        const urlMode = searchParams.get("paymentMode");
         if (partnerData?.cohort_payment_mode === "OFFLINE_ONLY") {
           setPaymentMode("OFFLINE");
+        } else if (partnerData?.cohort_payment_mode === "ONLINE_ONLY") {
+          setPaymentMode("ONLINE");
+        } else if (urlMode === "OFFLINE" || urlMode === "ONLINE") {
+          setPaymentMode(urlMode);
         } else {
           setPaymentMode("ONLINE");
         }

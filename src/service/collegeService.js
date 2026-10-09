@@ -50,3 +50,10 @@ export const getSuperadminStudents = async (_token, params = {}) => {
   });
   return response.data.data;
 };
+
+export const updateCollegePaymentMode = async (cohort_payment_mode, collegeId) => {
+  const url = collegeId ? `/${collegeId}/payment-mode` : '/payment-mode';
+  const response = await axiosCollegeInstance.patch(url, { cohort_payment_mode });
+  return response.data.data;
+};
+

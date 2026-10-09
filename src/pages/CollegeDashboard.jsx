@@ -17,9 +17,13 @@ import {
   FaTimes,
   FaUsers,
   FaUserGraduate,
+  FaCheck,
+  FaCreditCard,
+  FaBuilding,
+  FaArrowRight,
 } from "react-icons/fa";
 import useStore, { storeActions } from "../store/useStore";
-import { getCollegeDashboard } from "../service/collegeService";
+import { getCollegeDashboard, updateCollegePaymentMode } from "../service/collegeService";
 import CollegeAttendancePanel from "../components/attendance/CollegeAttendancePanel";
 
 const menuSections = [
@@ -362,7 +366,11 @@ const CollegeDashboard = () => {
         <main className="p-4 space-y-6 sm:p-6">
           {activeMenu === "Dashboard" && (
             <>
-              <HeroPanel profile={profile} metrics={dashboard.metrics} />
+              <HeroPanel
+                profile={profile}
+                metrics={dashboard.metrics}
+                onConfigurePayment={() => setActiveMenu("Partner Link")}
+              />
               <MetricSection dashboard={dashboard} />
               <CourseSummary courses={dashboard.courses} onOpenCourse={openCourse} />
             </>
@@ -409,7 +417,7 @@ const CollegeDashboard = () => {
   );
 };
 
-const HeroPanel = ({ profile, metrics }) => (
+const HeroPanel = ({ profile, metrics, onConfigurePayment }) => (
   <section className="bg-white border border-slate-200 rounded-lg shadow-sm p-4 sm:p-6">
     <div className="grid xl:grid-cols-[minmax(0,1fr)_minmax(280px,520px)] gap-6 items-center">
       <div>
@@ -429,6 +437,40 @@ const HeroPanel = ({ profile, metrics }) => (
         <MiniMetric label="BATCHES" value={metrics.active_batches} tone="amber" />
         <MiniMetric label="STATUS" value={profile.status} tone="violet" />
       </div>
+    </div>
+
+    {/* Cohort Payment Mode Status Banner */}
+    <div className="mt-6 pt-5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-orange-50/60 rounded-xl p-4 border border-orange-200">
+      <div>
+        <span className="text-[11px] font-black uppercase tracking-wider text-orange-700 flex items-center gap-1.5">
+          <FaCreditCard /> Cohort Fee Collection &amp; Payment Policy
+        </span>
+        <p className="text-sm font-bold text-slate-900 mt-1">
+          Current Setting:{" "}
+          <span className="text-orange-600">
+            {profile.cohort_payment_mode === "OFFLINE_ONLY"
+              ? "Offline Campus Collection Only (Online Disabled)"
+              : profile.cohort_payment_mode === "ONLINE_ONLY"
+              ? "Online Payment Only (Compulsory Razorpay)"
+              : "Student Choice (Online Razorpay or Campus Offline)"}
+          </span>
+        </p>
+        <p className="text-xs text-slate-600 mt-0.5">
+          {profile.cohort_payment_mode === "OFFLINE_ONLY"
+            ? "Students enroll with status APPLIED while your college collects tuition offline on campus."
+            : profile.cohort_payment_mode === "ONLINE_ONLY"
+            ? "Students must complete online payment via Razorpay to be ENROLLED."
+            : "Students can choose either to pay online via Razorpay or offline via your college campus."}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onConfigurePayment}
+        className="shrink-0 inline-flex items-center gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white px-4 py-2.5 text-xs font-bold shadow-xs transition cursor-pointer"
+      >
+        <span>Change Payment Mode</span>
+        <FaArrowRight className="text-[10px]" />
+      </button>
     </div>
   </section>
 );
@@ -572,14 +614,104 @@ const CourseDetails = ({ course, onBack, onOpenStudent }) => (
   </Panel>
 );
 
-const PartnerPanel = ({ profile }) => (
-  <Panel icon={<FaLink />} title="Partner Link">
-    <div className="grid gap-5">
-      <InfoBox label="Student Join Link" value={profile.partner_link} />
-      <InfoBox label="Partner Code" value={profile.partner_code} />
-    </div>
-  </Panel>
-);
+const PartnerPanel = ({ profile, onPaymentModeChange }) => {
+  const [mode, setMode] = useState(profile.cohort_payment_mode || "STUDENT_CHOICE");
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async (newMode) => {
+    try {
+      setSaving(true);
+      await updateCollegePaymentMode(newMode);
+      setMode(newMode);
+      toast.success("Cohort payment setting updated!");
+      onPaymentModeChange?.(newMode);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update payment setting");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Panel icon={<FaLink />} title="Partner Link & Fee Settings">
+      <div className="grid gap-5">
+        <InfoBox label="Student Join Link" value={profile.partner_link} />
+        <InfoBox label="Partner Code" value={profile.partner_code} />
+
+        <div className="border border-slate-200 rounded-xl bg-white p-5 shadow-xs">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <p className="text-sm font-bold text-slate-900">Cohort Fee Collection & Payment Option</p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Configure how students joining via your partner link pay their course admission fees.
+              </p>
+            </div>
+            {saving && <FaSpinner className="animate-spin text-orange-500 text-sm" />}
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-3 mt-4">
+            <button
+              type="button"
+              onClick={() => handleSave("STUDENT_CHOICE")}
+              disabled={saving}
+              className={`p-3.5 rounded-xl border-2 text-left transition cursor-pointer ${
+                mode === "STUDENT_CHOICE" || mode === "BOTH"
+                  ? "border-orange-500 bg-orange-50/70 text-orange-950 font-bold shadow-2xs"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold">Student Choice</span>
+                {(mode === "STUDENT_CHOICE" || mode === "BOTH") && <FaCheck className="text-orange-600 text-xs" />}
+              </div>
+              <p className="text-[11px] font-medium text-slate-500 mt-1.5 leading-snug">
+                Students can choose either to pay online via Razorpay or offline on campus.
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSave("OFFLINE_ONLY")}
+              disabled={saving}
+              className={`p-3.5 rounded-xl border-2 text-left transition cursor-pointer ${
+                mode === "OFFLINE_ONLY"
+                  ? "border-purple-600 bg-purple-50/70 text-purple-950 font-bold shadow-2xs"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold">Offline Campus Only</span>
+                {mode === "OFFLINE_ONLY" && <FaCheck className="text-purple-600 text-xs" />}
+              </div>
+              <p className="text-[11px] font-medium text-slate-500 mt-1.5 leading-snug">
+                Disable online payment. College collects fees offline; students join with status APPLIED.
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSave("ONLINE_ONLY")}
+              disabled={saving}
+              className={`p-3.5 rounded-xl border-2 text-left transition cursor-pointer ${
+                mode === "ONLINE_ONLY"
+                  ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 font-bold shadow-2xs"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold">Online Payment Only</span>
+                {mode === "ONLINE_ONLY" && <FaCheck className="text-emerald-600 text-xs" />}
+              </div>
+              <p className="text-[11px] font-medium text-slate-500 mt-1.5 leading-snug">
+                Students must pay fee online via Razorpay to complete enrollment.
+              </p>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Panel>
+  );
+};
 
 const ProfilePanel = ({ profile }) => (
   <Panel icon={<FaUserGraduate />} title="College Profile">

@@ -12,6 +12,7 @@ import {
   FaCheckCircle,
   FaReceipt,
   FaCheck,
+  FaBuilding,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { COURSES_ENUM } from "../constants/enums";
@@ -860,6 +861,52 @@ const Enroll = () => {
                     </span>
                   </div>
                 </div>
+
+                {/* ACCEPTED PAYMENT MODES */}
+                <div className="mt-4 pt-3.5 border-t border-orange-200/60 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <span className="font-bold text-slate-700">Payment Gateways &amp; Methods:</span>
+                  <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                    <span className="rounded-lg bg-white border border-slate-200 px-2.5 py-1 font-semibold text-slate-700">
+                      UPI (GPay / PhonePe / Paytm / QR)
+                    </span>
+                    <span className="rounded-lg bg-white border border-slate-200 px-2.5 py-1 font-semibold text-slate-700">
+                      Cards (Visa / MasterCard / RuPay)
+                    </span>
+                    <span className="rounded-lg bg-white border border-slate-200 px-2.5 py-1 font-semibold text-slate-700">
+                      Net Banking (50+ Banks)
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* COLLEGE COHORT PARTNER LINK HELPER */}
+              <div className="mt-4 rounded-xl border border-dashed border-orange-300 bg-orange-50/50 p-4 text-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-8 w-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 font-bold">
+                    <FaBuilding />
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-900 block">
+                      Joining through a College / University Partner Link?
+                    </span>
+                    <span className="text-slate-600">
+                      College cohorts may have campus offline fee collection or special batch schedules.
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const code = window.prompt("Enter your College Partner Code (e.g. ABCD12):");
+                    if (code && code.trim()) {
+                      navigate(`/join/${code.trim()}`);
+                    }
+                  }}
+                  className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-orange-300 bg-white px-3 py-1.5 font-bold text-orange-700 hover:bg-orange-50 transition cursor-pointer"
+                >
+                  <span>Use Partner Code</span>
+                  <FaArrowRight className="text-[10px]" />
+                </button>
               </div>
 
               <div className="mt-6 flex items-center gap-3">
