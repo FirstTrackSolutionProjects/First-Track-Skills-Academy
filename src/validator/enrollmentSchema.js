@@ -9,5 +9,6 @@ export const enrollCohortCourseSchema = z.object({
   course_id: validateIdSchema,
   partner_code: z.string().trim().min(3, { message: "Partner code is required" }),
   batch_timing: batchTimingEnum,
+  payment_mode: z.enum(["OFFLINE", "ONLINE"]).optional(),
 });
 

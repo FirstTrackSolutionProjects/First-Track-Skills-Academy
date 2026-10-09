@@ -33,9 +33,11 @@ import {
   FaExclamationTriangle,
   FaCalendarCheck,
   FaExternalLinkAlt,
+  FaCreditCard,
 } from "react-icons/fa";
 import MarkAttendancePanel from "../components/attendance/MarkAttendancePanel";
 import AttendanceSessionsPanel from "../components/attendance/AttendanceSessionsPanel";
+import PaymentTransactionsPanel from "../components/payments/PaymentTransactionsPanel";
 import useStore, { storeActions } from "../store/useStore";
 import { createAdmin } from "../service/adminService";
 import {
@@ -73,6 +75,9 @@ const statusColors = {
   APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-100",
   REJECTED: "bg-rose-50 text-rose-700 border-rose-100",
   ENROLLED: "bg-blue-50 text-blue-700 border-blue-100",
+  APPLIED: "bg-purple-50 text-purple-700 border-purple-200",
+  SUCCESS: "bg-emerald-50 text-emerald-700 border-emerald-100",
+  FAILED: "bg-rose-50 text-rose-700 border-rose-100",
   IN_PROGRESS: "bg-amber-50 text-amber-700 border-amber-100",
   COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-100",
   CANCELLED: "bg-rose-50 text-rose-700 border-rose-100",
@@ -299,6 +304,11 @@ const menuSections = (role) =>
             { name: "Attendance Sessions", icon: <FaHistory /> },
           ],
         },
+        {
+          title: "Payments",
+          icon: <FaCreditCard />,
+          items: [{ name: "Transactions", icon: <FaCreditCard /> }],
+        },
         { title: "Account", icon: <FaUserShield />, items: [{ name: "Profile", icon: <FaUserShield /> }] },
       ]
     : [
@@ -341,6 +351,11 @@ const menuSections = (role) =>
             { name: "Mark Attendance", icon: <FaCalendarCheck /> },
             { name: "Attendance Sessions", icon: <FaHistory /> },
           ],
+        },
+        {
+          title: "Payments",
+          icon: <FaCreditCard />,
+          items: [{ name: "Transactions", icon: <FaCreditCard /> }],
         },
         { title: "Account", icon: <FaUserShield />, items: [{ name: "Profile", icon: <FaUserShield /> }] },
       ];
@@ -1073,6 +1088,10 @@ const AdminDashboard = () => {
                     setActiveMenu("Mark Attendance");
                   }}
                 />
+              )}
+
+              {activeMenu === "Transactions" && (
+                <PaymentTransactionsPanel />
               )}
 
               {activeMenu === "Profile" && (
@@ -3198,10 +3217,18 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
                           Batch: {st.batch_name}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-0.5 shadow-2xs">
-                          <span className="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
-                          Unassigned Batch
-                        </span>
+                        <div className="flex flex-wrap items-center gap-1 mt-1">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-0.5 shadow-2xs">
+                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                            Unassigned Batch
+                          </span>
+                          {st.enrollment_status === "APPLIED" && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200 rounded px-2 py-0.5 shadow-2xs" title="Joined via Partner Link; fees collected offline">
+                              <span className="h-1.5 w-1.5 rounded-full bg-purple-500"></span>
+                              Applied (Offline Fee)
+                            </span>
+                          )}
+                        </div>
                       )}
                       {st.student_courses && st.student_courses.length > 1 && (
                         <div className="mt-1">
@@ -3555,7 +3582,8 @@ const StudentsPanel = ({ colleges, courseOptions, filters, studentsPage, loading
       </SelectInput>
       <SelectInput label="Status" value={filters.enrollment_status} onChange={(value) => onFilterChange("enrollment_status", value)}>
         <option value="">All statuses</option>
-        <option value="ENROLLED">Enrolled</option>
+        <option value="ENROLLED">Enrolled (Verified / Online)</option>
+        <option value="APPLIED">Applied (Offline Fee Pending)</option>
         <option value="IN_PROGRESS">In Progress</option>
         <option value="COMPLETED">Completed</option>
         <option value="CANCELLED">Cancelled</option>

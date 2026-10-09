@@ -1,6 +1,18 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Link, NavLink, useNavigate, useSearchParams, useLocation } from "react-router-dom";
-import { FaArrowRight, FaClock, FaHome, FaPaperPlane, FaSpinner } from "react-icons/fa";
+import {
+  FaArrowRight,
+  FaClock,
+  FaHome,
+  FaPaperPlane,
+  FaSpinner,
+  FaCreditCard,
+  FaShieldAlt,
+  FaLock,
+  FaCheckCircle,
+  FaReceipt,
+  FaCheck,
+} from "react-icons/fa";
 import { toast } from "react-toastify";
 import { COURSES_ENUM } from "../constants/enums";
 import { getCourses } from "../service/courseService";
@@ -10,6 +22,8 @@ import sendEnrollment from "@/services/courses/send_enrollment.courses.service";
 import useStore, { storeActions } from "../store/useStore";
 import { createStudent } from "../service/userService";
 import { login } from "../service/authService";
+import { createPaymentOrder, verifyPayment } from "../service/paymentService";
+import { loadRazorpayScript } from "../utils/loadRazorpay";
 
 const INITIAL_FORM_STATE = Object.freeze({
   first_name: "",
@@ -31,6 +45,15 @@ const INITIAL_FORM_STATE = Object.freeze({
   agree: false,
 });
 
+const mapBatchTiming = (batch = "") => {
+  const upper = (batch || "").toUpperCase();
+  if (upper.includes("MORN")) return "MORNING";
+  if (upper.includes("AFTER")) return "AFTERNOON";
+  if (upper.includes("EVEN")) return "EVENING";
+  if (upper.includes("NIGHT")) return "NIGHT";
+  return "MORNING";
+};
+
 const Enroll = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -40,12 +63,15 @@ const Enroll = () => {
 
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
   const [files, setFiles] = useState({ profileImage: null, resume: null });
-  const [courseList, setCourseList] = useState(
-    Object.values(COURSES_ENUM).map((title) => ({ id: title, title }))
-  );
+  const [courseList, setCourseList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submittedData, setSubmittedData] = useState(null);
+
+  // Dev Mock Sandbox modal state
+  const [mockModalOpen, setMockModalOpen] = useState(false);
+  const [pendingMockOrder, setPendingMockOrder] = useState(null);
+  const [pendingSubmissionPayload, setPendingSubmissionPayload] = useState(null);
 
   const profileRef = useRef(null);
   const resumeRef = useRef(null);
@@ -56,7 +82,7 @@ const Enroll = () => {
     location.state?.courseTitle;
   const isLockedFromInfo = Boolean(paramCourse);
 
-  // Fetch available courses to populate dynamic course titles
+  // Fetch available courses
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -64,10 +90,22 @@ const Enroll = () => {
         if (Array.isArray(data) && data.length > 0) {
           setCourseList(data);
         } else {
-          setCourseList(Object.values(COURSES_ENUM).map((title) => ({ id: title, title })));
+          setCourseList(
+            Object.values(COURSES_ENUM).map((title, idx) => ({
+              id: idx + 1,
+              title,
+              price: 25000,
+            }))
+          );
         }
       } catch (err) {
-        setCourseList(Object.values(COURSES_ENUM).map((title) => ({ id: title, title })));
+        setCourseList(
+          Object.values(COURSES_ENUM).map((title, idx) => ({
+            id: idx + 1,
+            title,
+            price: 25000,
+          }))
+        );
       }
     };
     fetchCourses();
@@ -85,7 +123,7 @@ const Enroll = () => {
     }
   }, [auth]);
 
-  // Set default / preselected course by course.title from URL or state
+  // Set default / preselected course
   useEffect(() => {
     if (paramCourse) {
       setFormData((prev) => ({ ...prev, course: paramCourse }));
@@ -93,6 +131,21 @@ const Enroll = () => {
       setFormData((prev) => ({ ...prev, course: courseList[0].title }));
     }
   }, [paramCourse, courseList]);
+
+  // Identify currently selected course object and price
+  const selectedCourseObj = useMemo(() => {
+    if (!courseList.length) return null;
+    return (
+      courseList.find(
+        (c) =>
+          c.title === formData.course ||
+          c.id === formData.course ||
+          String(c.id) === String(formData.course)
+      ) || courseList[0]
+    );
+  }, [courseList, formData.course]);
+
+  const coursePrice = Number(selectedCourseObj?.price) || 25000;
 
   const handleChange = (e) => {
     const { name, value, type, checked, files: inputFiles } = e.target;
@@ -128,15 +181,15 @@ const Enroll = () => {
       let profile_image = "";
       let resume = "";
 
+      // 1. If not logged in, register student and auto-login
       if (!isLoggedIn) {
-        // Validate password match
         if (formData.password !== formData.confirm_password) {
           toast.error("Passwords do not match");
           setLoading(false);
           return;
         }
 
-        // Upload files if attached (optional)
+        // Upload files if attached
         const uploadList = [];
         if (files.profileImage) {
           uploadList.push({
@@ -169,7 +222,7 @@ const Enroll = () => {
           }
         }
 
-        // Create student account with all profile fields
+        // Create student account
         await createStudent({
           first_name: formData.first_name.trim(),
           middle_name: formData.middle_name ? formData.middle_name.trim() : undefined,
@@ -219,8 +272,8 @@ const Enroll = () => {
         pin: formData.pin || "",
         qualification: formData.qualification || "",
         college: formData.college || "",
-        course: formData.course,
-        mode: "Online", // Mode is always Online
+        course: selectedCourseObj?.title || formData.course,
+        mode: "Online",
         batch: formData.batch,
         files: {
           ...(profile_image ? { profileImage: profile_image } : {}),
@@ -228,25 +281,145 @@ const Enroll = () => {
         },
       };
 
-      await sendEnrollment(submissionPayload);
+      // 2. INITIATE COMPULSORY RAZORPAY PAYMENT
+      const targetCourseId = Number(selectedCourseObj?.id) || 1;
+      const orderData = await createPaymentOrder({
+        course_id: targetCourseId,
+      });
+
+      const isScriptLoaded = await loadRazorpayScript();
+
+      // Fallback to Sandbox Modal if mock mode, keys absent, or script blocked
+      if (
+        orderData.is_mock ||
+        !isScriptLoaded ||
+        !window.Razorpay ||
+        orderData.key_id?.includes("placeholder")
+      ) {
+        setPendingMockOrder(orderData);
+        setPendingSubmissionPayload(submissionPayload);
+        setMockModalOpen(true);
+        setLoading(false);
+        return;
+      }
+
+      // 3. LAUNCH RAZORPAY CHECKOUT MODAL
+      const rzpOptions = {
+        key: orderData.key_id,
+        amount: orderData.amount,
+        currency: orderData.currency || "INR",
+        name: "First Track Skills Academy",
+        description: `Enrollment Fee: ${orderData.course?.title || formData.course}`,
+        image: "/images/companylogo.jpg",
+        order_id: orderData.order_id,
+        prefill: {
+          name: orderData.student?.name || fullName,
+          email: orderData.student?.email || email,
+          contact: orderData.student?.phone || formData.phone_number || "",
+        },
+        theme: {
+          color: "#f97316",
+        },
+        handler: async function (response) {
+          try {
+            setLoading(true);
+            // Verify payment on backend
+            await verifyPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              batch_timing: mapBatchTiming(formData.batch),
+              payment_method: "ONLINE",
+            });
+
+            // Send notification email
+            try {
+              await sendEnrollment(submissionPayload);
+            } catch (err) {
+              console.warn("Enrollment email error:", err);
+            }
+
+            setSubmittedData({
+              fullName,
+              email,
+              course: selectedCourseObj?.title || formData.course,
+              batch: formData.batch,
+              paymentId: response.razorpay_payment_id,
+              orderId: response.razorpay_order_id,
+              amount: coursePrice,
+              date: new Date().toLocaleString(),
+            });
+            setSubmitted(true);
+            toast.success("Payment verified! Course admission completed successfully.");
+          } catch (verifyError) {
+            toast.error(
+              verifyError.response?.data?.message || "Payment verification failed"
+            );
+          } finally {
+            setLoading(false);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setLoading(false);
+            toast.warning("Payment was not completed. Admission requires verified course fee payment.");
+          },
+        },
+      };
+
+      const razorpayInstance = new window.Razorpay(rzpOptions);
+      razorpayInstance.open();
+    } catch (error) {
+      console.error(error);
+      const message =
+        error.response?.data?.message || error.message || "Failed to initiate course enrollment";
+      toast.error(message);
+      setLoading(false);
+    }
+  };
+
+  // Complete Sandbox Mock Payment
+  const handleCompleteMockPayment = async () => {
+    if (!pendingMockOrder) return;
+    try {
+      setLoading(true);
+      const mockPaymentId = `pay_mock_${Date.now()}`;
+      await verifyPayment({
+        razorpay_order_id: pendingMockOrder.order_id,
+        razorpay_payment_id: mockPaymentId,
+        razorpay_signature: "mock_signature_dev_sandbox",
+        batch_timing: mapBatchTiming(formData.batch),
+        payment_method: "ONLINE_MOCK",
+      });
+
+      if (pendingSubmissionPayload) {
+        try {
+          await sendEnrollment(pendingSubmissionPayload);
+        } catch (err) {
+          console.warn("Enrollment email error:", err);
+        }
+      }
+
+      const fullName =
+        pendingSubmissionPayload?.fullName ||
+        [formData.first_name, formData.middle_name, formData.last_name].filter(Boolean).join(" ");
+      const email = pendingSubmissionPayload?.email || formData.email;
 
       setSubmittedData({
         fullName,
         email,
-        course: formData.course,
+        course: selectedCourseObj?.title || formData.course,
         batch: formData.batch,
+        paymentId: mockPaymentId,
+        orderId: pendingMockOrder.order_id,
+        amount: coursePrice,
+        date: new Date().toLocaleString(),
       });
+      setMockModalOpen(false);
       setSubmitted(true);
-
-      toast.success(
-        isLoggedIn
-          ? "Enrollment submitted successfully!"
-          : "Account created and enrolled successfully!"
-      );
-    } catch (error) {
-      console.error(error);
-      const message = error.response?.data?.message || error.message || "Failed to submit enrollment";
-      toast.error(message);
+      toast.success("Sandbox payment verified! Admission completed.");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Mock payment verification failed");
     } finally {
       setLoading(false);
     }
@@ -257,41 +430,67 @@ const Enroll = () => {
       <div className="max-w-6xl mx-auto px-5 w-full">
         {submitted && submittedData ? (
           <div className="bg-white rounded-3xl shadow-xl p-8 md:p-12 text-center max-w-2xl mx-auto border border-orange-100">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-amber-50 text-amber-500 mb-6 border border-amber-200 shadow-sm">
-              <FaClock className="text-4xl animate-pulse" />
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 mb-6 border border-emerald-200 shadow-sm">
+              <FaCheck className="text-4xl" />
             </div>
 
-            <span className="inline-block rounded-full bg-amber-100 border border-amber-300 px-4 py-1.5 text-xs font-bold text-amber-800 tracking-wide uppercase mb-3">
-              Status: Pending - Awaiting Batch Allocation
+            <span className="inline-block rounded-full bg-emerald-100 border border-emerald-300 px-4 py-1.5 text-xs font-black text-emerald-800 tracking-wider uppercase mb-3">
+              Fee Paid &bull; Enrolled &bull; Awaiting Batch Allocation
             </span>
 
-            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-              Enrollment Received!
+            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+              Admission Confirmed!
             </h2>
 
             <p className="mt-4 text-base text-gray-600 sm:text-lg max-w-xl mx-auto leading-relaxed">
-              Thank you for enrolling in{" "}
-              <span className="font-bold text-gray-900">{submittedData.course}</span>.
-              Your course is currently <strong className="text-amber-700">Pending (Awaiting Batch Allocation)</strong>.
-              You will receive updates via email at{" "}
-              <span className="font-semibold text-orange-600">{submittedData.email}</span> when
-              you are assigned a batch.
+              Congratulations! Your payment for{" "}
+              <span className="font-bold text-gray-900">{submittedData.course}</span> has been verified.
+              Your seat is confirmed and your profile is currently{" "}
+              <strong className="text-amber-700">Pending Batch Allocation</strong>.
+              We will notify you at <span className="font-semibold text-orange-600">{submittedData.email}</span> as soon as your batch and mentor are assigned.
             </p>
 
+            {/* Official Admission & Payment Receipt */}
             <div className="mt-8 rounded-2xl bg-slate-50 border border-slate-200 p-6 text-left max-w-md mx-auto space-y-3 shadow-inner">
+              <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+                <FaReceipt className="text-orange-500 text-lg" />
+                <h3 className="font-extrabold text-slate-900 text-sm uppercase tracking-wider">
+                  Payment Receipt &bull; First Track Skills
+                </h3>
+              </div>
               <div className="flex justify-between items-center text-sm py-1 border-b border-slate-200">
-                <span className="text-slate-500 font-medium">Selected Course</span>
+                <span className="text-slate-500 font-medium">Student</span>
+                <span className="font-bold text-slate-800">{submittedData.fullName}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm py-1 border-b border-slate-200">
+                <span className="text-slate-500 font-medium">Course</span>
                 <span className="font-bold text-slate-800">{submittedData.course}</span>
               </div>
               <div className="flex justify-between items-center text-sm py-1 border-b border-slate-200">
-                <span className="text-slate-500 font-medium">Preferred Batch Timing</span>
+                <span className="text-slate-500 font-medium">Batch Timing</span>
                 <span className="font-bold text-slate-800">{submittedData.batch} Batch</span>
               </div>
+              <div className="flex justify-between items-center text-sm py-1 border-b border-slate-200">
+                <span className="text-slate-500 font-medium">Amount Paid</span>
+                <span className="font-black text-emerald-700 text-base">₹{Number(submittedData.amount || 25000).toLocaleString("en-IN")}</span>
+              </div>
+              {submittedData.paymentId && (
+                <div className="flex justify-between items-center text-xs py-1 border-b border-slate-200">
+                  <span className="text-slate-500 font-medium">Payment ID</span>
+                  <span className="font-mono font-bold text-slate-700">{submittedData.paymentId}</span>
+                </div>
+              )}
+              {submittedData.orderId && (
+                <div className="flex justify-between items-center text-xs py-1 border-b border-slate-200">
+                  <span className="text-slate-500 font-medium">Order ID</span>
+                  <span className="font-mono text-slate-600">{submittedData.orderId}</span>
+                </div>
+              )}
               <div className="flex justify-between items-center text-sm py-1">
-                <span className="text-slate-500 font-medium">Course Status</span>
-                <span className="font-bold text-amber-600 flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-amber-500 inline-block animate-pulse" />
-                  Pending - Awaiting Batch Allocation
+                <span className="text-slate-500 font-medium">Admission Status</span>
+                <span className="font-bold text-emerald-600 flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                  Verified &amp; Active
                 </span>
               </div>
             </div>
@@ -454,17 +653,23 @@ const Enroll = () => {
                       value={formData.gender}
                       onChange={handleChange}
                       required
-                      className="border rounded-xl px-4 py-3 bg-white"
+                      className="border rounded-xl px-4 py-3"
                     >
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
                       <option value="Other">Other</option>
                     </select>
+                  </div>
 
+                  <h2 className="text-2xl font-bold mt-10 mb-6">
+                    Address Information
+                  </h2>
+
+                  <div className="grid md:grid-cols-3 gap-6">
                     <input
                       type="text"
                       name="district"
-                      placeholder="District / City *"
+                      placeholder="District *"
                       value={formData.district}
                       onChange={handleChange}
                       required
@@ -494,14 +699,14 @@ const Enroll = () => {
                   </div>
 
                   <h2 className="text-2xl font-bold mt-10 mb-6">
-                    Education
+                    Academic Background
                   </h2>
 
                   <div className="grid md:grid-cols-2 gap-6">
                     <input
                       type="text"
                       name="qualification"
-                      placeholder="Highest Qualification (e.g., B.Tech, BCA, B.Sc) *"
+                      placeholder="Highest Qualification (e.g. B.Tech, BCA, MCA) *"
                       value={formData.qualification}
                       onChange={handleChange}
                       required
@@ -511,7 +716,7 @@ const Enroll = () => {
                     <input
                       type="text"
                       name="college"
-                      placeholder="College / University Name *"
+                      placeholder="College / Institute Name *"
                       value={formData.college}
                       onChange={handleChange}
                       required
@@ -622,7 +827,42 @@ const Enroll = () => {
                 </div>
               </div>
 
-              <div className="mt-8 flex items-center gap-3">
+              {/* COMPULSORY PAYMENT SUMMARY CARD */}
+              <div className="mt-8 rounded-2xl bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 p-5 sm:p-6 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <FaCreditCard className="text-orange-600" />
+                      <span className="text-xs uppercase tracking-wider font-extrabold text-orange-700">
+                        Compulsory Course Admission Fee
+                      </span>
+                    </div>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <span className="text-3xl font-black text-gray-900">
+                        ₹{coursePrice.toLocaleString("en-IN")}
+                      </span>
+                      <span className="text-xs text-slate-500 font-semibold">
+                        (All-inclusive fee for {selectedCourseObj?.duration_weeks || 12} weeks)
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-2 max-w-md">
+                      Admission to individual courses requires upfront payment verification via Razorpay. Supports UPI (GPay/PhonePe), Credit/Debit Cards, and Netbanking.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col sm:items-end gap-1.5 shrink-0">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 border border-emerald-300 px-3 py-1 text-xs font-bold text-emerald-800">
+                      <FaLock className="text-[10px]" />
+                      100% Secure Razorpay
+                    </span>
+                    <span className="text-[11px] font-semibold text-slate-500">
+                      Instant Seat Confirmation
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 flex items-center gap-3">
                 <input
                   type="checkbox"
                   name="agree"
@@ -634,22 +874,31 @@ const Enroll = () => {
 
                 <span className="text-gray-600 text-sm">
                   I agree to the{" "}
-                  <Link to="/terms-of-use" className="text-orange-500 underline hover:text-orange-600">Terms &amp; Conditions</Link>
-                  {" "}and{" "}
-                  <Link to="/privacy-policy" className="text-orange-500 underline hover:text-orange-600">Privacy Policy</Link>.
+                  <Link to="/terms-of-use" className="text-orange-500 underline hover:text-orange-600">
+                    Terms &amp; Conditions
+                  </Link>{" "}
+                  and{" "}
+                  <Link to="/privacy-policy" className="text-orange-500 underline hover:text-orange-600">
+                    Privacy Policy
+                  </Link>.
                 </span>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="mt-8 w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white py-4 rounded-xl text-lg font-semibold flex items-center justify-center gap-3 transition shadow-md cursor-pointer"
+                className="mt-8 w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white py-4 rounded-xl text-lg font-bold flex items-center justify-center gap-3 transition shadow-md cursor-pointer"
               >
-                {loading ? "Submitting..." : "Enroll Now"}
                 {loading ? (
-                  <FaSpinner className="animate-spin" />
+                  <>
+                    <span>Connecting to Razorpay...</span>
+                    <FaSpinner className="animate-spin" />
+                  </>
                 ) : (
-                  <FaPaperPlane />
+                  <>
+                    <span>Pay ₹{coursePrice.toLocaleString("en-IN")} &amp; Enroll</span>
+                    <FaCreditCard />
+                  </>
                 )}
               </button>
 
@@ -665,6 +914,62 @@ const Enroll = () => {
           </>
         )}
       </div>
+
+      {/* DEV SANDBOX MODAL (When live Razorpay keys are not yet set in .env) */}
+      {mockModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-amber-600 font-bold">
+                <FaShieldAlt className="text-xl" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Razorpay Sandbox Simulation</h3>
+                <p className="text-xs text-slate-500">Development / Test Gateway</p>
+              </div>
+            </div>
+
+            <p className="mt-4 text-sm text-slate-600 leading-relaxed">
+              Razorpay API keys have not yet been configured in the environment (.env). You can simulate a successful payment of{" "}
+              <strong className="text-slate-900">₹{coursePrice.toLocaleString("en-IN")}</strong> to verify the entire compulsory admission flow.
+            </p>
+
+            <div className="mt-4 rounded-xl bg-slate-50 border border-slate-200 p-3 text-xs space-y-1.5 font-mono text-slate-700">
+              <div className="flex justify-between">
+                <span>Order ID:</span>
+                <span className="font-bold">{pendingMockOrder?.order_id}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Course:</span>
+                <span className="font-bold">{pendingMockOrder?.course?.title}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Amount:</span>
+                <span className="font-bold text-emerald-700">₹{coursePrice.toLocaleString("en-IN")}</span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setMockModalOpen(false)}
+                className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleCompleteMockPayment}
+                disabled={loading}
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 py-2.5 text-xs font-bold text-white shadow-md transition"
+              >
+                {loading ? <FaSpinner className="animate-spin" /> : <FaCheckCircle />}
+                Simulate Successful Payment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

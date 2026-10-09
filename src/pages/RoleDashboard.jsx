@@ -525,7 +525,12 @@ const CoursePanel = ({ courses, isStudent, onSelectCourse }) => (
             {isStudent ? (
               <div className="mt-5 pt-4 border-t border-slate-100 flex flex-col gap-2.5">
                 <div className="flex items-center justify-between">
-                  {course.is_allocated ? (
+                  {course.enrollment_status === "APPLIED" ? (
+                    <span className="text-xs font-bold text-purple-700 bg-purple-50 border border-purple-200 rounded-full px-2.5 py-1 flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-purple-500 inline-block animate-pulse" />
+                      Applied - Campus Fee Collection Pending
+                    </span>
+                  ) : course.is_allocated ? (
                     <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-1 flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
                       Batch Active

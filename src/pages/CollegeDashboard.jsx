@@ -713,8 +713,14 @@ const StudentTable = ({ students, showCourse, onOpenStudent }) => {
               {showCourse && <td className="py-4 pr-4 text-slate-600">{student.course_title}</td>}
               <td className="py-4 pr-4 text-slate-600">{student.batch_timing}</td>
               <td className="py-4 pr-4">
-                <span className="bg-emerald-50 text-emerald-700 rounded-full px-3 py-1 text-sm font-bold">
-                  {student.enrollment_status}
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-bold border ${
+                    student.enrollment_status === "APPLIED"
+                      ? "bg-purple-50 text-purple-700 border-purple-200"
+                      : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  }`}
+                >
+                  {student.enrollment_status === "APPLIED" ? "APPLIED (Offline Fee)" : student.enrollment_status || "ENROLLED"}
                 </span>
               </td>
               <td className="py-4 pr-4 text-right">
@@ -779,8 +785,14 @@ const StudentDetailModal = ({ student, onClose }) => {
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-xl font-bold text-slate-900">Student Profile</h3>
-                <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
-                  {student.enrollment_status || "ENROLLED"}
+                <span
+                  className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${
+                    student.enrollment_status === "APPLIED"
+                      ? "bg-purple-50 border-purple-200 text-purple-700"
+                      : "bg-emerald-50 border-emerald-200 text-emerald-700"
+                  }`}
+                >
+                  {student.enrollment_status === "APPLIED" ? "APPLIED (Offline Fee Pending)" : student.enrollment_status || "ENROLLED"}
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-1">
