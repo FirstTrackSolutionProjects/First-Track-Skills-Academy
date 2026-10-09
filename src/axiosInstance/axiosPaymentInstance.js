@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const BACKEND_URL = import.meta.env.VITE_APP_BACKEND_URL;
+const rawBackendUrl = import.meta.env.VITE_APP_BACKEND_URL || import.meta.env.VITE_APP_API_URL || "";
+const BACKEND_URL = rawBackendUrl.replace(/\/+$/, "");
 
 const axiosPaymentInstance = axios.create({
   baseURL: `${BACKEND_URL}/payments`,
