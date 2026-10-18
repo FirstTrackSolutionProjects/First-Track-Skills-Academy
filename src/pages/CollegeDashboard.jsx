@@ -19,6 +19,7 @@ import {
   FaUserGraduate,
 } from "react-icons/fa";
 import useStore, { storeActions } from "../store/useStore";
+import { logoutUser } from "../service/authService";
 import { getCollegeDashboard } from "../service/collegeService";
 import CollegeAttendancePanel from "../components/attendance/CollegeAttendancePanel";
 
@@ -129,7 +130,7 @@ const CollegeDashboard = () => {
               Back to Homepage
             </Link>
             <button
-              onClick={storeActions.clearAuth}
+              onClick={() => logoutUser()}
               className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 px-6 py-3 font-semibold text-slate-700 transition shadow-sm"
             >
               <FaSignOutAlt />
@@ -250,7 +251,7 @@ const CollegeDashboard = () => {
           <button
             onClick={() => {
               setMobileMenuOpen(false);
-              storeActions.clearAuth();
+              logoutUser();
             }}
             className="flex items-center gap-3 px-4 py-3 text-base font-semibold text-red-600"
           >

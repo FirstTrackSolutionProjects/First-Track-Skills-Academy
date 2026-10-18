@@ -19,6 +19,7 @@ import { getBatches, getCourses } from "../service/courseService";
 import { getMyMentorBatches, getBatchStudents } from "../service/batchService";
 import { getMyEnrolledCourses } from "../service/enrollmentService";
 import useStore, { storeActions } from "../store/useStore";
+import { logoutUser } from "../service/authService";
 import StudentAttendancePanel from "../components/attendance/StudentAttendancePanel";
 
 const roleCopy = {
@@ -280,7 +281,7 @@ const RoleDashboard = () => {
           <button
             onClick={() => {
               setMobileMenuOpen(false);
-              storeActions.clearAuth();
+              logoutUser();
             }}
             className="flex w-full items-center gap-3 rounded-md px-4 py-3 text-base font-semibold text-red-600 hover:bg-red-50"
           >

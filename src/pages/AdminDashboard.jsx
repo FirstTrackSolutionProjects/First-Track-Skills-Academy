@@ -40,6 +40,7 @@ import MarkAttendancePanel from "../components/attendance/MarkAttendancePanel";
 import AttendanceSessionsPanel from "../components/attendance/AttendanceSessionsPanel";
 import PaymentTransactionsPanel from "../components/payments/PaymentTransactionsPanel";
 import useStore, { storeActions } from "../store/useStore";
+import { logoutUser } from "../service/authService";
 import { createAdmin } from "../service/adminService";
 import {
   getColleges,
@@ -785,7 +786,7 @@ const AdminDashboard = () => {
           <button
             onClick={() => {
               setMobileMenuOpen(false);
-              storeActions.clearAuth();
+              logoutUser();
             }}
             className="flex h-12 w-full items-center gap-4 rounded-lg px-4 text-left text-base font-semibold text-red-600 hover:bg-red-50"
           >

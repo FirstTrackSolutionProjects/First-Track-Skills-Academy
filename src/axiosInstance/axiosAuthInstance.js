@@ -1,18 +1,17 @@
 import axios from "axios";
+import { attachAuthInterceptors } from "./authInterceptor";
 
-const BACKEND_URL = import.meta.env.VITE_APP_BACKEND_URL;
+const rawBackendUrl =
+  import.meta.env.VITE_APP_BACKEND_URL ||
+  import.meta.env.VITE_APP_API_URL ||
+  "";
+const BACKEND_URL = rawBackendUrl.replace(/\/+$/, "");
 
 const axiosAuthInstance = axios.create({
   baseURL: `${BACKEND_URL}/auth`,
   withCredentials: true,
 });
 
-axiosAuthInstance.interceptors.request.use((config) => {
-  const accessToken = localStorage.getItem("accessToken");
-  if (accessToken) {
-    config.headers.Authorization = `Bearer ${accessToken}`;
-  }
-  return config;
-});
+attachAuthInterceptors(axiosAuthInstance);
 
 export default axiosAuthInstance;

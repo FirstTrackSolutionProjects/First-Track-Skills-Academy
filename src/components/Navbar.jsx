@@ -17,6 +17,7 @@ import {
   FaChartBar,
 } from "react-icons/fa";
 import useStore, { storeActions } from "../store/useStore";
+import { logoutUser } from "../service/authService";
 
 const Navbar = () => {
   const { auth } = useStore();
@@ -146,7 +147,7 @@ const Navbar = () => {
                 <span>Dashboard</span>
               </NavLink>
               <button
-                onClick={storeActions.clearAuth}
+                onClick={() => logoutUser()}
                 className="flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white px-4 xl:px-5 py-2 rounded-full text-xs xl:text-sm font-bold transition hover:scale-102 whitespace-nowrap shadow-xs"
               >
                 <span>Logout</span>
@@ -308,7 +309,7 @@ const Navbar = () => {
 
                 <button
                   onClick={() => {
-                    storeActions.clearAuth();
+                    logoutUser();
                     setOpen(false);
                   }}
                   className="w-full flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 py-2.5 text-xs font-bold transition shadow-2xs"
