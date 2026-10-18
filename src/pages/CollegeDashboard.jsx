@@ -439,36 +439,25 @@ const HeroPanel = ({ profile, metrics, onConfigurePayment }) => (
       </div>
     </div>
 
-    {/* Cohort Payment Mode Status Banner */}
-    <div className="mt-6 pt-5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-orange-50/60 rounded-xl p-4 border border-orange-200">
+    {/* Cohort Fee Collection Policy Banner */}
+    <div className="mt-6 pt-5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-purple-50/70 rounded-xl p-4 border border-purple-200">
       <div>
-        <span className="text-[11px] font-black uppercase tracking-wider text-orange-700 flex items-center gap-1.5">
-          <FaCreditCard /> Cohort Fee Collection &amp; Payment Policy
+        <span className="text-[11px] font-black uppercase tracking-wider text-purple-700 flex items-center gap-1.5">
+          <FaBuilding /> Cohort Fee Policy: Offline Campus Collection
         </span>
         <p className="text-sm font-bold text-slate-900 mt-1">
-          Current Setting:{" "}
-          <span className="text-orange-600">
-            {profile.cohort_payment_mode === "OFFLINE_ONLY"
-              ? "Offline Campus Collection Only (Online Disabled)"
-              : profile.cohort_payment_mode === "ONLINE_ONLY"
-              ? "Online Payment Only (Compulsory Razorpay)"
-              : "Student Choice (Online Razorpay or Campus Offline)"}
-          </span>
+          Admission Policy: <span className="text-purple-700">Offline Campus Collection (Status: APPLIED)</span>
         </p>
         <p className="text-xs text-slate-600 mt-0.5">
-          {profile.cohort_payment_mode === "OFFLINE_ONLY"
-            ? "Students enroll with status APPLIED while your college collects tuition offline on campus."
-            : profile.cohort_payment_mode === "ONLINE_ONLY"
-            ? "Students must complete online payment via Razorpay to be ENROLLED."
-            : "Students can choose either to pay online via Razorpay or offline via your college campus."}
+          Online payment is removed for partner cohorts. Students join via your partner link with status APPLIED while your institution collects course fees offline on campus.
         </p>
       </div>
       <button
         type="button"
         onClick={onConfigurePayment}
-        className="shrink-0 inline-flex items-center gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white px-4 py-2.5 text-xs font-bold shadow-xs transition cursor-pointer"
+        className="shrink-0 inline-flex items-center gap-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 text-xs font-bold shadow-xs transition cursor-pointer"
       >
-        <span>Change Payment Mode</span>
+        <span>View Partner Link</span>
         <FaArrowRight className="text-[10px]" />
       </button>
     </div>

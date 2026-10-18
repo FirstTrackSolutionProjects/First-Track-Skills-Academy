@@ -36,7 +36,6 @@ const PartnerJoin = () => {
   const [partner, setPartner] = useState(null);
   const [courses, setCourses] = useState([]);
   const [courseBatchTiming, setCourseBatchTiming] = useState({});
-  const [coursePaymentMode, setCoursePaymentMode] = useState({});
   const [mode, setMode] = useState("signup");
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
@@ -166,9 +165,7 @@ const PartnerJoin = () => {
 
   const continueToEnroll = (courseId) => {
     const batchTiming = courseBatchTiming[courseId] || "EVENING";
-    const defaultMode = partner?.cohort_payment_mode === "OFFLINE_ONLY" ? "OFFLINE" : "ONLINE";
-    const paymentMode = coursePaymentMode[courseId] || defaultMode;
-    navigate(`/join/${partnerCode}/enroll?courseId=${courseId}&batchTiming=${batchTiming}&paymentMode=${paymentMode}`);
+    navigate(`/join/${partnerCode}/enroll?courseId=${courseId}&batchTiming=${batchTiming}`);
   };
 
   if (checking) {
@@ -219,36 +216,22 @@ const PartnerJoin = () => {
           </span>
         </div>
 
-        {/* PAYMENT POLICY HIGHLIGHT */}
-        <div className="mt-3.5 rounded-xl bg-white border border-orange-100 p-3.5 text-xs flex items-start gap-3 shadow-2xs">
-          <div className="h-7 w-7 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 mt-0.5">
-            <FaCreditCard className="text-sm" />
+        {/* CAMPUS OFFLINE FEE COLLECTION HIGHLIGHT */}
+        <div className="mt-3.5 rounded-xl bg-white border border-purple-100 p-3.5 text-xs flex items-start gap-3 shadow-2xs">
+          <div className="h-7 w-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 mt-0.5">
+            <FaBuilding className="text-sm" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="font-bold text-slate-900 text-xs">
-                Fee Collection &amp; Payment Options
+                College Campus Fee Collection
               </span>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                partner.cohort_payment_mode === "OFFLINE_ONLY"
-                  ? "bg-purple-100 text-purple-800 border border-purple-200"
-                  : partner.cohort_payment_mode === "ONLINE_ONLY"
-                  ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                  : "bg-blue-100 text-blue-800 border border-blue-200"
-              }`}>
-                {partner.cohort_payment_mode === "OFFLINE_ONLY"
-                  ? "Offline Campus Only"
-                  : partner.cohort_payment_mode === "ONLINE_ONLY"
-                  ? "Online Razorpay Only"
-                  : "Student Choice (Online & Offline)"}
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 border border-purple-200">
+                Offline College Collection
               </span>
             </div>
             <p className="text-slate-600 mt-1 leading-relaxed">
-              {partner.cohort_payment_mode === "OFFLINE_ONLY"
-                ? "This college collects fees offline directly on campus. Online Razorpay payment is disabled. When you apply, your application status will show APPLIED until fees are settled on campus."
-                : partner.cohort_payment_mode === "ONLINE_ONLY"
-                ? "Students in this cohort must complete the fee payment online via Razorpay. Your seat is confirmed immediately with ENROLLED status."
-                : "You can choose either to Pay Online via Razorpay (Instant Active ENROLLED status) or Pay Offline via College Campus (College collects fees offline; status will be APPLIED)."}
+              Online payment is not required for cohort registration. Your college collects course fees offline on campus. When you register, your enrollment status will show <strong>APPLIED</strong>. Once your college confirms fee collection, the academy administration assigns your batch and mentors.
             </p>
           </div>
         </div>
@@ -400,92 +383,22 @@ const PartnerJoin = () => {
                     </FormSelect>
                   </div>
 
-                  {/* Payment Mode Selector on Course Card */}
+                  {/* Campus Fee Collection Notice on Course Card */}
                   <div className="mt-4 border-t border-slate-100 pt-3">
-                    <label className="block text-[11px] font-bold text-gray-800 uppercase tracking-wider mb-2">
-                      Payment &amp; Admission Option *
-                    </label>
-
-                    {partner?.cohort_payment_mode === "OFFLINE_ONLY" ? (
-                      <div className="rounded-xl border border-purple-200 bg-purple-50/70 p-3 text-xs text-purple-900 flex items-center gap-2.5">
-                        <FaBuilding className="text-purple-600 text-sm shrink-0" />
-                        <div>
-                          <p className="font-bold">Offline Campus Collection Only</p>
-                          <p className="text-[11px] text-purple-700">Fees collected offline on campus. Status: APPLIED</p>
-                        </div>
+                    <div className="rounded-xl border border-purple-200 bg-purple-50/70 p-3 text-xs text-purple-900 flex items-center gap-2.5">
+                      <FaBuilding className="text-purple-600 text-sm shrink-0" />
+                      <div>
+                        <p className="font-bold">Offline Campus Fee Collection</p>
+                        <p className="text-[11px] text-purple-700">Fees collected offline on campus &bull; Status: APPLIED</p>
                       </div>
-                    ) : partner?.cohort_payment_mode === "ONLINE_ONLY" ? (
-                      <div className="rounded-xl border border-orange-200 bg-orange-50/70 p-3 text-xs text-orange-900 flex items-center gap-2.5">
-                        <FaCreditCard className="text-orange-600 text-sm shrink-0" />
-                        <div>
-                          <p className="font-bold">Online Payment Only (Razorpay)</p>
-                          <p className="text-[11px] text-orange-700">Immediate active enrollment via Razorpay</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <label
-                          className={`flex flex-col justify-between p-2.5 rounded-xl border-2 cursor-pointer transition ${
-                            (coursePaymentMode[course.id] || "ONLINE") === "ONLINE"
-                              ? "border-orange-500 bg-orange-50/60 shadow-2xs"
-                              : "border-slate-200 bg-white hover:border-slate-300"
-                          }`}
-                        >
-                          <div className="flex items-center gap-1.5">
-                            <input
-                              type="radio"
-                              name={`payment_mode_${course.id}`}
-                              value="ONLINE"
-                              checked={(coursePaymentMode[course.id] || "ONLINE") === "ONLINE"}
-                              onChange={() =>
-                                setCoursePaymentMode((prev) => ({ ...prev, [course.id]: "ONLINE" }))
-                              }
-                              className="text-orange-600"
-                            />
-                            <span className="font-bold text-slate-800 text-[11px]">Pay Online</span>
-                          </div>
-                          <span className="text-[10px] text-slate-500 mt-1">Razorpay &bull; Enrolled</span>
-                        </label>
-
-                        <label
-                          className={`flex flex-col justify-between p-2.5 rounded-xl border-2 cursor-pointer transition ${
-                            coursePaymentMode[course.id] === "OFFLINE"
-                              ? "border-purple-500 bg-purple-50/60 shadow-2xs"
-                              : "border-slate-200 bg-white hover:border-slate-300"
-                          }`}
-                        >
-                          <div className="flex items-center gap-1.5">
-                            <input
-                              type="radio"
-                              name={`payment_mode_${course.id}`}
-                              value="OFFLINE"
-                              checked={coursePaymentMode[course.id] === "OFFLINE"}
-                              onChange={() =>
-                                setCoursePaymentMode((prev) => ({ ...prev, [course.id]: "OFFLINE" }))
-                              }
-                              className="text-purple-600"
-                            />
-                            <span className="font-bold text-slate-800 text-[11px]">Pay Offline</span>
-                          </div>
-                          <span className="text-[10px] text-slate-500 mt-1">Campus &bull; Applied</span>
-                        </label>
-                      </div>
-                    )}
+                    </div>
                   </div>
 
                   <button
                     onClick={() => continueToEnroll(course.id)}
-                    className={`mt-5 w-full py-3.5 rounded-xl font-bold transition shadow-sm cursor-pointer flex items-center justify-center gap-2 text-white ${
-                      (coursePaymentMode[course.id] || (partner?.cohort_payment_mode === "OFFLINE_ONLY" ? "OFFLINE" : "ONLINE")) === "ONLINE"
-                        ? "bg-orange-500 hover:bg-orange-600"
-                        : "bg-purple-600 hover:bg-purple-700"
-                    }`}
+                    className="mt-5 w-full py-3.5 rounded-xl font-bold transition shadow-sm cursor-pointer flex items-center justify-center gap-2 text-white bg-purple-600 hover:bg-purple-700"
                   >
-                    <span>
-                      {(coursePaymentMode[course.id] || (partner?.cohort_payment_mode === "OFFLINE_ONLY" ? "OFFLINE" : "ONLINE")) === "ONLINE"
-                        ? `Proceed to Pay Online (₹${Number(course.price || 25000).toLocaleString("en-IN")})`
-                        : "Apply with Offline Fee Collection"}
-                    </span>
+                    <span>Apply for Cohort Batch</span>
                   </button>
                 </div>
               ))}

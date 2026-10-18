@@ -146,7 +146,10 @@ const Enroll = () => {
     );
   }, [courseList, formData.course]);
 
-  const coursePrice = Number(selectedCourseObj?.price) || 25000;
+  const basePrice = Number(selectedCourseObj?.price) || 25000;
+  const coursePrice = Number(selectedCourseObj?.effective_price ?? selectedCourseObj?.discount_price ?? selectedCourseObj?.price) || 25000;
+  const hasDiscount = coursePrice < basePrice;
+  const discountPercentage = Number(selectedCourseObj?.discount_percentage) || (hasDiscount ? Math.round(((basePrice - coursePrice) / basePrice) * 100) : 0);
 
   const handleChange = (e) => {
     const { name, value, type, checked, files: inputFiles } = e.target;
@@ -838,10 +841,20 @@ const Enroll = () => {
                         Compulsory Course Admission Fee
                       </span>
                     </div>
-                    <div className="flex items-baseline gap-2 mt-1">
+                    <div className="flex items-baseline gap-2.5 mt-1 flex-wrap">
                       <span className="text-3xl font-black text-gray-900">
                         ₹{coursePrice.toLocaleString("en-IN")}
                       </span>
+                      {hasDiscount && (
+                        <>
+                          <span className="text-base text-slate-400 line-through font-semibold">
+                            ₹{basePrice.toLocaleString("en-IN")}
+                          </span>
+                          <span className="rounded-md bg-emerald-100 border border-emerald-300 px-2 py-0.5 text-xs font-black text-emerald-800">
+                            {discountPercentage}% OFF
+                          </span>
+                        </>
+                      )}
                       <span className="text-xs text-slate-500 font-semibold">
                         (All-inclusive fee for {selectedCourseObj?.duration_weeks || 12} weeks)
                       </span>

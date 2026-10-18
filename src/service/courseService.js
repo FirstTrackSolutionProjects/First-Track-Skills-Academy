@@ -25,8 +25,15 @@ export const updateCourseStatus = async (courseId, payload) => {
   return response.data;
 };
 
+export const updateCoursePricing = async (courseId, payload) => {
+  const response = await axiosCourseInstance.patch(`/${courseId}/pricing`, payload);
+  return response.data;
+};
+
 export const softDeleteCourse = async (courseId) => {
   const response = await axiosCourseInstance.delete(`/${courseId}`);
   return response.data;
 };
+
+
 

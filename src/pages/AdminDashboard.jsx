@@ -34,6 +34,7 @@ import {
   FaCalendarCheck,
   FaExternalLinkAlt,
   FaCreditCard,
+  FaTag,
 } from "react-icons/fa";
 import MarkAttendancePanel from "../components/attendance/MarkAttendancePanel";
 import AttendanceSessionsPanel from "../components/attendance/AttendanceSessionsPanel";
@@ -46,7 +47,7 @@ import {
   getSuperadminStudents,
   updateCollegeStatus,
 } from "../service/collegeService";
-import { createBatch, createCourse, getBatches, getCourses, updateCourseStatus, softDeleteCourse } from "../service/courseService";
+import { createBatch, createCourse, getBatches, getCourses, updateCourseStatus, softDeleteCourse, updateCoursePricing } from "../service/courseService";
 import {
   getBatches as fetchBatchesApi,
   getBatchStudents,
@@ -216,17 +217,27 @@ const getStudentRows = (student) => {
   ];
 };
 
-const getCourseRows = (course) => [
-  { label: "Course Title", value: course.title || "N/A" },
-  { label: "Course Slug", value: course.slug || "No slug" },
-  { label: "Category", value: course.category || "N/A" },
-  { label: "Duration", value: `${course.duration_weeks || 0} weeks` },
-  { label: "Description", value: course.description || "No description provided." },
-  { label: "Google Classroom Link", value: course.google_classroom_link || "N/A" },
-  { label: "Course Status", value: course.is_active === false ? "Disabled" : "Active" },
-  { label: "Course ID", value: `#CRS-${course.id}` },
-  { label: "Created At", value: course.created_at ? new Date(course.created_at).toLocaleString() : "N/A" },
-];
+const getCourseRows = (course) => {
+  const basePrice = Number(course.price) || 25000;
+  const discountPct = Number(course.discount_percentage) || 0;
+  const discountPrice = course.discount_price !== null && course.discount_price !== undefined ? Number(course.discount_price) : null;
+  const effectivePrice = Number(course.effective_price ?? (discountPrice !== null && discountPrice >= 0 ? discountPrice : (discountPct > 0 ? basePrice * (1 - discountPct / 100) : basePrice))) || basePrice;
+
+  return [
+    { label: "Course Title", value: course.title || "N/A" },
+    { label: "Course Slug", value: course.slug || "No slug" },
+    { label: "Category", value: course.category || "N/A" },
+    { label: "Base Price", value: `₹${basePrice.toLocaleString("en-IN")}` },
+    { label: "Discount", value: discountPct > 0 ? `${discountPct}% OFF` : (discountPrice !== null ? `Fixed discount (₹${discountPrice.toLocaleString("en-IN")})` : "None (0%)") },
+    { label: "Effective Student Fee", value: `₹${effectivePrice.toLocaleString("en-IN")}` },
+    { label: "Duration", value: `${course.duration_weeks || 0} weeks` },
+    { label: "Description", value: course.description || "No description provided." },
+    { label: "Google Classroom Link", value: course.google_classroom_link || "N/A" },
+    { label: "Course Status", value: course.is_active === false ? "Disabled" : "Active" },
+    { label: "Course ID", value: `#CRS-${course.id}` },
+    { label: "Created At", value: course.created_at ? new Date(course.created_at).toLocaleString() : "N/A" },
+  ];
+};
 
 const getBatchRows = (batch) => [
   { label: "Batch Name", value: batch.batch_name || "N/A" },
@@ -400,6 +411,7 @@ const AdminDashboard = () => {
   const [selectedDetail, setSelectedDetail] = useState(null);
   const [selectedBatchForMentors, setSelectedBatchForMentors] = useState(null);
   const [selectedBatchForRoster, setSelectedBatchForRoster] = useState(null);
+  const [selectedCourseForPricing, setSelectedCourseForPricing] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const role = auth?.user?.role;
@@ -928,6 +940,8 @@ const AdminDashboard = () => {
               {activeMenu === "Course Data" && (
                 <CourseDataPanel
                   courses={courses}
+                  isSuperadmin={isSuperadmin}
+                  onEditPricing={(course) => setSelectedCourseForPricing(course)}
                   onOpenCourse={(course) =>
                     openDetail("Course Details", getCourseRows(course), {
                       type: "COURSE",
@@ -1140,10 +1154,21 @@ const AdminDashboard = () => {
           rows={selectedDetail.rows}
           target={selectedDetail.target}
           currentUser={auth?.user}
+          onEditPricing={(course) => setSelectedCourseForPricing(course)}
           onClose={() => setSelectedDetail(null)}
           onRefresh={async () => {
             await loadBaseData(false);
             if (activeMenu === "Students") await loadStudents();
+          }}
+        />
+      )}
+
+      {selectedCourseForPricing && (
+        <EditCoursePricingModal
+          course={selectedCourseForPricing}
+          onClose={() => setSelectedCourseForPricing(null)}
+          onSuccess={async () => {
+            await loadBaseData(false);
           }}
         />
       )}
@@ -1169,7 +1194,7 @@ const AdminDashboard = () => {
   );
 };
 
-const DetailModal = ({ title, rows, target, onClose, onRefresh, currentUser }) => {
+const DetailModal = ({ title, rows, target, onClose, onRefresh, currentUser, onEditPricing }) => {
   const [confirmAction, setConfirmAction] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -1390,6 +1415,21 @@ const DetailModal = ({ title, rows, target, onClose, onRefresh, currentUser }) =
                   <FaTrashAlt className="text-rose-500" />
                   <span>Remove {target.type === "USER" ? (target.role ? target.role.charAt(0) + target.role.slice(1).toLowerCase() : "User") : target.type === "COURSE" ? "Course" : "Batch"}</span>
                 </button>
+
+                {target?.type === "COURSE" && currentUser?.role === "SUPERADMIN" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onEditPricing?.(target.entity);
+                      onClose();
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-3.5 py-2 text-xs font-bold text-purple-700 shadow-2xs hover:bg-purple-100 transition cursor-pointer"
+                    title="Change Course Pricing & Discount (Superadmin Only)"
+                  >
+                    <FaTag className="text-purple-600" />
+                    <span>Edit Pricing &amp; Discount</span>
+                  </button>
+                )}
               </>
             )}
 
@@ -1491,18 +1531,26 @@ const MentorDataPanel = ({ mentors, onOpenMentor }) => (
   </Panel>
 );
 
-const CourseDataPanel = ({ courses, onOpenCourse }) => (
+const CourseDataPanel = ({ courses, onOpenCourse, isSuperadmin, onEditPricing }) => (
   <Panel>
-    <div className="mb-6 flex items-center gap-4">
-      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
-        <FaBookOpen />
+    <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex items-center gap-4">
+        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+          <FaBookOpen />
+        </div>
+        <div>
+          <h3 className="text-2xl font-bold">Course Data</h3>
+          <p className="text-slate-500">Existing courses available for individual enrollment and batch creation.</p>
+        </div>
       </div>
-      <div>
-        <h3 className="text-2xl font-bold">Course Data</h3>
-        <p className="text-slate-500">Existing courses available for batch creation.</p>
-      </div>
+      {isSuperadmin && (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 border border-purple-200 px-3 py-1 text-xs font-bold text-purple-700 shadow-2xs">
+          <FaTag className="text-[10px]" />
+          Superadmin: Pricing &amp; Discounts Enabled
+        </span>
+      )}
     </div>
-    <CourseTable courses={courses} onOpenCourse={onOpenCourse} />
+    <CourseTable courses={courses} onOpenCourse={onOpenCourse} isSuperadmin={isSuperadmin} onEditPricing={onEditPricing} />
   </Panel>
 );
 
@@ -3339,7 +3387,7 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
   );
 };
 
-const CourseTable = ({ courses, onOpenCourse }) =>
+const CourseTable = ({ courses, onOpenCourse, isSuperadmin, onEditPricing }) =>
   courses.length ? (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
@@ -3348,63 +3396,330 @@ const CourseTable = ({ courses, onOpenCourse }) =>
             <th className="py-3 pr-4">COURSE</th>
             <th className="py-3 pr-4">CATEGORY</th>
             <th className="py-3 pr-4">DURATION</th>
+            <th className="py-3 pr-4">FEE &amp; DISCOUNT</th>
             <th className="py-3 pr-4">STATUS</th>
             <th className="py-3 pr-4 text-right">ACTION</th>
           </tr>
         </thead>
         <tbody>
-          {courses.map((course) => (
-            <tr
-              key={course.id}
-              onClick={() => onOpenCourse?.(course)}
-              className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 last:border-b-0 transition"
-            >
-              <td className="py-4 pr-4">
-                <p className="font-semibold text-orange-600 hover:underline">{course.title}</p>
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <p className="text-xs text-slate-500">{course.slug || "No slug"}</p>
-                  {course.google_classroom_link && (
-                    <a
-                      href={course.google_classroom_link}
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center gap-1 rounded bg-blue-50 border border-blue-200 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 hover:bg-blue-100 transition"
-                      title="Open Google Classroom"
+          {courses.map((course) => {
+            const base = Number(course.price) || 25000;
+            const discountPct = Number(course.discount_percentage) || 0;
+            const dPrice = course.discount_price !== null && course.discount_price !== undefined ? Number(course.discount_price) : null;
+            const effective = Number(course.effective_price ?? (dPrice !== null && dPrice >= 0 ? dPrice : (discountPct > 0 ? base * (1 - discountPct / 100) : base))) || base;
+            const hasDisc = effective < base;
+
+            return (
+              <tr
+                key={course.id}
+                onClick={() => onOpenCourse?.(course)}
+                className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 last:border-b-0 transition"
+              >
+                <td className="py-4 pr-4">
+                  <p className="font-semibold text-orange-600 hover:underline">{course.title}</p>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <p className="text-xs text-slate-500">{course.slug || "No slug"}</p>
+                    {course.google_classroom_link && (
+                      <a
+                        href={course.google_classroom_link}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="inline-flex items-center gap-1 rounded bg-blue-50 border border-blue-200 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 hover:bg-blue-100 transition"
+                        title="Open Google Classroom"
+                      >
+                        <span>Classroom</span>
+                        <FaExternalLinkAlt className="text-[8px]" />
+                      </a>
+                    )}
+                  </div>
+                </td>
+                <td className="py-4 pr-4 text-slate-600">{course.category}</td>
+                <td className="py-4 pr-4 text-slate-600">{course.duration_weeks} weeks</td>
+                <td className="py-4 pr-4">
+                  <div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-bold text-slate-900">₹{effective.toLocaleString("en-IN")}</span>
+                      {hasDisc && (
+                        <span className="text-[10px] text-slate-400 line-through">
+                          ₹{base.toLocaleString("en-IN")}
+                        </span>
+                      )}
+                    </div>
+                    {hasDisc ? (
+                      <span className="inline-block mt-0.5 rounded px-1.5 py-0.5 bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-700">
+                        {discountPct > 0 ? `${discountPct}% OFF` : `Save ₹${(base - effective).toLocaleString("en-IN")}`}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-slate-400">Regular catalog fee</span>
+                    )}
+                  </div>
+                </td>
+                <td className="py-4 pr-4">
+                  <StatusBadge status={course.is_active !== false ? "ACTIVE" : "INACTIVE"} />
+                </td>
+                <td className="py-4 pr-4 text-right">
+                  <div className="flex items-center justify-end gap-1.5">
+                    {isSuperadmin && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditPricing?.(course);
+                        }}
+                        className="inline-flex items-center gap-1 rounded-lg border border-purple-200 bg-purple-50 px-2.5 py-1.5 text-xs font-bold text-purple-700 shadow-2xs hover:bg-purple-100 transition cursor-pointer"
+                        title="Edit Course Pricing & Discount (Superadmin Only)"
+                      >
+                        <FaTag className="text-[10px] text-purple-600" />
+                        <span>Pricing</span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenCourse?.(course);
+                      }}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-bold text-orange-700 shadow-xs transition hover:bg-orange-100 hover:text-orange-800 cursor-pointer"
+                      title="View Course Details"
                     >
-                      <span>Classroom</span>
-                      <FaExternalLinkAlt className="text-[8px]" />
-                    </a>
-                  )}
-                </div>
-              </td>
-              <td className="py-4 pr-4 text-slate-600">{course.category}</td>
-              <td className="py-4 pr-4 text-slate-600">{course.duration_weeks} weeks</td>
-              <td className="py-4 pr-4">
-                <StatusBadge status={course.is_active !== false ? "ACTIVE" : "INACTIVE"} />
-              </td>
-              <td className="py-4 pr-4 text-right">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onOpenCourse?.(course);
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-bold text-orange-700 shadow-xs transition hover:bg-orange-100 hover:text-orange-800"
-                  title="View Course Details"
-                >
-                  <FaEye className="text-sm text-orange-500" />
-                  <span>View</span>
-                </button>
-              </td>
-            </tr>
-          ))}
+                      <FaEye className="text-sm text-orange-500" />
+                      <span>View</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
   ) : (
     <EmptyState text="No courses found." />
   );
+
+const EditCoursePricingModal = ({ course, onClose, onSuccess }) => {
+  const [basePrice, setBasePrice] = useState(Number(course.price) || 25000);
+  const [discountPercentage, setDiscountPercentage] = useState(Number(course.discount_percentage) || 0);
+  const [discountPrice, setDiscountPrice] = useState(
+    course.discount_price !== null && course.discount_price !== undefined
+      ? Number(course.discount_price)
+      : Math.round((Number(course.price) || 25000) * (1 - (Number(course.discount_percentage) || 0) / 100))
+  );
+  const [saving, setSaving] = useState(false);
+
+  // When basePrice changes, recompute discountPrice based on current discountPercentage
+  const handleBasePriceChange = (val) => {
+    const p = Math.max(0, Number(val) || 0);
+    setBasePrice(p);
+    setDiscountPrice(Math.round(p * (1 - discountPercentage / 100)));
+  };
+
+  // When discount % changes, recompute discountPrice
+  const handleDiscountPercentageChange = (val) => {
+    const pct = Math.min(100, Math.max(0, Number(val) || 0));
+    setDiscountPercentage(pct);
+    setDiscountPrice(Math.round(basePrice * (1 - pct / 100)));
+  };
+
+  // When discount price changes, recompute discount %
+  const handleDiscountPriceChange = (val) => {
+    const dp = Math.max(0, Number(val) || 0);
+    setDiscountPrice(dp);
+    if (basePrice > 0) {
+      const pct = Math.max(0, Math.min(100, Math.round(((basePrice - dp) / basePrice) * 100 * 10) / 10));
+      setDiscountPercentage(pct);
+    }
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    if (basePrice <= 0) {
+      toast.error("Base price must be greater than 0");
+      return;
+    }
+    try {
+      setSaving(true);
+      await updateCoursePricing(course.id, {
+        price: basePrice,
+        discount_percentage: discountPercentage,
+        discount_price: discountPercentage > 0 ? discountPrice : null,
+      });
+      toast.success(`Pricing for "${course.title}" updated successfully!`);
+      onSuccess?.();
+      onClose();
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || "Failed to update pricing");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const savings = Math.max(0, basePrice - discountPrice);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+      <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-100 text-purple-700 font-bold">
+              <FaTag className="text-lg" />
+            </div>
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 bg-purple-50 border border-purple-200 rounded px-2 py-0.5">
+                Superadmin Only
+              </span>
+              <h3 className="text-lg font-bold text-slate-900 mt-1">Manage Course Pricing &amp; Discount</h3>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition cursor-pointer"
+          >
+            <FaTimes />
+          </button>
+        </div>
+
+        <div className="mt-4 rounded-xl bg-slate-50 border border-slate-200 p-3 text-xs">
+          <p className="font-bold text-slate-800 text-sm">{course.title}</p>
+          <p className="text-slate-500 mt-0.5">{course.category} &bull; {course.duration_weeks || 12} Weeks Training</p>
+        </div>
+
+        <form onSubmit={handleSave} className="mt-5 space-y-4">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Base Course Price (₹) *
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center font-bold text-slate-500 text-sm">₹</span>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={basePrice}
+                onChange={(e) => handleBasePriceChange(e.target.value)}
+                className="w-full rounded-xl border border-slate-300 pl-8 pr-4 py-2.5 text-sm font-semibold text-slate-900 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-hidden transition"
+                required
+              />
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">Regular standard catalog price of the course.</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                Discount (%)
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  value={discountPercentage}
+                  onChange={(e) => handleDiscountPercentageChange(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm font-semibold text-slate-900 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-hidden transition"
+                />
+                <span className="absolute inset-y-0 right-0 pr-3 flex items-center font-bold text-slate-400 text-sm">%</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                Final Student Price (₹)
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center font-bold text-slate-500 text-sm">₹</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={discountPrice}
+                  onChange={(e) => handleDiscountPriceChange(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 pl-8 pr-4 py-2.5 text-sm font-semibold text-slate-900 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-hidden transition"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Discount Presets */}
+          <div>
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+              Quick Discount Presets:
+            </span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {[0, 10, 15, 20, 25, 30, 40, 50].map((pct) => (
+                <button
+                  key={pct}
+                  type="button"
+                  onClick={() => handleDiscountPercentageChange(pct)}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-bold border transition cursor-pointer ${
+                    discountPercentage === pct
+                      ? "bg-purple-600 text-white border-purple-600 shadow-2xs"
+                      : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                  }`}
+                >
+                  {pct === 0 ? "No Discount" : `${pct}%`}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Live Student Checkout Preview Card */}
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3.5 text-xs">
+            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 block">
+              Live Student Enrollment Preview
+            </span>
+            <div className="mt-2 flex items-baseline gap-2 flex-wrap">
+              <span className="text-2xl font-black text-slate-900">
+                ₹{discountPrice.toLocaleString("en-IN")}
+              </span>
+              {discountPercentage > 0 && (
+                <>
+                  <span className="text-sm text-slate-400 line-through">
+                    ₹{basePrice.toLocaleString("en-IN")}
+                  </span>
+                  <span className="rounded bg-emerald-200 border border-emerald-300 px-1.5 py-0.5 text-[10px] font-black text-emerald-900">
+                    {discountPercentage}% OFF
+                  </span>
+                </>
+              )}
+            </div>
+            {discountPercentage > 0 ? (
+              <p className="text-emerald-700 font-semibold mt-1">
+                🎉 Students save ₹{savings.toLocaleString("en-IN")} ({discountPercentage}% discount) upon individual admission checkout.
+              </p>
+            ) : (
+              <p className="text-slate-500 mt-1">
+                Standard full course fee without discounts applied.
+              </p>
+            )}
+          </div>
+
+          <div className="mt-6 flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="inline-flex items-center gap-2 rounded-xl bg-purple-600 hover:bg-purple-700 px-5 py-2.5 text-xs font-bold text-white shadow-md transition disabled:opacity-60 cursor-pointer"
+            >
+              {saving ? <FaSpinner className="animate-spin" /> : <FaCheck />}
+              <span>Save Pricing &amp; Discount</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 const FormHeader = ({ icon, title, text }) => (
   <div className="mb-6 flex items-center gap-4">
