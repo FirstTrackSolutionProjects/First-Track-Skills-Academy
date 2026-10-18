@@ -17,13 +17,9 @@ import {
   FaTimes,
   FaUsers,
   FaUserGraduate,
-  FaCheck,
-  FaCreditCard,
-  FaBuilding,
-  FaArrowRight,
 } from "react-icons/fa";
 import useStore, { storeActions } from "../store/useStore";
-import { getCollegeDashboard, updateCollegePaymentMode } from "../service/collegeService";
+import { getCollegeDashboard } from "../service/collegeService";
 import CollegeAttendancePanel from "../components/attendance/CollegeAttendancePanel";
 
 const menuSections = [
@@ -417,7 +413,7 @@ const CollegeDashboard = () => {
   );
 };
 
-const HeroPanel = ({ profile, metrics, onConfigurePayment }) => (
+const HeroPanel = ({ profile, metrics }) => (
   <section className="bg-white border border-slate-200 rounded-lg shadow-sm p-4 sm:p-6">
     <div className="grid xl:grid-cols-[minmax(0,1fr)_minmax(280px,520px)] gap-6 items-center">
       <div>
@@ -437,29 +433,6 @@ const HeroPanel = ({ profile, metrics, onConfigurePayment }) => (
         <MiniMetric label="BATCHES" value={metrics.active_batches} tone="amber" />
         <MiniMetric label="STATUS" value={profile.status} tone="violet" />
       </div>
-    </div>
-
-    {/* Cohort Fee Collection Policy Banner */}
-    <div className="mt-6 pt-5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-purple-50/70 rounded-xl p-4 border border-purple-200">
-      <div>
-        <span className="text-[11px] font-black uppercase tracking-wider text-purple-700 flex items-center gap-1.5">
-          <FaBuilding /> Cohort Fee Policy: Offline Campus Collection
-        </span>
-        <p className="text-sm font-bold text-slate-900 mt-1">
-          Admission Policy: <span className="text-purple-700">Offline Campus Collection (Status: APPLIED)</span>
-        </p>
-        <p className="text-xs text-slate-600 mt-0.5">
-          Online payment is removed for partner cohorts. Students join via your partner link with status APPLIED while your institution collects course fees offline on campus.
-        </p>
-      </div>
-      <button
-        type="button"
-        onClick={onConfigurePayment}
-        className="shrink-0 inline-flex items-center gap-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 text-xs font-bold shadow-xs transition cursor-pointer"
-      >
-        <span>View Partner Link</span>
-        <FaArrowRight className="text-[10px]" />
-      </button>
     </div>
   </section>
 );
@@ -603,100 +576,12 @@ const CourseDetails = ({ course, onBack, onOpenStudent }) => (
   </Panel>
 );
 
-const PartnerPanel = ({ profile, onPaymentModeChange }) => {
-  const [mode, setMode] = useState(profile.cohort_payment_mode || "STUDENT_CHOICE");
-  const [saving, setSaving] = useState(false);
-
-  const handleSave = async (newMode) => {
-    try {
-      setSaving(true);
-      await updateCollegePaymentMode(newMode);
-      setMode(newMode);
-      toast.success("Cohort payment setting updated!");
-      onPaymentModeChange?.(newMode);
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update payment setting");
-    } finally {
-      setSaving(false);
-    }
-  };
-
+const PartnerPanel = ({ profile }) => {
   return (
-    <Panel icon={<FaLink />} title="Partner Link & Fee Settings">
+    <Panel icon={<FaLink />} title="Partner Referral Link">
       <div className="grid gap-5">
         <InfoBox label="Student Join Link" value={profile.partner_link} />
         <InfoBox label="Partner Code" value={profile.partner_code} />
-
-        <div className="border border-slate-200 rounded-xl bg-white p-5 shadow-xs">
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <p className="text-sm font-bold text-slate-900">Cohort Fee Collection & Payment Option</p>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Configure how students joining via your partner link pay their course admission fees.
-              </p>
-            </div>
-            {saving && <FaSpinner className="animate-spin text-orange-500 text-sm" />}
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-3 mt-4">
-            <button
-              type="button"
-              onClick={() => handleSave("STUDENT_CHOICE")}
-              disabled={saving}
-              className={`p-3.5 rounded-xl border-2 text-left transition cursor-pointer ${
-                mode === "STUDENT_CHOICE" || mode === "BOTH"
-                  ? "border-orange-500 bg-orange-50/70 text-orange-950 font-bold shadow-2xs"
-                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold">Student Choice</span>
-                {(mode === "STUDENT_CHOICE" || mode === "BOTH") && <FaCheck className="text-orange-600 text-xs" />}
-              </div>
-              <p className="text-[11px] font-medium text-slate-500 mt-1.5 leading-snug">
-                Students can choose either to pay online via Razorpay or offline on campus.
-              </p>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSave("OFFLINE_ONLY")}
-              disabled={saving}
-              className={`p-3.5 rounded-xl border-2 text-left transition cursor-pointer ${
-                mode === "OFFLINE_ONLY"
-                  ? "border-purple-600 bg-purple-50/70 text-purple-950 font-bold shadow-2xs"
-                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold">Offline Campus Only</span>
-                {mode === "OFFLINE_ONLY" && <FaCheck className="text-purple-600 text-xs" />}
-              </div>
-              <p className="text-[11px] font-medium text-slate-500 mt-1.5 leading-snug">
-                Disable online payment. College collects fees offline; students join with status APPLIED.
-              </p>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSave("ONLINE_ONLY")}
-              disabled={saving}
-              className={`p-3.5 rounded-xl border-2 text-left transition cursor-pointer ${
-                mode === "ONLINE_ONLY"
-                  ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 font-bold shadow-2xs"
-                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold">Online Payment Only</span>
-                {mode === "ONLINE_ONLY" && <FaCheck className="text-emerald-600 text-xs" />}
-              </div>
-              <p className="text-[11px] font-medium text-slate-500 mt-1.5 leading-snug">
-                Students must pay fee online via Razorpay to complete enrollment.
-              </p>
-            </button>
-          </div>
-        </div>
       </div>
     </Panel>
   );
@@ -841,7 +726,7 @@ const StudentTable = ({ students, showCourse, onOpenStudent }) => {
                       : "bg-emerald-50 text-emerald-700 border-emerald-200"
                   }`}
                 >
-                  {student.enrollment_status === "APPLIED" ? "APPLIED (Offline Fee)" : student.enrollment_status || "ENROLLED"}
+                  {student.enrollment_status || "ENROLLED"}
                 </span>
               </td>
               <td className="py-4 pr-4 text-right">
@@ -913,7 +798,7 @@ const StudentDetailModal = ({ student, onClose }) => {
                       : "bg-emerald-50 border-emerald-200 text-emerald-700"
                   }`}
                 >
-                  {student.enrollment_status === "APPLIED" ? "APPLIED (Offline Fee Pending)" : student.enrollment_status || "ENROLLED"}
+                  {student.enrollment_status || "ENROLLED"}
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-1">

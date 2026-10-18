@@ -831,18 +831,15 @@ const Enroll = () => {
                 </div>
               </div>
 
-              {/* COMPULSORY PAYMENT SUMMARY CARD */}
-              <div className="mt-8 rounded-2xl bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 p-5 sm:p-6 shadow-sm">
+              {/* COURSE FEE SUMMARY */}
+              <div className="mt-8 rounded-2xl bg-slate-50 border border-slate-200 p-5 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div>
-                    <div className="flex items-center gap-2">
-                      <FaCreditCard className="text-orange-600" />
-                      <span className="text-xs uppercase tracking-wider font-extrabold text-orange-700">
-                        Compulsory Course Admission Fee
-                      </span>
-                    </div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Course Fee
+                    </span>
                     <div className="flex items-baseline gap-2.5 mt-1 flex-wrap">
-                      <span className="text-3xl font-black text-gray-900">
+                      <span className="text-3xl font-black text-slate-900">
                         ₹{coursePrice.toLocaleString("en-IN")}
                       </span>
                       {hasDiscount && (
@@ -850,63 +847,29 @@ const Enroll = () => {
                           <span className="text-base text-slate-400 line-through font-semibold">
                             ₹{basePrice.toLocaleString("en-IN")}
                           </span>
-                          <span className="rounded-md bg-emerald-100 border border-emerald-300 px-2 py-0.5 text-xs font-black text-emerald-800">
+                          <span className="rounded-md bg-emerald-100 border border-emerald-300 px-2 py-0.5 text-xs font-bold text-emerald-800">
                             {discountPercentage}% OFF
                           </span>
                         </>
                       )}
-                      <span className="text-xs text-slate-500 font-semibold">
-                        (All-inclusive fee for {selectedCourseObj?.duration_weeks || 12} weeks)
+                      <span className="text-xs text-slate-500 font-medium">
+                        ({selectedCourseObj?.duration_weeks || 12} weeks)
                       </span>
                     </div>
-                    <p className="text-xs text-slate-600 mt-2 max-w-md">
-                      Admission to individual courses requires upfront payment verification via Razorpay. Supports UPI (GPay/PhonePe), Credit/Debit Cards, and Netbanking.
-                    </p>
                   </div>
 
-                  <div className="flex flex-col sm:items-end gap-1.5 shrink-0">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 border border-emerald-300 px-3 py-1 text-xs font-bold text-emerald-800">
-                      <FaLock className="text-[10px]" />
-                      100% Secure Razorpay
-                    </span>
-                    <span className="text-[11px] font-semibold text-slate-500">
-                      Instant Seat Confirmation
-                    </span>
-                  </div>
-                </div>
-
-                {/* ACCEPTED PAYMENT MODES */}
-                <div className="mt-4 pt-3.5 border-t border-orange-200/60 flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="font-bold text-slate-700">Payment Gateways &amp; Methods:</span>
-                  <div className="flex flex-wrap items-center gap-2 text-[11px]">
-                    <span className="rounded-lg bg-white border border-slate-200 px-2.5 py-1 font-semibold text-slate-700">
-                      UPI (GPay / PhonePe / Paytm / QR)
-                    </span>
-                    <span className="rounded-lg bg-white border border-slate-200 px-2.5 py-1 font-semibold text-slate-700">
-                      Cards (Visa / MasterCard / RuPay)
-                    </span>
-                    <span className="rounded-lg bg-white border border-slate-200 px-2.5 py-1 font-semibold text-slate-700">
-                      Net Banking (50+ Banks)
-                    </span>
-                  </div>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 self-start sm:self-auto shadow-2xs">
+                    <FaLock className="text-[10px] text-emerald-600" />
+                    Secure Payment
+                  </span>
                 </div>
               </div>
 
-              {/* COLLEGE COHORT PARTNER LINK HELPER */}
-              <div className="mt-4 rounded-xl border border-dashed border-orange-300 bg-orange-50/50 p-4 text-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-8 w-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 font-bold">
-                    <FaBuilding />
-                  </div>
-                  <div>
-                    <span className="font-bold text-slate-900 block">
-                      Joining through a College / University Partner Link?
-                    </span>
-                    <span className="text-slate-600">
-                      College cohorts may have campus offline fee collection or special batch schedules.
-                    </span>
-                  </div>
-                </div>
+              {/* PARTNER CODE LINK */}
+              <div className="mt-3 rounded-xl border border-slate-200 bg-white p-3.5 text-xs flex items-center justify-between gap-3">
+                <span className="text-slate-600">
+                  Enrolling via a College Partner Code?
+                </span>
                 <button
                   type="button"
                   onClick={() => {
@@ -915,10 +878,9 @@ const Enroll = () => {
                       navigate(`/join/${code.trim()}`);
                     }
                   }}
-                  className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-orange-300 bg-white px-3 py-1.5 font-bold text-orange-700 hover:bg-orange-50 transition cursor-pointer"
+                  className="font-bold text-orange-600 hover:text-orange-700 transition cursor-pointer"
                 >
-                  <span>Use Partner Code</span>
-                  <FaArrowRight className="text-[10px]" />
+                  Enter code &rarr;
                 </button>
               </div>
 
@@ -990,8 +952,8 @@ const Enroll = () => {
             </div>
 
             <p className="mt-4 text-sm text-slate-600 leading-relaxed">
-              Razorpay API keys have not yet been configured in the environment (.env). You can simulate a successful payment of{" "}
-              <strong className="text-slate-900">₹{coursePrice.toLocaleString("en-IN")}</strong> to verify the entire compulsory admission flow.
+              Complete payment confirmation of{" "}
+              <strong className="text-slate-900">₹{coursePrice.toLocaleString("en-IN")}</strong> to finish your enrollment.
             </p>
 
             <div className="mt-4 rounded-xl bg-slate-50 border border-slate-200 p-3 text-xs space-y-1.5 font-mono text-slate-700">

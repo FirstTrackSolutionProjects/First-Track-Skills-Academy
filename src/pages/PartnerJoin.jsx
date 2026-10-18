@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FaPaperPlane, FaSignInAlt, FaSpinner, FaCreditCard, FaBuilding, FaCheck } from "react-icons/fa";
+import { FaPaperPlane, FaSignInAlt, FaSpinner, FaBuilding, FaCheck } from "react-icons/fa";
 import AuthFormShell from "../components/forms/AuthFormShell";
 import FormInput from "../components/forms/FormInput";
 import FormSelect from "../components/forms/FormSelect";
@@ -215,39 +215,16 @@ const PartnerJoin = () => {
             Partner Code: {partner.partner_code}
           </span>
         </div>
-
-        {/* CAMPUS OFFLINE FEE COLLECTION HIGHLIGHT */}
-        <div className="mt-3.5 rounded-xl bg-white border border-purple-100 p-3.5 text-xs flex items-start gap-3 shadow-2xs">
-          <div className="h-7 w-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 mt-0.5">
-            <FaBuilding className="text-sm" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="font-bold text-slate-900 text-xs">
-                College Campus Fee Collection
-              </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 border border-purple-200">
-                Offline College Collection
-              </span>
-            </div>
-            <p className="text-slate-600 mt-1 leading-relaxed">
-              Online payment is not required for cohort registration. Your college collects course fees offline on campus. When you register, your enrollment status will show <strong>APPLIED</strong>. Once your college confirms fee collection, the academy administration assigns your batch and mentors.
-            </p>
-          </div>
-        </div>
       </div>
 
       {!isStudentLoggedIn ? (
         <div className="space-y-6">
-          {/* PREVIEW OF AVAILABLE COURSES AND FEES */}
+          {/* PREVIEW OF AVAILABLE COURSES */}
           {courses.length > 0 && (
             <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Available Cohort Programs ({courses.length})
-                </span>
-                <span className="text-xs font-bold text-orange-600">
-                  Standard Fee: ₹25,000 / Course
                 </span>
               </div>
               <div className="grid sm:grid-cols-2 gap-2 text-xs">
@@ -257,15 +234,12 @@ const PartnerJoin = () => {
                       <p className="font-bold text-slate-800">{c.title}</p>
                       <p className="text-[11px] text-slate-500">{c.duration_weeks || 12} Weeks Training</p>
                     </div>
-                    <span className="text-xs font-black text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md shrink-0">
+                    <span className="text-xs font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-md shrink-0">
                       ₹{Number(c.price || 25000).toLocaleString("en-IN")}
                     </span>
                   </div>
                 ))}
               </div>
-              <p className="mt-3 text-[11px] text-slate-500 text-center font-medium">
-                👉 Create an account or log in below to choose your batch and select your payment option.
-              </p>
             </div>
           )}
 
@@ -383,22 +357,11 @@ const PartnerJoin = () => {
                     </FormSelect>
                   </div>
 
-                  {/* Campus Fee Collection Notice on Course Card */}
-                  <div className="mt-4 border-t border-slate-100 pt-3">
-                    <div className="rounded-xl border border-purple-200 bg-purple-50/70 p-3 text-xs text-purple-900 flex items-center gap-2.5">
-                      <FaBuilding className="text-purple-600 text-sm shrink-0" />
-                      <div>
-                        <p className="font-bold">Offline Campus Fee Collection</p>
-                        <p className="text-[11px] text-purple-700">Fees collected offline on campus &bull; Status: APPLIED</p>
-                      </div>
-                    </div>
-                  </div>
-
                   <button
                     onClick={() => continueToEnroll(course.id)}
                     className="mt-5 w-full py-3.5 rounded-xl font-bold transition shadow-sm cursor-pointer flex items-center justify-center gap-2 text-white bg-purple-600 hover:bg-purple-700"
                   >
-                    <span>Apply for Cohort Batch</span>
+                    <span>Apply for Cohort</span>
                   </button>
                 </div>
               ))}

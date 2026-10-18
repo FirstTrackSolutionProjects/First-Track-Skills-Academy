@@ -528,7 +528,7 @@ const CoursePanel = ({ courses, isStudent, onSelectCourse }) => (
                   {course.enrollment_status === "APPLIED" ? (
                     <span className="text-xs font-bold text-purple-700 bg-purple-50 border border-purple-200 rounded-full px-2.5 py-1 flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-purple-500 inline-block animate-pulse" />
-                      Applied - Campus Fee Collection Pending
+                      Applied
                     </span>
                   ) : course.is_allocated ? (
                     <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-1 flex items-center gap-1.5">
@@ -538,7 +538,7 @@ const CoursePanel = ({ courses, isStudent, onSelectCourse }) => (
                   ) : (
                     <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-1 flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-amber-500 inline-block animate-pulse" />
-                      Pending - Awaiting Batch Allocation
+                      Enrolled
                     </span>
                   )}
                   <span className="inline-flex items-center gap-1 text-xs font-bold text-orange-600 group-hover:translate-x-1 transition">

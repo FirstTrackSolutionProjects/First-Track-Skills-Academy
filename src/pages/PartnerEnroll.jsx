@@ -3,10 +3,8 @@ import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-r
 import { toast } from "react-toastify";
 import {
   FaArrowLeft,
-  FaCheck,
   FaPaperPlane,
   FaSpinner,
-  FaBuilding,
   FaClock,
 } from "react-icons/fa";
 import AuthFormShell from "../components/forms/AuthFormShell";
@@ -95,7 +93,7 @@ const PartnerEnroll = () => {
       });
       setEnrolled(true);
       setFieldErrors({});
-      toast.success("Application submitted! College will collect fees offline.");
+      toast.success("Application submitted successfully!");
     } catch (error) {
       toast.error(error.response?.data?.message || error.message || "Failed to submit cohort application");
     } finally {
@@ -136,7 +134,7 @@ const PartnerEnroll = () => {
     return (
       <AuthFormShell
         badge="Application Submitted"
-        title="Cohort Admission Received"
+        title="Application Received"
         subtitle={`Application registered for ${enrolledDetails.collegeName}.`}
       >
         <div className="text-center py-4">
@@ -145,7 +143,7 @@ const PartnerEnroll = () => {
           </div>
 
           <span className="inline-block rounded-full px-4 py-1 text-xs font-black tracking-wider uppercase mb-3 bg-purple-200 text-purple-900 border border-purple-300">
-            Status: APPLIED (Awaiting Campus Fee Collection)
+            Status: Applied
           </span>
 
           <h2 className="text-2xl sm:text-3xl font-black text-gray-900">
@@ -153,9 +151,8 @@ const PartnerEnroll = () => {
           </h2>
 
           <p className="mt-3 text-sm sm:text-base text-gray-600 max-w-md mx-auto leading-relaxed">
-            You applied under <span className="font-bold text-gray-900">{enrolledDetails.collegeName}</span>.
-            Your admission status is currently <strong className="text-purple-700">APPLIED</strong>.
-            Your institution collects course fees offline on campus. Once fee settlement is confirmed by your college coordinator, our administration will assign your batch and mentors.
+            Your application for <span className="font-bold text-gray-900">{enrolledDetails.courseTitle}</span> under{" "}
+            <span className="font-bold text-gray-900">{enrolledDetails.collegeName}</span> has been received. You will be notified once your batch is allocated.
           </p>
 
           {/* Details Box */}
@@ -167,10 +164,6 @@ const PartnerEnroll = () => {
             <div className="flex justify-between items-center py-1 border-b border-slate-100">
               <span className="text-slate-500 font-medium">Batch Timing</span>
               <span className="font-bold text-slate-800">{enrolledDetails.batchTiming} Batch</span>
-            </div>
-            <div className="flex justify-between items-center py-1 border-b border-slate-100">
-              <span className="text-slate-500 font-medium">Fee Collection</span>
-              <span className="font-bold text-purple-700">Offline Campus Collection</span>
             </div>
             <div className="flex justify-between items-center py-1">
               <span className="text-slate-500 font-medium">Admission Status</span>
@@ -243,21 +236,6 @@ const PartnerEnroll = () => {
         )}
       </div>
 
-      {/* Cohort Campus Offline Fee Policy Banner */}
-      <div className="mt-6 rounded-2xl border border-purple-200 bg-purple-50/70 p-4 text-xs text-purple-950 flex items-start gap-3 shadow-2xs">
-        <div className="h-8 w-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 mt-0.5">
-          <FaBuilding className="text-base" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="font-bold text-sm text-purple-900">Campus Offline Fee Collection</p>
-          <p className="text-slate-600 mt-1 leading-relaxed">
-            Online payment is removed for partner registrations. Course fees are collected directly on campus by <strong>{partner.college_name}</strong>.
-            Upon submitting this application, your enrollment status will be recorded as <strong className="text-purple-700">APPLIED</strong>.
-            Once your college coordinators confirm fee collection, the administration will add you into your active course batch and assign mentors.
-          </p>
-        </div>
-      </div>
-
       {/* Action Button */}
       <button
         onClick={handleEnroll}
@@ -271,7 +249,7 @@ const PartnerEnroll = () => {
           </>
         ) : (
           <>
-            <span>Submit Cohort Application (Status: APPLIED)</span>
+            <span>Submit Application</span>
             <FaPaperPlane />
           </>
         )}

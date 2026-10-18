@@ -3271,9 +3271,9 @@ const StudentAllocationPanel = ({ batches, courses, colleges, onRefresh, onOpenS
                             Unassigned Batch
                           </span>
                           {st.enrollment_status === "APPLIED" && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200 rounded px-2 py-0.5 shadow-2xs" title="Joined via Partner Link; fees collected offline">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200 rounded px-2 py-0.5 shadow-2xs" title="Joined via Partner Link">
                               <span className="h-1.5 w-1.5 rounded-full bg-purple-500"></span>
-                              Applied (Offline Fee)
+                              Applied (Partner)
                             </span>
                           )}
                         </div>
@@ -3897,8 +3897,8 @@ const StudentsPanel = ({ colleges, courseOptions, filters, studentsPage, loading
       </SelectInput>
       <SelectInput label="Status" value={filters.enrollment_status} onChange={(value) => onFilterChange("enrollment_status", value)}>
         <option value="">All statuses</option>
-        <option value="ENROLLED">Enrolled (Verified / Online)</option>
-        <option value="APPLIED">Applied (Offline Fee Pending)</option>
+        <option value="ENROLLED">Enrolled</option>
+        <option value="APPLIED">Applied</option>
         <option value="IN_PROGRESS">In Progress</option>
         <option value="COMPLETED">Completed</option>
         <option value="CANCELLED">Cancelled</option>

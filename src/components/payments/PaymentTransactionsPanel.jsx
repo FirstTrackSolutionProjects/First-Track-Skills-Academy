@@ -84,7 +84,7 @@ const PaymentTransactionsPanel = () => {
             <div>
               <h2 className="text-2xl font-black text-slate-900">Payment Transactions &amp; Revenue</h2>
               <p className="text-sm text-slate-600 mt-0.5">
-                Monitor online Razorpay admissions, cohort fee collections, and student payment receipts.
+                Monitor online admissions, cohort enrollments, and student payment transactions.
               </p>
             </div>
           </div>
@@ -159,9 +159,9 @@ const PaymentTransactionsPanel = () => {
               className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-xs font-bold text-slate-700 focus:bg-white focus:border-orange-500 focus:outline-hidden"
             >
               <option value="ALL">All Payment Statuses</option>
-              <option value="SUCCESS">Verified (SUCCESS)</option>
-              <option value="PENDING">Pending (PENDING)</option>
-              <option value="FAILED">Failed (FAILED)</option>
+              <option value="SUCCESS">Success</option>
+              <option value="PENDING">Pending</option>
+              <option value="FAILED">Failed</option>
             </select>
           </div>
 
@@ -172,8 +172,8 @@ const PaymentTransactionsPanel = () => {
               className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-xs font-bold text-slate-700 focus:bg-white focus:border-orange-500 focus:outline-hidden"
             >
               <option value="ALL">All Admission Types</option>
-              <option value="INDIVIDUAL">Individual Course (Compulsory Razorpay)</option>
-              <option value="COHORT">College Cohort (Partner Admission)</option>
+              <option value="INDIVIDUAL">Individual Admission</option>
+              <option value="COHORT">College Cohort</option>
             </select>
           </div>
         </div>
