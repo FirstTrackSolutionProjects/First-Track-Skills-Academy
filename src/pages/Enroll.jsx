@@ -459,7 +459,7 @@ const Enroll = () => {
               <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
                 <FaReceipt className="text-orange-500 text-lg" />
                 <h3 className="font-extrabold text-slate-900 text-sm uppercase tracking-wider">
-                  Payment Receipt &bull; First Track Skills
+                  Payment Receipt &bull; First Track Skills Academy
                 </h3>
               </div>
               <div className="flex justify-between items-center text-sm py-1 border-b border-slate-200">
