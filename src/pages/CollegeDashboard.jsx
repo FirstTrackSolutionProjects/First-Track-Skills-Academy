@@ -17,11 +17,13 @@ import {
   FaTimes,
   FaUsers,
   FaUserGraduate,
+  FaReceipt,
 } from "react-icons/fa";
 import useStore, { storeActions } from "../store/useStore";
 import { logoutUser } from "../service/authService";
 import { getCollegeDashboard } from "../service/collegeService";
 import CollegeAttendancePanel from "../components/attendance/CollegeAttendancePanel";
+import UserPaymentHistoryPanel from "../components/payments/UserPaymentHistoryPanel";
 
 const menuSections = [
   {
@@ -43,6 +45,7 @@ const menuSections = [
     icon: <FaUserGraduate />,
     items: [
       { name: "Partner Link", icon: <FaLink /> },
+      { name: "Payment History", icon: <FaReceipt /> },
       { name: "Profile", icon: <FaUserGraduate /> },
     ],
   },
@@ -426,6 +429,9 @@ const CollegeDashboard = () => {
           )}
 
           {activeMenu === "Partner Link" && <PartnerPanel profile={profile} />}
+          {activeMenu === "Payment History" && (
+            <UserPaymentHistoryPanel isCollege={true} currentUser={auth?.user} />
+          )}
           {activeMenu === "Profile" && <ProfilePanel profile={profile} />}
         </main>
       </div>

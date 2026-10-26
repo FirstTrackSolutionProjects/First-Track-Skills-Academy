@@ -7,8 +7,11 @@ import {
   FaCalendarCheck,
   FaChevronDown,
   FaClock,
+  FaCreditCard,
+  FaHistory,
   FaHome,
   FaLayerGroup,
+  FaReceipt,
   FaSignOutAlt,
   FaSpinner,
   FaTimes,
@@ -21,6 +24,8 @@ import { getMyEnrolledCourses } from "../service/enrollmentService";
 import useStore, { storeActions } from "../store/useStore";
 import { logoutUser } from "../service/authService";
 import StudentAttendancePanel from "../components/attendance/StudentAttendancePanel";
+import UserCourseHistoryPanel from "../components/courses/UserCourseHistoryPanel";
+import UserPaymentHistoryPanel from "../components/payments/UserPaymentHistoryPanel";
 
 const roleCopy = {
   MENTOR: {
@@ -74,8 +79,15 @@ const menuByRole = {
       icon: <FaBookOpen />,
       items: [
         { name: "Courses", icon: <FaBookOpen /> },
-        { name: "Enrollments", icon: <FaLayerGroup /> },
+        { name: "Course History", icon: <FaHistory /> },
         { name: "Attendance", icon: <FaCalendarCheck /> },
+      ],
+    },
+    {
+      title: "Finance",
+      icon: <FaReceipt />,
+      items: [
+        { name: "Payment History", icon: <FaCreditCard /> },
       ],
     },
     {
@@ -99,6 +111,7 @@ const RoleDashboard = () => {
     Overview: true,
     Batches: false,
     Courses: false,
+    Finance: false,
     Account: false,
   });
 
@@ -426,27 +439,57 @@ const RoleDashboard = () => {
             <>
               {activeMenu === "Dashboard" && (
                 <>
-                  <HeroPanel copy={copy} user={auth.user} metrics={metrics} isStudent={isStudent} />
-                  <CoursePanel courses={courses} isStudent={isStudent} onSelectCourse={handleCourseSelect} />
+                  <HeroPanel
+                    copy={copy}
+                    user={auth.user}
+                    metrics={metrics}
+                    isStudent={isStudent}
+                    onNavigate={handleMenuClick}
+                  />
+                  <CoursePanel
+                    courses={courses}
+                    isStudent={isStudent}
+                    onSelectCourse={handleCourseSelect}
+                    onNavigate={handleMenuClick}
+                  />
                   {role === "MENTOR" && <BatchPanel batches={batches} onOpenBatch={openBatch} />}
                 </>
               )}
               {activeMenu === "Courses" && (
-                <CoursePanel courses={courses} isStudent={isStudent} onSelectCourse={handleCourseSelect} />
+                <CoursePanel
+                  courses={courses}
+                  isStudent={isStudent}
+                  onSelectCourse={handleCourseSelect}
+                  onNavigate={handleMenuClick}
+                />
+              )}
+              {(activeMenu === "Course History" || activeMenu === "Enrollments") && (
+                <UserCourseHistoryPanel
+                  courses={courses}
+                  currentUser={auth.user}
+                  onSelectCourse={handleCourseSelect}
+                  onViewPayments={() => handleMenuClick("Payment History")}
+                />
+              )}
+              {activeMenu === "Payment History" && (
+                <UserPaymentHistoryPanel currentUser={auth.user} />
               )}
               {activeMenu === "Batches" && <BatchPanel batches={batches} onOpenBatch={openBatch} />}
               {activeMenu === "Batch Details" && selectedBatch && (
                 <BatchDetails batch={selectedBatch} onBack={() => handleMenuClick("Batches")} />
               )}
               {activeMenu === "Batch Timings" && <BatchTimingsPanel batches={batches} />}
-              {activeMenu === "Enrollments" && (
-                <CoursePanel courses={courses} isStudent={true} onSelectCourse={handleCourseSelect} />
-              )}
               {activeMenu === "Attendance" && isStudent && (
                 <StudentAttendancePanel />
               )}
               {activeMenu === "Profile" && (
-                <ProfilePanel user={auth.user} courses={courses} batches={batches} isStudent={isStudent} />
+                <ProfilePanel
+                  user={auth.user}
+                  courses={courses}
+                  batches={batches}
+                  isStudent={isStudent}
+                  onNavigate={handleMenuClick}
+                />
               )}
             </>
           )}
@@ -489,7 +532,7 @@ const SidebarSection = ({ section, activeMenu, isOpen, onToggle, onMenuClick }) 
   </div>
 );
 
-const HeroPanel = ({ copy, user, metrics, isStudent }) => (
+const HeroPanel = ({ copy, user, metrics, isStudent, onNavigate }) => (
   <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(280px,480px)] xl:items-center">
       <div>
@@ -501,25 +544,73 @@ const HeroPanel = ({ copy, user, metrics, isStudent }) => (
         <p className="mt-4 text-base sm:text-lg text-slate-600">
           Welcome back, <span className="font-bold text-slate-900">{user.first_name || user.name || "Student"}</span>. {isStudent ? "Track your enrolled courses, live interactive class schedules, and hands-on modules below." : "Manage your batches, mentor assignments, and course updates."}
         </p>
+
+        {isStudent && (
+          <div className="mt-5 flex items-center gap-2.5 flex-wrap">
+            <button
+              type="button"
+              onClick={() => onNavigate?.("Course History")}
+              className="inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3.5 py-2 text-xs font-bold text-orange-700 shadow-2xs hover:bg-orange-100 transition cursor-pointer"
+            >
+              <FaHistory />
+              View Course History
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate?.("Payment History")}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-700 shadow-2xs hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 transition cursor-pointer"
+            >
+              <FaReceipt />
+              View Payment History
+            </button>
+          </div>
+        )}
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
-        <MiniMetric label={isStudent ? "MY COURSES" : "COURSES"} value={metrics.courses} />
-        <MiniMetric label={isStudent ? "COURSE STATUS" : "BATCHES"} value={isStudent ? "Pending Batch" : metrics.batches} />
+        <MiniMetric
+          label={isStudent ? "MY COURSES" : "COURSES"}
+          value={metrics.courses}
+          onClick={isStudent ? () => onNavigate?.("Courses") : undefined}
+        />
+        <MiniMetric
+          label={isStudent ? "COURSE STATUS" : "BATCHES"}
+          value={isStudent ? "Pending Batch" : metrics.batches}
+          onClick={isStudent ? () => onNavigate?.("Course History") : undefined}
+        />
         <MiniMetric label="ROLE" value={metrics.status} />
       </div>
     </div>
   </section>
 );
 
-const MiniMetric = ({ label, value }) => (
-  <div className="rounded-xl border border-orange-100 bg-orange-50/70 p-4 text-orange-700">
+const MiniMetric = ({ label, value, onClick }) => (
+  <div
+    onClick={onClick}
+    className={`rounded-xl border border-orange-100 bg-orange-50/70 p-4 text-orange-700 ${
+      onClick ? "cursor-pointer hover:bg-orange-100/70 transition hover:shadow-xs" : ""
+    }`}
+  >
     <p className="text-sm font-bold">{label}</p>
     <p className="mt-2 break-words text-2xl font-bold">{value}</p>
   </div>
 );
 
-const CoursePanel = ({ courses, isStudent, onSelectCourse }) => (
-  <Panel icon={<FaBookOpen />} title={isStudent ? "My Enrolled Courses" : "Courses"}>
+const CoursePanel = ({ courses, isStudent, onSelectCourse, onNavigate }) => (
+  <Panel
+    icon={<FaBookOpen />}
+    title={isStudent ? "My Enrolled Courses" : "Courses"}
+    action={
+      isStudent && courses.length > 0 ? (
+        <button
+          type="button"
+          onClick={() => onNavigate?.("Course History")}
+          className="text-xs font-bold text-orange-600 hover:text-orange-700 underline cursor-pointer"
+        >
+          View Full History &rarr;
+        </button>
+      ) : null
+    }
+  >
     {courses.length ? (
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {courses.map((course) => (
@@ -816,7 +907,7 @@ const BatchTimingsPanel = ({ batches }) => (
   </Panel>
 );
 
-const ProfilePanel = ({ user, courses = [], batches = [], isStudent }) => {
+const ProfilePanel = ({ user, courses = [], batches = [], isStudent, onNavigate }) => {
   const role = user?.role || (isStudent ? "STUDENT" : "MENTOR");
   const fullNameStr = [user?.first_name, user?.middle_name, user?.last_name].filter(Boolean).join(" ") || user?.name || (isStudent ? "Student User" : "Mentor User");
   const profile = user?.student_profile || {};
@@ -882,6 +973,25 @@ const ProfilePanel = ({ user, courses = [], batches = [], isStudent }) => {
             <InfoBox label="Course Status" value="Pending Batch Allocation" />
             <InfoBox label="Institution" value="First Track Skills Academy" />
           </div>
+
+          <div className="mt-6 flex items-center gap-3 pt-4 border-t border-slate-100 flex-wrap">
+            <button
+              type="button"
+              onClick={() => onNavigate?.("Course History")}
+              className="inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2 text-xs font-bold text-orange-700 hover:bg-orange-100 transition shadow-2xs cursor-pointer"
+            >
+              <FaHistory />
+              View Full Course History
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate?.("Payment History")}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 transition shadow-2xs cursor-pointer"
+            >
+              <FaReceipt />
+              View Fee Payment History
+            </button>
+          </div>
         </>
       ) : (
         <>
@@ -904,13 +1014,16 @@ const InfoBox = ({ label, value }) => (
   </div>
 );
 
-const Panel = ({ icon, title, children }) => (
+const Panel = ({ icon, title, action, children }) => (
   <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-    <div className="mb-6 flex items-center gap-4">
-      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-lg text-slate-700">
-        {icon}
+    <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex items-center gap-4">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-lg text-slate-700">
+          {icon}
+        </div>
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900">{title}</h2>
       </div>
-      <h2 className="text-2xl font-bold text-slate-900">{title}</h2>
+      {action && <div>{action}</div>}
     </div>
     {children}
   </section>
