@@ -597,5 +597,38 @@ export function downloadInvoiceAsFile(receipt, currentUser, options = {}) {
   URL.revokeObjectURL(url);
 }
 
+/**
+ * Initiates client-side PDF download by rendering the invoice DOM node with html2canvas and jsPDF.
+ */
+export async function downloadInvoiceAsPDF(elementId, invoiceNo = "Invoice") {
+  const element = document.getElementById(elementId);
+  if (!element) return;
+
+  try {
+    const html2canvasModule = await import("html2canvas");
+    const html2canvas = html2canvasModule.default || html2canvasModule;
+    const { jsPDF } = await import("jspdf");
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: "#ffffff",
+    });
+
+    const imgData = canvas.toDataURL("image/jpeg", 0.98);
+    const pdf = new jsPDF("p", "mm", "a4");
+    const imgWidth = 210;
+    const pageHeight = 297;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, Math.min(imgHeight, pageHeight));
+    pdf.save(`Tax-Invoice-${invoiceNo}.pdf`);
+  } catch (err) {
+    console.error("PDF generation error:", err);
+    window.print();
+  }
+}
+
 export { COMPANY_INFO };
 
