@@ -20,6 +20,7 @@ import {
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { getMyPayments } from "../../service/paymentService";
+import TaxInvoiceModal from "./TaxInvoiceModal";
 
 const statusConfig = {
   SUCCESS: {
@@ -105,10 +106,6 @@ const UserPaymentHistoryPanel = ({ isCollege = false, currentUser = null }) => {
       totalCount: payments.length,
     };
   }, [payments]);
-
-  const handlePrintReceipt = () => {
-    window.print();
-  };
 
   return (
     <div className="space-y-6">
@@ -427,157 +424,13 @@ const UserPaymentHistoryPanel = ({ isCollege = false, currentUser = null }) => {
         </div>
       )}
 
-      {/* Official Payment Receipt Modal */}
+      {/* Official Tax Invoice Modal */}
       {selectedReceipt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
-          <div className="relative w-full max-w-lg rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-orange-100 max-h-[92vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-              <div className="flex items-center gap-3">
-                <img
-                  src="/images/companylogo.jpg"
-                  alt="First Track Skills Academy"
-                  className="h-10 w-10 rounded-full border-2 border-orange-500 object-cover shadow-sm"
-                />
-                <div>
-                  <h3 className="text-base font-extrabold text-slate-900 leading-tight">
-                    First Track <span className="text-orange-500">Skills Academy</span>
-                  </h3>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                    Official Fee Payment Receipt
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedReceipt(null)}
-                className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
-              >
-                <FaTimes className="text-lg" />
-              </button>
-            </div>
-
-            {/* Receipt Body */}
-            <div className="mt-5 space-y-4">
-              {/* Receipt Top Status Pill */}
-              <div className="flex items-center justify-between rounded-xl bg-orange-50/70 p-3.5 border border-orange-100">
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                    Receipt Number
-                  </span>
-                  <div className="font-mono text-xs font-bold text-slate-800">
-                    #REC-FTST-{selectedReceipt.id.toString().padStart(5, "0")}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                    Payment Status
-                  </span>
-                  <div className="text-xs font-black text-emerald-700 flex items-center gap-1 justify-end">
-                    <FaCheckCircle className="text-emerald-500 text-xs" />
-                    {selectedReceipt.status || "SUCCESS"}
-                  </div>
-                </div>
-              </div>
-
-              {/* Student & Course Details */}
-              <div className="space-y-2.5 text-xs text-slate-700 border-b border-slate-100 pb-4">
-                <div className="flex justify-between py-1">
-                  <span className="text-slate-400 font-medium">Participant Name</span>
-                  <span className="font-bold text-slate-900">
-                    {selectedReceipt.student
-                      ? `${selectedReceipt.student.first_name || ""} ${selectedReceipt.student.last_name || ""}`.trim()
-                      : currentUser?.first_name || "Enrolled Student"}
-                  </span>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span className="text-slate-400 font-medium">Email Address</span>
-                  <span className="font-semibold text-slate-800">
-                    {selectedReceipt.student?.email || currentUser?.email || "N/A"}
-                  </span>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span className="text-slate-400 font-medium">Program Title</span>
-                  <span className="font-bold text-orange-600 text-right max-w-[240px]">
-                    {selectedReceipt.course?.title || "Industry Certification Program"}
-                  </span>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span className="text-slate-400 font-medium">Category / Domain</span>
-                  <span className="font-semibold text-slate-800">
-                    {selectedReceipt.course?.category || "Professional Training"}
-                  </span>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span className="text-slate-400 font-medium">Payment Date &amp; Time</span>
-                  <span className="font-semibold text-slate-800">
-                    {selectedReceipt.created_at
-                      ? new Date(selectedReceipt.created_at).toLocaleString("en-IN")
-                      : "N/A"}
-                  </span>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span className="text-slate-400 font-medium">Payment Mode</span>
-                  <span className="font-semibold text-slate-800">
-                    {selectedReceipt.payment_method || "Online Razorpay Gateway"}
-                  </span>
-                </div>
-                <div className="flex justify-between py-1 font-mono text-[11px]">
-                  <span className="text-slate-400 font-sans">Payment / Ref ID</span>
-                  <span className="text-slate-700">
-                    {selectedReceipt.razorpay_payment_id || "N/A"}
-                  </span>
-                </div>
-                <div className="flex justify-between py-1 font-mono text-[11px]">
-                  <span className="text-slate-400 font-sans">Order ID</span>
-                  <span className="text-slate-700">
-                    {selectedReceipt.razorpay_order_id || "N/A"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Amount Breakdown */}
-              <div className="rounded-2xl bg-slate-50 p-4 border border-slate-200">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <div className="text-xs font-bold text-slate-800">Total Tuition Fee Paid</div>
-                    <div className="text-[11px] text-slate-500">Includes all applicable training taxes</div>
-                  </div>
-                  <div className="text-xl font-black text-orange-600">
-                    ₹{Number(selectedReceipt.amount || 0).toLocaleString("en-IN")}
-                  </div>
-                </div>
-              </div>
-
-              {/* Watermark / Guarantee notice */}
-              <div className="flex items-center gap-2.5 rounded-xl bg-emerald-50/70 p-3 text-emerald-800 text-xs border border-emerald-100">
-                <FaShieldAlt className="text-emerald-600 text-lg shrink-0" />
-                <p className="text-[11px] leading-relaxed">
-                  Verified payment voucher issued by First Track Skills Academy. Admission confirmed for live interactive batches.
-                </p>
-              </div>
-            </div>
-
-            {/* Modal Actions */}
-            <div className="mt-6 flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={handlePrintReceipt}
-                className="inline-flex items-center gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 px-5 py-2.5 text-xs font-bold text-white shadow-md transition cursor-pointer"
-              >
-                <FaPrint />
-                Print / Save PDF
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedReceipt(null)}
-                className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+        <TaxInvoiceModal
+          receipt={selectedReceipt}
+          currentUser={currentUser}
+          onClose={() => setSelectedReceipt(null)}
+        />
       )}
     </div>
   );

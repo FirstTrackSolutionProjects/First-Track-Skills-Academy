@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tax Invoice - FTSTINV260900142 - First Track Skills Academy</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 15mm;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    body {
+      margin: 0;
+      padding: 30px 20px;
+      background-color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #1e293b;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .top-toolbar {
+      max-width: 820px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+      padding: 12px 20px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+    .top-toolbar .title-area {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .top-toolbar .btn-group {
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background-color: #ea580c;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(234, 88, 12, 0.25);
+    }
+    .btn-primary:hover {
+      background-color: #c2410c;
+    }
+    .btn-secondary {
+      background-color: #ffffff;
+      color: #334155;
+      border-color: #cbd5e1;
+    }
+    .btn-secondary:hover {
+      background-color: #f8fafc;
+    }
+
+    /* Main Invoice Card */
+    .invoice-card {
+      max-width: 820px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 44px 50px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06);
+      border-radius: 4px;
+    }
+
+    /* Header */
+    .header-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 8px;
+    }
+    .header-logo-td {
+      vertical-align: middle;
+      text-align: left;
+    }
+    .brand-flex {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .brand-logo-img {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 2px solid #ea580c;
+      object-fit: cover;
+      display: block;
+    }
+    .brand-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.3px;
+      margin: 0;
+      line-height: 1.2;
+    }
+    .brand-subtitle {
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 600;
+      margin-top: 3px;
+    }
+    .header-meta-td {
+      vertical-align: middle;
+      text-align: right;
+      font-size: 12px;
+      color: #334155;
+      line-height: 1.6;
+    }
+    .header-meta-td div {
+      margin-bottom: 2px;
+    }
+    .header-meta-td strong {
+      color: #0f172a;
+    }
+
+    /* Accent separator line matching Jupiter Xpress invoice format */
+    .accent-divider {
+      width: 100%;
+      height: 3.5px;
+      background-color: #b85d19;
+      margin: 14px 0 28px 0;
+    }
+
+    /* Address Grid */
+    .address-grid {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 28px;
+    }
+    .address-col {
+      width: 50%;
+      vertical-align: top;
+      font-size: 11.5px;
+      line-height: 1.6;
+      color: #475569;
+    }
+    .address-col.from {
+      padding-right: 30px;
+    }
+    .address-col.to {
+      padding-left: 15px;
+    }
+    .address-heading {
+      font-size: 14px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+    .entity-name {
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    /* Data Table with warm peach/sand header (#f4e7dc) */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      margin-bottom: 24px;
+      font-size: 11.5px;
+    }
+    .data-table thead tr {
+      background-color: #f4e7dc;
+      color: #33271e;
+    }
+    .data-table th {
+      padding: 10px 8px;
+      font-weight: 700;
+      font-size: 11px;
+      text-align: center;
+      border: 1px solid #ebd9cb;
+      letter-spacing: 0.2px;
+    }
+    .data-table td {
+      padding: 13px 8px;
+      text-align: center;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+      font-size: 11px;
+    }
+    .data-table td.desc-td {
+      text-align: left;
+      padding-left: 12px;
+    }
+
+    /* Summary Calculation Section */
+    .summary-section {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+    .words-cell {
+      width: 55%;
+      vertical-align: top;
+      padding-right: 20px;
+      font-size: 11.5px;
+      color: #475569;
+    }
+    .calc-cell {
+      width: 45%;
+      vertical-align: top;
+    }
+    .tax-breakdown-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .tax-breakdown-table td {
+      padding: 4px 6px;
+    }
+    .tax-breakdown-table td.label-col {
+      color: #64748b;
+      font-weight: 600;
+      text-align: left;
+    }
+    .tax-breakdown-table td.val-col {
+      color: #0f172a;
+      font-weight: 600;
+      text-align: right;
+    }
+    .total-tax-row td {
+      border-top: 1px solid #cbd5e1;
+      padding-top: 9px;
+      margin-top: 5px;
+      font-weight: 800;
+      font-size: 14px;
+      color: #0f172a;
+    }
+
+    /* Footer */
+    .invoice-footer {
+      margin-top: 48px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+      font-size: 11px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    @media print {
+      body {
+        background: transparent !important;
+        padding: 0 !important;
+      }
+      .top-toolbar {
+        display: none !important;
+      }
+      .invoice-card {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Action Toolbar -->
+  <div class="top-toolbar">
+    <div class="title-area">
+      <span>📄</span>
+      <span>Official Tax Invoice Preview (GST Compliant)</span>
+    </div>
+    <div class="btn-group">
+      <button onclick="window.print()" class="btn btn-primary">
+        <span>🖨️</span>
+        <span>Print / Save as PDF</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Printable Invoice Document Sheet -->
+  <div class="invoice-card" id="invoice">
+    
+    <!-- Top Header -->
+    <table class="header-table">
+      <tr>
+        <td class="header-logo-td">
+          <div class="brand-flex">
+            <img src="/images/companylogo.jpg" alt="First Track Skills Academy" class="brand-logo-img" onerror="this.src='/images/companylogo.png'">
+            <div>
+              <h1 class="brand-title">First Track Skills Academy</h1>
+              <div class="brand-subtitle">First Track Solution Technologies Pvt. Ltd. &bull; Tax Invoice</div>
+            </div>
+          </div>
+        </td>
+        <td class="header-meta-td">
+          <div><strong>Invoice No:</strong> FTSTINV260900142</div>
+          <div><strong>Invoice Date:</strong> 01-11-2026</div>
+          <div><strong>HSN/SAC Code:</strong> 999293</div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Deep Orange / Copper Accent Line (#b85d19) -->
+    <div class="accent-divider"></div>
+
+    <!-- From and To 2-Column Grid -->
+    <table class="address-grid">
+      <tr>
+        <td class="address-col from">
+          <div class="address-heading">From</div>
+          <div class="entity-name">First Track Solution Technologies Pvt. Ltd.</div>
+          <div>Saheed Nagar, Bhubaneswar, Odisha, India - 751007</div>
+          <div>Contact No: +91 8240742313</div>
+          <div>Email Id: contact@firsttrackskillsacademy.in</div>
+          <div><strong>GSTIN:</strong> 21AAECF0000A1Z5</div>
+          <div><strong>PAN:</strong> AAECF0000A</div>
+        </td>
+        <td class="address-col to">
+          <div class="address-heading">To</div>
+          <div class="entity-name">ANIKET KUMAR</div>
+          <div>Saheed Nagar, Bhubaneswar, Odisha, India - 751007</div>
+          <div>Contact No: +91 8240742313</div>
+          <div>Email: aniketkumar5155@gmail.com</div>
+          <div><strong>GSTIN:</strong> N/A</div>
+          <div><strong>PAN:</strong> N/A</div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Itemized Fee Table with Peach Header (#f4e7dc) -->
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="width: 5%;">S.L</th>
+          <th style="width: 17%;">Date</th>
+          <th style="width: 32%;">Order ID / Description</th>
+          <th style="width: 6%;">Qty</th>
+          <th style="width: 13%;">Course Fee (Rs)</th>
+          <th style="width: 13%;">Dispute Charge (Rs)</th>
+          <th style="width: 13%;">Extra Charge (Rs)</th>
+          <th style="width: 15%;">Total Amount (Rs)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td style="font-family: monospace; font-size: 10px;">2026-11-01 12:20:00</td>
+          <td class="desc-td">
+            <div style="font-weight: 700; color: #0f172a;">Full Stack Web Development (MERN)</div>
+            <div style="color: #64748b; font-size: 10px; margin-top: 2px;">
+              Ref: pay_live_948aBc123xyz &bull; 24 Weeks &bull; Professional Certification
+            </div>
+          </td>
+          <td>1</td>
+          <td>21186.44</td>
+          <td>0.00</td>
+          <td>0.00</td>
+          <td style="font-weight: 700; color: #0f172a;">25000.00</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Tax Breakdown & Amount in Words -->
+    <table class="summary-section">
+      <tr>
+        <td class="words-cell">
+          <div style="margin-top: 14px;">
+            <strong>Total Amount in Words:</strong> Twenty-Five Thousand Rupees Only.
+          </div>
+        </td>
+        <td class="calc-cell">
+          <table class="tax-breakdown-table">
+            <tr>
+              <td class="label-col">BV (Base Value)</td>
+              <td class="val-col">Rs. 21186.44</td>
+            </tr>
+            <tr>
+              <td class="label-col">CGST (9%)</td>
+              <td class="val-col">Rs. 1893.22</td>
+            </tr>
+            <tr>
+              <td class="label-col">SGST (9%)</td>
+              <td class="val-col">Rs. 1893.22</td>
+            </tr>
+            <tr>
+              <td class="label-col">IGST (18%)</td>
+              <td class="val-col">Rs. 0.00</td>
+            </tr>
+            <tr class="total-tax-row">
+              <td>Total Amount (With Tax)</td>
+              <td style="text-align: right;">Rs. 25000.00</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Footer -->
+    <div class="invoice-footer">
+      <div>Details: Billing of 01-11-2026</div>
+      <div style="margin-top: 4px;">This is a computer-generated invoice and does not require a signature.</div>
+    </div>
+
+  </div>
+
+</body>
+</html>
